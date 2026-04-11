@@ -399,6 +399,78 @@ function fillReport(data, dateStr, shichen, gender){
   fillAnalysisSection('财运', analysis ? analysis.wealth : '');
   fillAnalysisSection('健康', analysis ? analysis.health : '');
   fillAnalysisSection('感情', analysis ? analysis.relationship : '');
+
+  // English page: also fill with English keywords, then translate
+  fillAnalysisSection('Career', analysis ? analysis.career : '');
+  fillAnalysisSection('Wealth', analysis ? analysis.wealth : '');
+  fillAnalysisSection('Health', analysis ? analysis.health : '');
+  fillAnalysisSection('Relationship', analysis ? analysis.relationship : '');
+
+  /* ── Auto-translate for English page ── */
+  if(document.documentElement.lang === 'en' && analysis){
+    translateReport(analysis, chart);
+  }
+}
+
+/* ── Claude API Translation ── */
+async function translateReport(analysis, chart){
+  var sections = {};
+  if(analysis.personality) sections.personality = analysis.personality;
+  if(analysis.career) sections.career = analysis.career;
+  if(analysis.wealth) sections.wealth = analysis.wealth;
+  if(analysis.health) sections.health = analysis.health;
+  if(analysis.relationship) sections.relationship = analysis.relationship;
+
+  if(Object.keys(sections).length === 0) return;
+
+  var dayStem = chart.pillars.day.stem;
+  var dayWx = GAN_WX[dayStem] || '';
+
+  // Show translating indicator
+  var indicator = document.createElement('div');
+  indicator.id = 'translateIndicator';
+  indicator.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(26,24,20,.9);color:#fff;padding:10px 24px;border-radius:100px;font-size:12px;z-index:9999;letter-spacing:.04em';
+  indicator.textContent = 'Translating report...';
+  document.body.appendChild(indicator);
+
+  try {
+    var res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        sections: sections,
+        context: {
+          day_master: dayStem + dayWx,
+          strength: chart.day_master_strength || '',
+          use_gods: (analysis.use_god_summary || '').substring(0, 100),
+          avoid_gods: ''
+        }
+      })
+    });
+
+    if(!res.ok) throw new Error('Translation API error');
+    var data = await res.json();
+    var t = data.translated;
+
+    // Fill translated text into report
+    if(t.personality) fillAnalysisSection('Traits', t.personality);
+    if(t.personality) fillAnalysisSection('性格', t.personality);
+    if(t.career) fillAnalysisSection('Career', t.career);
+    if(t.career) fillAnalysisSection('事业', t.career);
+    if(t.wealth) fillAnalysisSection('Wealth', t.wealth);
+    if(t.wealth) fillAnalysisSection('财运', t.wealth);
+    if(t.health) fillAnalysisSection('Health', t.health);
+    if(t.health) fillAnalysisSection('健康', t.health);
+    if(t.relationship) fillAnalysisSection('Relationship', t.relationship);
+    if(t.relationship) fillAnalysisSection('感情', t.relationship);
+    if(t.relationship) fillAnalysisSection('Marriage', t.relationship);
+  } catch(e){
+    console.error('Translation failed:', e);
+  }
+
+  // Remove indicator
+  var ind = document.getElementById('translateIndicator');
+  if(ind) ind.remove();
 }
 
 function fillAnalysisSection(keyword, text){
