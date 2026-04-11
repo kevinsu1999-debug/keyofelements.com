@@ -139,18 +139,51 @@ function fillReport(data, dateStr, shichen, gender){
   var dayWx = GAN_WX[dayStem];
   var dayWxClass = WX_CLASS[dayWx];
 
-  /* 日期格式化 */
+  /* 日期格式化 — 使用后端返回的真太阳时 */
   var dp = dateStr.split('-');
   var dateDisplay = dp[0]+'年'+parseInt(dp[1])+'月'+parseInt(dp[2])+'日 '+shichen+'时';
+  var tstDisplay = '';
+  var correctionNote = '';
+
+  if(chart.true_solar_time){
+    var tst = new Date(chart.true_solar_time);
+    if(!isNaN(tst.getTime())){
+      var tstH = tst.getUTCHours !== undefined ? tst.getHours() : tst.getHours();
+      var tstM = tst.getMinutes();
+      // 找到真太阳时对应的时辰
+      var shichenMap = [
+        [23,'子'],[1,'丑'],[3,'寅'],[5,'卯'],[7,'辰'],[9,'巳'],
+        [11,'午'],[13,'未'],[15,'申'],[17,'酉'],[19,'戌'],[21,'亥']
+      ];
+      var tstShichen = '子';
+      for(var si=shichenMap.length-1;si>=0;si--){
+        if(tstH >= shichenMap[si][0]){ tstShichen = shichenMap[si][1]; break; }
+      }
+      var isZhPage = document.documentElement.lang === 'zh';
+      tstDisplay = (isZhPage ? '真太阳时：' : 'True Solar: ') +
+        String(tstH).padStart(2,'0') + ':' + String(tstM).padStart(2,'0') +
+        (isZhPage ? ' （' + tstShichen + '时）' : ' (' + tstShichen + ')');
+    }
+  }
+
+  if(chart.eot_minutes !== undefined && chart.longitude_correction_minutes !== undefined){
+    var isZhPage2 = document.documentElement.lang === 'zh';
+    var totalCorr = (chart.longitude_correction_minutes + chart.eot_minutes).toFixed(1);
+    correctionNote = isZhPage2
+      ? '经度校正 ' + chart.longitude_correction_minutes.toFixed(1) + '分 + 均时差 ' + chart.eot_minutes.toFixed(1) + '分 = 总校正 ' + totalCorr + '分'
+      : 'Lon correction ' + chart.longitude_correction_minutes.toFixed(1) + 'min + EoT ' + chart.eot_minutes.toFixed(1) + 'min = Total ' + totalCorr + 'min';
+  }
 
   /* ── 报告头部 ── */
   var hdr = document.querySelector('.rpt-info-card');
   if(hdr){
-    var genderText = gender==='F' ? '女命' : '男命';
+    var isZhHdr = document.documentElement.lang === 'zh';
+    var genderText = isZhHdr ? (gender==='F' ? '女命' : '男命') : (gender==='F' ? 'Female' : 'Male');
     hdr.innerHTML =
-      '<div class="rpt-f"><div class="rpt-f-l">性　别</div><div class="rpt-f-v"><b>'+genderText+'</b></div></div>'+
-      '<div class="rpt-f"><div class="rpt-f-l">出生日期</div><div class="rpt-f-v">'+dateDisplay+'<span class="rpt-f-note">真太阳时校正</span></div></div>'+
-      '<div class="rpt-f"><div class="rpt-f-l">日　主</div><div class="rpt-f-v"><b class="e-'+dayWxClass+'">'+dayStem+dayWx+'</b></div></div>';
+      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'性　别':'Gender')+'</div><div class="rpt-f-v"><b>'+genderText+'</b></div></div>'+
+      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'出生日期':'Birth Date')+'</div><div class="rpt-f-v">'+dateDisplay+'</div></div>'+
+      (tstDisplay ? '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'真太阳时':'True Solar Time')+'</div><div class="rpt-f-v"><b>'+tstDisplay+'</b>'+(correctionNote ? '<span class="rpt-f-note">'+correctionNote+'</span>' : '')+'</div></div>' : '')+
+      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'日　主':'Day Master')+'</div><div class="rpt-f-v"><b class="e-'+dayWxClass+'">'+dayStem+dayWx+'</b></div></div>';
   }
 
   /* ── 01 四柱 ── */
