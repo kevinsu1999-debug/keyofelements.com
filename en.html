@@ -1614,9 +1614,16 @@ body{font-size:15px;line-height:1.75}
    <div style="font-size:11px;letter-spacing:.35em;color:var(--t4);margin-bottom:16px">P R E M I U M</div>
    <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,3vw,28px);font-weight:300;letter-spacing:.06em;color:var(--t1);margin-bottom:8px">Unlock Your Complete Destiny Blueprint</div>
    <div style="font-size:12px;color:var(--t3);max-width:320px;margin:0 auto 28px">Annual Forecast · Monthly Outlook · Key Alerts · Core Guidance</div>
-   <button class="pw-btn" onclick="openLogin('register')">Unlock Now →</button>
-   <button class="pw-btn secondary" onclick="openLogin('login')">Sign In</button>
-   <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line)">
+
+   <!-- Stripe Pricing Table -->
+   <div id="stripePricingWrap" style="max-width:480px;margin:0 auto 24px">
+     <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
+     <stripe-pricing-table pricing-table-id="prctbl_1TL0nU5tISGwngzcss0E2RA1"
+       publishable-key="pk_live_51TL0bI5tISGwngzcgh9EWYF7cFlJdUatfbAvCDQ4HnuLVBJgaSKYdERtxFLuve0fjLcewdgBlQdO3CM7YKcEL3ME00qsZ1iDd3">
+     </stripe-pricing-table>
+   </div>
+
+   <div style="margin-top:16px;padding-top:20px;border-top:1px solid var(--line)">
      <div style="font-size:10px;letter-spacing:.12em;color:var(--t4);margin-bottom:10px">Have an invite code?</div>
      <div style="display:flex;gap:8px;max-width:300px;margin:0 auto">
        <input type="text" id="bypassCode" placeholder="Enter code" style="flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--t1);text-align:center;letter-spacing:.1em">
@@ -2695,122 +2702,10 @@ function pickSize(el){
   </div>
 </div>
 
-<script>
-var kesUser = JSON.parse(localStorage.getItem('kes_user') || 'null');
-var authMode = 'login';
-
-function openLogin(mode){
-  authMode = mode || 'login';
-  updateAuthUI();
-  document.getElementById('loginOverlay').classList.add('open');
-}
-function closeLogin(){
-  document.getElementById('loginOverlay').classList.remove('open');
-}
-function toggleAuthMode(){
-  authMode = authMode === 'login' ? 'register' : 'login';
-  updateAuthUI();
-}
-function updateAuthUI(){
-  var isReg = authMode === 'register';
-  document.getElementById('loginTitle').textContent = isReg ? 'Sign Up' : 'Sign In';
-  document.getElementById('loginSub').textContent = isReg ? 'Create an account to unlock your complete reading' : 'Sign in to unlock your complete reading';
-  document.getElementById('loginBtn').textContent = isReg ? 'Sign Up' : 'Sign In';
-  document.getElementById('loginNameField').style.display = isReg ? 'block' : 'none';
-  document.getElementById('loginToggle').textContent = isReg ? 'Already have an account? Sign in' : "Don't have an account? Sign up";
-  document.getElementById('forgotLink').style.display = isReg ? 'none' : 'block';
-  hideForgotPassword();
-}
-function showForgotPassword(){
-  document.getElementById('forgotPanel').style.display = 'block';
-  document.getElementById('loginBtn').style.display = 'none';
-  document.getElementById('forgotLink').style.display = 'none';
-  document.getElementById('loginToggle').style.display = 'none';
-  document.querySelector('.lb-divider').style.display = 'none';
-  document.getElementById('loginTitle').textContent = 'Reset Password';
-  document.getElementById('loginSub').textContent = 'Enter your email to receive a reset link';
-  document.getElementById('loginPass').parentElement.style.display = 'none';
-}
-function hideForgotPassword(){
-  document.getElementById('forgotPanel').style.display = 'none';
-  document.getElementById('loginBtn').style.display = 'block';
-  document.getElementById('forgotLink').style.display = 'block';
-  document.getElementById('loginToggle').style.display = 'block';
-  document.querySelector('.lb-divider').style.display = 'block';
-  document.getElementById('loginPass').parentElement.style.display = 'block';
-  document.getElementById('loginTitle').textContent = 'Sign In';
-  document.getElementById('loginSub').textContent = 'Sign in to unlock your complete reading';
-}
-function handleResetPassword(){
-  var email = document.getElementById('resetEmail').value;
-  if(!email){ alert('Please enter your email'); return; }
-  alert('Reset link sent to ' + email + '\nPlease check your inbox (and spam folder).');
-  hideForgotPassword();
-}
-function handleAuth(){
-  var email = document.getElementById('loginEmail').value;
-  var pass = document.getElementById('loginPass').value;
-  if(!email || !pass){ alert('Please fill in email and password'); return; }
-  kesUser = { email: email, name: document.getElementById('loginName').value || email.split('@')[0], paid: false };
-  localStorage.setItem('kes_user', JSON.stringify(kesUser));
-  closeLogin();
-  updateUserUI();
-  if(!kesUser.paid){
-    if(confirm('Login successful! Unlock the full report now?\n\nThe full version includes annual forecast, monthly outlook, alerts, and core guidance.')){
-      handlePayment();
-    }
-  }
-}
-function handlePayment(){
-  kesUser.paid = true;
-  localStorage.setItem('kes_user', JSON.stringify(kesUser));
-  unlockReport();
-  alert('Payment successful! Full report unlocked.');
-}
-function unlockReport(){
-  var gate = document.getElementById('paywallGate');
-  var cta = document.getElementById('paywallCta');
-  if(gate) gate.classList.remove('locked');
-  if(cta) cta.style.display = 'none';
-}
-
-var VALID_CODES = ['KESVIP'];
-function checkBypassCode(){
-  var input = document.getElementById('bypassCode');
-  var err = document.getElementById('codeError');
-  var code = input.value.trim().toUpperCase();
-  if(VALID_CODES.indexOf(code) >= 0){
-    unlockReport();
-  } else {
-    err.style.display = 'block';
-    input.style.borderColor = 'var(--huo)';
-    setTimeout(function(){ err.style.display='none'; input.style.borderColor='var(--line)'; }, 3000);
-  }
-}
-
-function lockReport(){
-  var gate = document.getElementById('paywallGate');
-  var cta = document.getElementById('paywallCta');
-  if(gate) gate.classList.add('locked');
-  if(cta) cta.style.display = '';
-  var input = document.getElementById('bypassCode');
-  if(input) input.value = '';
-}
-function updateUserUI(){
-  var acctLink = document.getElementById('n-acct');
-  if(kesUser && acctLink){
-    acctLink.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 13c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> ' + (kesUser.name || 'Account');
-  }
-  if(kesUser && kesUser.paid) unlockReport();
-}
-function dismissDisclaimer(){
-  document.getElementById('disclaimerBanner').classList.add('hidden');
-  sessionStorage.setItem('kes_disc','1');
-}
-if(sessionStorage.getItem('kes_disc')==='1'){
-  document.getElementById('disclaimerBanner').classList.add('hidden');
-}
-updateUserUI();
-</script>
+<script src="kes-shop.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="kes-config.js"></script>
+<script src="kes-auth.js"></script>
 </body>
 </html>
