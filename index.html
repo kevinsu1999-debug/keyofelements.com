@@ -1117,8 +1117,8 @@ body{font-size:15px;line-height:1.75}
 
 .paywall-cta{
   position:relative;z-index:20;
-  text-align:center;padding:48px 32px;margin:-80px auto 0;
-  max-width:520px;
+  text-align:center;padding:48px 32px;
+  max-width:520px;margin:0 auto;
 }
 .paywall-cta .pw-icon{font-size:32px;margin-bottom:12px;opacity:.4}
 .paywall-cta .pw-title{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:8px;letter-spacing:.04em}
@@ -1622,6 +1622,23 @@ body{font-size:15px;line-height:1.75}
     </div>
   <div class="r-hr"></div></div>
 
+  <!-- Paywall CTA (at top, before locked content) -->
+  <div class="paywall-cta" id="paywallCta">
+    <div style="font-size:11px;letter-spacing:.35em;color:var(--t4);margin-bottom:16px">P R E M I U M</div>
+    <div class="pw-title" style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,3vw,28px);font-weight:300;letter-spacing:.06em">解锁你的完整命运蓝图</div>
+    <div class="pw-sub" style="font-size:12px;color:var(--t3);max-width:320px;margin:0 auto 28px">流年走势 · 逐月运势 · 重点预警 · 核心建议</div>
+    <button class="pw-btn" onclick="openLogin('register')">立即解锁 →</button>
+    <button class="pw-btn secondary" onclick="openLogin('login')">已有账户</button>
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line)">
+      <div style="font-size:10px;letter-spacing:.12em;color:var(--t4);margin-bottom:10px">持有邀请码？</div>
+      <div style="display:flex;gap:8px;max-width:300px;margin:0 auto">
+        <input type="text" id="bypassCode" placeholder="输入邀请码" style="flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--t1);text-align:center;letter-spacing:.1em">
+        <button onclick="checkBypassCode()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--t1);color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;cursor:pointer;font-family:inherit;white-space:nowrap">验证</button>
+      </div>
+      <div id="codeError" style="font-size:11px;color:var(--huo);margin-top:8px;display:none">邀请码无效，请重试</div>
+    </div>
+  </div>
+
   <!-- ═══ PAYWALL GATE: 2026+ Premium content ═══ -->
   <div class="paywall-gate locked" id="paywallGate">
 
@@ -1724,23 +1741,6 @@ body{font-size:15px;line-height:1.75}
   </div>
 
   </div><!-- end paywall-gate -->
-
-  <!-- Paywall CTA (shown when locked) -->
-  <div class="paywall-cta" id="paywallCta">
-    <div style="font-size:11px;letter-spacing:.35em;color:var(--t4);margin-bottom:16px">P R E M I U M</div>
-    <div class="pw-title" style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,3vw,28px);font-weight:300;letter-spacing:.06em">解锁你的完整命运蓝图</div>
-    <div class="pw-sub" style="font-size:12px;color:var(--t3);max-width:320px;margin:0 auto 28px">流年走势 · 逐月运势 · 重点预警 · 核心建议</div>
-    <button class="pw-btn" onclick="openLogin('register')">立即解锁 →</button>
-    <button class="pw-btn secondary" onclick="openLogin('login')">已有账户</button>
-    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line)">
-      <div style="font-size:10px;letter-spacing:.12em;color:var(--t4);margin-bottom:10px">持有邀请码？</div>
-      <div style="display:flex;gap:8px;max-width:300px;margin:0 auto">
-        <input type="text" id="bypassCode" placeholder="输入邀请码" style="flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--t1);text-align:center;letter-spacing:.1em">
-        <button onclick="checkBypassCode()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--t1);color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;cursor:pointer;font-family:inherit;white-space:nowrap">验证</button>
-      </div>
-      <div id="codeError" style="font-size:11px;color:var(--huo);margin-top:8px;display:none">邀请码无效，请重试</div>
-    </div>
-  </div>
 
   <div class="r-disclaimer">
     <b>⚠ 免责声明 / Disclaimer</b><br>
@@ -2817,13 +2817,21 @@ function checkBypassCode(){
   var err = document.getElementById('codeError');
   var code = input.value.trim().toUpperCase();
   if(VALID_CODES.indexOf(code) >= 0){
-    localStorage.setItem('kes_bypass', code);
     unlockReport();
   } else {
     err.style.display = 'block';
     input.style.borderColor = 'var(--huo)';
     setTimeout(function(){ err.style.display='none'; input.style.borderColor='var(--line)'; }, 3000);
   }
+}
+
+function lockReport(){
+  var gate = document.getElementById('paywallGate');
+  var cta = document.getElementById('paywallCta');
+  if(gate) gate.classList.add('locked');
+  if(cta) cta.style.display = '';
+  var input = document.getElementById('bypassCode');
+  if(input) input.value = '';
 }
 
 function updateUserUI(){
@@ -2844,7 +2852,6 @@ if(sessionStorage.getItem('kes_disc')==='1'){
 }
 
 /* Init */
-if(localStorage.getItem('kes_bypass')) unlockReport();
 updateUserUI();
 </script>
 </body>

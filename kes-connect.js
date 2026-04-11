@@ -105,6 +105,7 @@ function kesSubmit(){
     return res.json();
   })
   .then(function(data){
+    if(typeof lockReport==='function') lockReport();
     fillReport(data, dateVal, shichen, gender);
     goPage('report');
     btn.textContent = origText;
