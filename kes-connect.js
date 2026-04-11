@@ -241,49 +241,61 @@ function fillReport(data, dateStr, shichen, gender){
   if(verdict) verdict.textContent = strength;
 
   /* ── 04 喜用忌神 ── */
-  /* 从 analysis 中提取 */
-  if(analysis && analysis.use_god_summary){
-    var ugSummary = analysis.use_god_summary;
-    /* 尝试解析用神和忌神 */
-    var useMatch = ugSummary.match(/用神[：:]([^\n忌]+)/);
-    var avoidMatch = ugSummary.match(/忌神[：:]([^\n]*)/);
-    if(useMatch || avoidMatch){
-      var yjGrid = document.querySelector('.r-yj-grid');
-      if(yjGrid){
-        var yjHtml = '<div class="r-yj-card"><div class="r-yj-label">用　神</div><div class="r-yj-chars">';
-        if(useMatch){
-          var useGods = useMatch[1].replace(/[、，\s]/g,',').split(',').filter(function(x){return x.trim()});
-          for(var u=0;u<useGods.length;u++){
-            var ug = useGods[u].trim();
-            var ugCls = WX_CLASS[ug] || 'jin';
-            yjHtml += '<span class="r-yj-char '+ugCls+'">'+ug+'</span>';
-          }
-        }
-        yjHtml += '</div></div>';
+  var yjGrid = document.querySelector('.r-yj-grid');
+  if(yjGrid){
+    var wxNames = ['木','火','土','金','水'];
+    var useElems = [], avoidElems = [];
 
-        yjHtml += '<div class="r-yj-card"><div class="r-yj-label">忌　神</div><div class="r-yj-chars">';
-        if(avoidMatch){
-          var avoidGods = avoidMatch[1].replace(/[、，\s]/g,',').split(',').filter(function(x){return x.trim()});
-          for(var a=0;a<avoidGods.length;a++){
-            var ag = avoidGods[a].trim();
-            var agCls = WX_CLASS[ag] || 'huo';
-            yjHtml += '<span class="r-yj-char '+agCls+'">'+ag+'</span>';
-          }
-        }
-        yjHtml += '</div></div>';
-
-        if(chart.tiaohuo_gods && chart.tiaohuo_gods.length){
-          yjHtml += '<div class="r-yj-card"><div class="r-yj-label">调候用神</div><div class="r-yj-chars">';
-          for(var t=0;t<chart.tiaohuo_gods.length;t++){
-            var tg = chart.tiaohuo_gods[t];
-            var tgWx = GAN_WX[tg] || '水';
-            yjHtml += '<span class="r-yj-char '+WX_CLASS[tgWx]+'">'+tg+'</span>';
-          }
-          yjHtml += '</div></div>';
-        }
-        yjGrid.innerHTML = yjHtml;
+    /* 优先从 raw.pattern.use_gods 提取 */
+    if(analysis && analysis.raw && analysis.raw.pattern && analysis.raw.pattern.use_gods){
+      var ug = analysis.raw.pattern.use_gods;
+      var ugStr = ug['用神'] || ug['喜神'] || '';
+      var avStr = ug['忌神'] || '';
+      for(var w=0;w<wxNames.length;w++){
+        if(ugStr.indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
+        if(avStr.indexOf(wxNames[w]) >= 0) avoidElems.push(wxNames[w]);
       }
     }
+
+    /* 备用：从 use_god_summary 文本提取纯五行字 */
+    if(useElems.length === 0 && analysis && analysis.use_god_summary){
+      var sumText = analysis.use_god_summary;
+      var useMatch = sumText.match(/用神[：:]\s*([^\n忌]+)/);
+      var avoidMatch = sumText.match(/忌神[：:]\s*([^\n]*)/);
+      if(useMatch){
+        for(var w=0;w<wxNames.length;w++){
+          if(useMatch[1].indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
+        }
+      }
+      if(avoidMatch){
+        for(var w=0;w<wxNames.length;w++){
+          if(avoidMatch[1].indexOf(wxNames[w]) >= 0) avoidElems.push(wxNames[w]);
+        }
+      }
+    }
+
+    var yjHtml = '<div class="r-yj-card"><div class="r-yj-label">用　神</div><div class="r-yj-chars">';
+    for(var u=0;u<useElems.length;u++){
+      yjHtml += '<span class="r-yj-char '+WX_CLASS[useElems[u]]+'">'+useElems[u]+'</span>';
+    }
+    yjHtml += '</div></div>';
+
+    yjHtml += '<div class="r-yj-card"><div class="r-yj-label">忌　神</div><div class="r-yj-chars">';
+    for(var a=0;a<avoidElems.length;a++){
+      yjHtml += '<span class="r-yj-char '+WX_CLASS[avoidElems[a]]+'">'+avoidElems[a]+'</span>';
+    }
+    yjHtml += '</div></div>';
+
+    if(chart.tiaohuo_gods && chart.tiaohuo_gods.length){
+      yjHtml += '<div class="r-yj-card"><div class="r-yj-label">调候用神</div><div class="r-yj-chars">';
+      for(var t=0;t<chart.tiaohuo_gods.length;t++){
+        var tg = chart.tiaohuo_gods[t];
+        var tgWx = GAN_WX[tg] || '水';
+        yjHtml += '<span class="r-yj-char '+WX_CLASS[tgWx]+'">'+tg+'</span>';
+      }
+      yjHtml += '</div></div>';
+    }
+    yjGrid.innerHTML = yjHtml;
   }
 
   /* ── 05 性格 ── */
