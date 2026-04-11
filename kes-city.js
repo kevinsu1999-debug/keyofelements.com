@@ -1,47 +1,62 @@
-/*  kes-city.js  —  Google Places Autocomplete 城市搜索
- *  支持全球所有城市，中英文模糊匹配
+/*  kes-city.js  —  全球城市搜索
+ *  调用 /api/city-search（服务端 Google Places）
+ *  API key 不暴露在前端
  */
 
-var _placesAutocomplete = null;
+var _cityTimer = null;
 
-function initCitySearch(){
+document.addEventListener('DOMContentLoaded', function(){
   var input = document.getElementById('cityInput');
-  if(!input || !window.google || !google.maps || !google.maps.places) return;
+  var drop = document.getElementById('cityDrop');
+  if(!input || !drop) return;
 
+  // 移除旧的 oninput
   input.removeAttribute('oninput');
 
-  _placesAutocomplete = new google.maps.places.Autocomplete(input, {
-    types: ['(cities)'],
-    fields: ['geometry', 'name', 'formatted_address', 'utc_offset_minutes']
+  input.addEventListener('input', function(){
+    var val = this.value.trim();
+    if(val.length < 2){ drop.classList.remove('show'); return; }
+
+    clearTimeout(_cityTimer);
+    _cityTimer = setTimeout(function(){ searchCity(val, drop); }, 400);
   });
 
-  var drop = document.getElementById('cityDrop');
-  if(drop) drop.style.display = 'none';
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.f-field')) drop.classList.remove('show');
+  });
+});
 
-  _placesAutocomplete.addListener('place_changed', function(){
-    var place = _placesAutocomplete.getPlace();
-    if(!place || !place.geometry) return;
+async function searchCity(query, drop){
+  try {
+    var res = await fetch('/api/city-search?q=' + encodeURIComponent(query));
+    var data = await res.json();
 
-    var lat = place.geometry.location.lat();
-    var lon = place.geometry.location.lng();
-    var name = input.value;
-
-    input.dataset.lon = lon;
-    input.dataset.lat = lat;
-    CITY_COORDS[name] = [lon, lat];
-
-    if(place.utc_offset_minutes !== undefined){
-      CITY_TZ[name] = place.utc_offset_minutes / 60;
-    } else {
-      CITY_TZ[name] = Math.round(lon / 15);
+    if(!data.results || !data.results.length){
+      drop.classList.remove('show');
+      return;
     }
-  });
 
-  var style = document.createElement('style');
-  style.textContent = '.pac-container{font-family:"Inter",sans-serif;border:1px solid #dedad4;border-radius:10px;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,.08)}.pac-item{padding:8px 14px;font-size:13px;color:#52504c;border-top:1px solid #edeae5;cursor:pointer}.pac-item:first-child{border-top:none}.pac-item:hover{background:#f4f2ee}.pac-item-query{font-weight:600;color:#1a1814}.pac-icon{display:none}';
-  document.head.appendChild(style);
+    drop.innerHTML = data.results.map(function(r){
+      if(!r.lat) return '';
+      return '<div class="city-option" onclick="pickCity(\'' +
+        r.name.replace(/'/g, "\\'") + '\',' + r.lon + ',' + r.lat + ',' + (r.utc_offset||'null') + ')">' +
+        r.name + '</div>';
+    }).join('');
+
+    drop.classList.add('show');
+  } catch(e){
+    console.error('City search failed:', e);
+  }
 }
 
-function onGoogleMapsReady(){
-  initCitySearch();
+function pickCity(name, lon, lat, tz){
+  var input = document.getElementById('cityInput');
+  input.value = name;
+  input.dataset.lon = lon;
+  input.dataset.lat = lat;
+  document.getElementById('cityDrop').classList.remove('show');
+
+  // 保存供 kesSubmit 使用
+  CITY_COORDS[name] = [lon, lat];
+  CITY_TZ[name] = tz !== null ? tz : Math.round(lon / 15);
 }
