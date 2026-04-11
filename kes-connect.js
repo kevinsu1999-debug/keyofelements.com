@@ -47,14 +47,16 @@ var ZHI_WX = {'子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':
 /* ── 表单提交 ─────────────────────────────── */
 
 function kesSubmit(){
+  var isZh = document.documentElement.lang === 'zh';
   var dateVal = document.querySelector('.form-wrap input[type="date"]').value;
   var timeSelect = document.querySelector('.form-wrap select');
   var cityVal = document.getElementById('cityInput').value;
   var genderF = document.getElementById('gF').classList.contains('on');
   var gender = genderF ? 'F' : 'M';
 
-  if(!dateVal){ alert('请选择出生日期'); return; }
-  if(!cityVal){ alert('请输入出生城市'); return; }
+  if(!dateVal){ alert(isZh ? '请选择出生日期' : 'Please select your birth date'); return; }
+  if(!timeSelect || !timeSelect.value){ alert(isZh ? '请选择出生时辰' : 'Please select your birth hour'); return; }
+  if(!cityVal || cityVal.trim().length < 2){ alert(isZh ? '请输入出生城市' : 'Please enter your birth city'); return; }
 
   var parts = dateVal.split('-');
   var year = parseInt(parts[0]);
@@ -247,18 +249,18 @@ function fillReport(data, dateStr, shichen, gender){
     var wxNames = ['木','火','土','金','水'];
     var useElems = [], avoidElems = [];
 
-    /* 优先从 raw.pattern.use_gods 提取 */
+    /* 方法1: 从 raw.pattern.use_gods 提取 */
     if(analysis && analysis.raw && analysis.raw.pattern && analysis.raw.pattern.use_gods){
       var ug = analysis.raw.pattern.use_gods;
-      var ugStr = ug['用神'] || ug['喜神'] || '';
-      var avStr = ug['忌神'] || '';
+      var ugStr = ug['用神'] || ug['喜神'] || ug['use_god'] || '';
+      var avStr = ug['忌神'] || ug['avoid_god'] || '';
       for(var w=0;w<wxNames.length;w++){
         if(ugStr.indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
         if(avStr.indexOf(wxNames[w]) >= 0) avoidElems.push(wxNames[w]);
       }
     }
 
-    /* 备用：从 use_god_summary 文本提取纯五行字 */
+    /* 方法2: 从 use_god_summary 文本提取 */
     if(useElems.length === 0 && analysis && analysis.use_god_summary){
       var sumText = analysis.use_god_summary;
       var useMatch = sumText.match(/用神[：:]\s*([^\n忌]+)/);
@@ -274,6 +276,47 @@ function fillReport(data, dateStr, shichen, gender){
         }
       }
     }
+
+    /* 方法3: 从 chart.use_god 提取 */
+    if(useElems.length === 0 && chart.use_god){
+      var ugObj = chart.use_god;
+      var ugList = ugObj['喜'] || ugObj['use'] || ugObj['favorable'] || [];
+      var avList = ugObj['忌'] || ugObj['avoid'] || ugObj['unfavorable'] || [];
+      if(typeof ugList === 'string') ugList = ugList.split(/[,，、\s]+/);
+      if(typeof avList === 'string') avList = avList.split(/[,，、\s]+/);
+      for(var w=0;w<wxNames.length;w++){
+        for(var u=0;u<ugList.length;u++){
+          if(ugList[u].indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
+        }
+        for(var a=0;a<avList.length;a++){
+          if(avList[a].indexOf(wxNames[w]) >= 0) avoidElems.push(wxNames[w]);
+        }
+      }
+    }
+
+    /* 方法4: 根据身强弱自动推导 */
+    if(useElems.length === 0){
+      var dm = chart.day_master_strength || '';
+      var dayWxElem = dayWx;
+      var wxCycle = {木:'火',火:'土',土:'金',金:'水',水:'木'};
+      var wxCtrl = {木:'土',火:'金',土:'水',金:'木',水:'火'};
+      var genBy = {};
+      for(var k in wxCycle) genBy[wxCycle[k]] = k; // 什么生我
+
+      if(dm.indexOf('强') >= 0 || dm === '身强'){
+        // 身强：泄耗克为喜
+        useElems = [wxCycle[dayWxElem], wxCtrl[dayWxElem]];
+        avoidElems = [genBy[dayWxElem], dayWxElem];
+      } else if(dm.indexOf('弱') >= 0 || dm === '身弱'){
+        // 身弱：生扶为喜
+        useElems = [genBy[dayWxElem], dayWxElem];
+        avoidElems = [wxCycle[dayWxElem], wxCtrl[dayWxElem]];
+      }
+    }
+
+    // 去重
+    useElems = useElems.filter(function(v,i,a){return a.indexOf(v)===i});
+    avoidElems = avoidElems.filter(function(v,i,a){return a.indexOf(v)===i});
 
     var yjHtml = '<div class="r-yj-card"><div class="r-yj-label">用　神</div><div class="r-yj-chars">';
     for(var u=0;u<useElems.length;u++){
