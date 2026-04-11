@@ -137,12 +137,7 @@ function fillReport(data, dateStr, shichen, gender){
 
   // Debug: 查看 API 返回的完整数据结构
   console.log('=== API Response ===');
-  console.log('chart keys:', Object.keys(chart));
-  console.log('true_solar_time:', chart.true_solar_time);
-  console.log('eot_minutes:', chart.eot_minutes);
-  console.log('longitude_correction:', chart.longitude_correction_minutes);
-  console.log('data keys:', Object.keys(data));
-  if(data.true_solar_time) console.log('data.true_solar_time:', data.true_solar_time);
+  console.log('time:', JSON.stringify(data.time));
 
   var dayStem = pillars.day.stem;
   var dayWx = GAN_WX[dayStem];
@@ -150,17 +145,31 @@ function fillReport(data, dateStr, shichen, gender){
 
   /* 日期格式化 — 使用后端返回的真太阳时 */
   var dp = dateStr.split('-');
+  var isZhPage = document.documentElement.lang === 'zh';
   var dateDisplay = dp[0]+'年'+parseInt(dp[1])+'月'+parseInt(dp[2])+'日 '+shichen+'时';
   var tstDisplay = '';
   var correctionNote = '';
 
-  if(chart.true_solar_time || data.true_solar_time){
-    var tstRaw = chart.true_solar_time || data.true_solar_time;
-    var tst = new Date(tstRaw);
-    console.log('TST parsed:', tst, 'from raw:', tstRaw);
+  var timeData = data.time || {};
+  if(timeData.true_solar_time){
+    var tst = new Date(timeData.true_solar_time);
+    console.log('TST parsed:', tst);
     if(!isNaN(tst.getTime())){
-      var tstH = tst.getUTCHours !== undefined ? tst.getHours() : tst.getHours();
-      var tstM = tst.getMinutes();
+      var tstH = tst.getUTCHours();
+      var tstM = tst.getUTCMinutes();
+      // 真太阳时已经是当地太阳时，直接用 UTC 部分（因为它不带标准时区概念）
+      // 但API返回的可能是UTC格式，需要取本地时间
+      // 如果带时区标记，用getHours；如果是UTC格式，需要加时区
+      var tstStr = timeData.true_solar_time;
+      if(tstStr.indexOf('+00:00') >= 0 || tstStr.endsWith('Z')){
+        // 这是UTC格式的真太阳时，实际就是当地太阳时（因为后端已经加了经度校正）
+        tstH = tst.getUTCHours();
+        tstM = tst.getUTCMinutes();
+      } else {
+        tstH = tst.getHours();
+        tstM = tst.getMinutes();
+      }
+
       // 找到真太阳时对应的时辰
       var shichenMap = [
         [23,'子'],[1,'丑'],[3,'寅'],[5,'卯'],[7,'辰'],[9,'巳'],
@@ -170,22 +179,23 @@ function fillReport(data, dateStr, shichen, gender){
       for(var si=shichenMap.length-1;si>=0;si--){
         if(tstH >= shichenMap[si][0]){ tstShichen = shichenMap[si][1]; break; }
       }
-      var isZhPage = document.documentElement.lang === 'zh';
-      tstDisplay = (isZhPage ? '真太阳时：' : 'True Solar: ') +
-        String(tstH).padStart(2,'0') + ':' + String(tstM).padStart(2,'0') +
-        (isZhPage ? ' （' + tstShichen + '时）' : ' (' + tstShichen + ')');
+      tstDisplay = String(tstH).padStart(2,'0') + ':' + String(tstM).padStart(2,'0') +
+        (isZhPage ? '（' + tstShichen + '时）' : ' (' + tstShichen + ')');
     }
   }
 
-  var eotMin = chart.eot_minutes !== undefined ? chart.eot_minutes : (data.eot_minutes !== undefined ? data.eot_minutes : null);
-  var lonCorr = chart.longitude_correction_minutes !== undefined ? chart.longitude_correction_minutes : (data.longitude_correction_minutes !== undefined ? data.longitude_correction_minutes : null);
-
-  if(eotMin !== null && lonCorr !== null){
-    var isZhPage2 = document.documentElement.lang === 'zh';
-    var totalCorr = (lonCorr + eotMin).toFixed(1);
-    correctionNote = isZhPage2
-      ? '经度校正 ' + lonCorr.toFixed(1) + '分 + 均时差 ' + eotMin.toFixed(1) + '分 = 总校正 ' + totalCorr + '分'
-      : 'Lon correction ' + lonCorr.toFixed(1) + 'min + EoT ' + eotMin.toFixed(1) + 'min = Total ' + totalCorr + 'min';
+  if(timeData.eot_minutes !== undefined && timeData.longitude_correction !== undefined){
+    // longitude_correction 是从格林威治算的总校正（lon*4分钟）
+    // 对用户有意义的是相对于当地标准时间的校正
+    var rawLonCorr = timeData.longitude_correction; // lon * 4
+    var eot = timeData.eot_minutes;
+    // 本地经度校正 = (经度 - 时区标准经线) * 4 = rawLonCorr - timezone*60
+    var tz = CITY_TZ[document.getElementById('cityInput').value] || 8;
+    var localLonCorr = rawLonCorr - tz * 60;
+    var totalCorr = (localLonCorr + eot).toFixed(1);
+    correctionNote = isZhPage
+      ? '经度校正 ' + localLonCorr.toFixed(1) + '分 + 均时差 ' + eot.toFixed(1) + '分 = 总校正 ' + totalCorr + '分'
+      : 'Lon ' + localLonCorr.toFixed(1) + 'min + EoT ' + eot.toFixed(1) + 'min = ' + totalCorr + 'min';
   }
 
   /* ── 报告头部 ── */
