@@ -32,7 +32,7 @@ var CITY_TZ = {
 
 /* 时辰 → 小时 (取中间值) */
 var SHICHEN_HOUR = {
-  '亥':22,'子':0,'丑':2,'阴':4,'卯':6,'辰':8,'巳':10,'午':12,'未':14,'申':16,'酉':18,'戌':20
+  '亥':22,'子':0,'丑':2,'寅':4,'卯':6,'辰':8,'巳':10,'午':12,'未':14,'申':16,'酉':18,'戌':20
 };
 
 /* 五行 → CSS class */
@@ -64,11 +64,12 @@ function kesSubmit(){
   var day = parseInt(parts[2]);
 
   /* 解析时辰 */
-  var shichen = timeSelect.value.charAt(0);
+  var shichen = timeSelect.value;
   var hour = SHICHEN_HOUR[shichen];
   if(hour === undefined) hour = 0;
 
   /* 查找城市坐标 */
+  var cityInput = document.getElementById('cityInput');
   var coords = CITY_COORDS[cityVal];
   if(!coords){
     /* 模糊匹配 */
@@ -78,14 +79,18 @@ function kesSubmit(){
       }
     }
   }
+  /* 从 data 属性获取（kes-city.js 设置） */
+  if(!coords && cityInput.dataset.lon && cityInput.dataset.lat){
+    coords = [parseFloat(cityInput.dataset.lon), parseFloat(cityInput.dataset.lat)];
+  }
   var lon = coords ? coords[0] : 116.4;
   var lat = coords ? coords[1] : 39.9;
-  var tz = CITY_TZ[cityVal] || 8;
+  var tz = CITY_TZ[cityVal] || Math.round(lon / 15);
 
   /* 显示加载状态 */
   var btn = document.querySelector('.f-btn');
   var origText = btn.textContent;
-  btn.textContent = '正在排盘计算中…';
+  btn.textContent = isZh ? '正在排盘计算中…' : 'Calculating...';
   btn.disabled = true;
   btn.style.opacity = '0.6';
 
@@ -94,7 +99,7 @@ function kesSubmit(){
     birth_hour: hour, birth_minute: 0,
     timezone_offset_hours: tz,
     longitude: lon, latitude: lat,
-    gender: gender, name: '', lang: 'zh-CN'
+    gender: gender, name: '', lang: isZh ? 'zh-CN' : 'en'
   };
 
   fetch(KES_API + '/api/calculate', {
