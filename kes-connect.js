@@ -135,6 +135,15 @@ function fillReport(data, dateStr, shichen, gender){
   var analysis = data.analysis;
   var dayun = data.dayun;
 
+  // Debug: 查看 API 返回的完整数据结构
+  console.log('=== API Response ===');
+  console.log('chart keys:', Object.keys(chart));
+  console.log('true_solar_time:', chart.true_solar_time);
+  console.log('eot_minutes:', chart.eot_minutes);
+  console.log('longitude_correction:', chart.longitude_correction_minutes);
+  console.log('data keys:', Object.keys(data));
+  if(data.true_solar_time) console.log('data.true_solar_time:', data.true_solar_time);
+
   var dayStem = pillars.day.stem;
   var dayWx = GAN_WX[dayStem];
   var dayWxClass = WX_CLASS[dayWx];
@@ -145,8 +154,10 @@ function fillReport(data, dateStr, shichen, gender){
   var tstDisplay = '';
   var correctionNote = '';
 
-  if(chart.true_solar_time){
-    var tst = new Date(chart.true_solar_time);
+  if(chart.true_solar_time || data.true_solar_time){
+    var tstRaw = chart.true_solar_time || data.true_solar_time;
+    var tst = new Date(tstRaw);
+    console.log('TST parsed:', tst, 'from raw:', tstRaw);
     if(!isNaN(tst.getTime())){
       var tstH = tst.getUTCHours !== undefined ? tst.getHours() : tst.getHours();
       var tstM = tst.getMinutes();
@@ -166,12 +177,15 @@ function fillReport(data, dateStr, shichen, gender){
     }
   }
 
-  if(chart.eot_minutes !== undefined && chart.longitude_correction_minutes !== undefined){
+  var eotMin = chart.eot_minutes !== undefined ? chart.eot_minutes : (data.eot_minutes !== undefined ? data.eot_minutes : null);
+  var lonCorr = chart.longitude_correction_minutes !== undefined ? chart.longitude_correction_minutes : (data.longitude_correction_minutes !== undefined ? data.longitude_correction_minutes : null);
+
+  if(eotMin !== null && lonCorr !== null){
     var isZhPage2 = document.documentElement.lang === 'zh';
-    var totalCorr = (chart.longitude_correction_minutes + chart.eot_minutes).toFixed(1);
+    var totalCorr = (lonCorr + eotMin).toFixed(1);
     correctionNote = isZhPage2
-      ? '经度校正 ' + chart.longitude_correction_minutes.toFixed(1) + '分 + 均时差 ' + chart.eot_minutes.toFixed(1) + '分 = 总校正 ' + totalCorr + '分'
-      : 'Lon correction ' + chart.longitude_correction_minutes.toFixed(1) + 'min + EoT ' + chart.eot_minutes.toFixed(1) + 'min = Total ' + totalCorr + 'min';
+      ? '经度校正 ' + lonCorr.toFixed(1) + '分 + 均时差 ' + eotMin.toFixed(1) + '分 = 总校正 ' + totalCorr + '分'
+      : 'Lon correction ' + lonCorr.toFixed(1) + 'min + EoT ' + eotMin.toFixed(1) + 'min = Total ' + totalCorr + 'min';
   }
 
   /* ── 报告头部 ── */
