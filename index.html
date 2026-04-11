@@ -1732,6 +1732,14 @@ body{font-size:15px;line-height:1.75}
     <div class="pw-sub" style="font-size:12px;color:var(--t3);max-width:320px;margin:0 auto 28px">流年走势 · 逐月运势 · 重点预警 · 核心建议</div>
     <button class="pw-btn" onclick="openLogin('register')">立即解锁 →</button>
     <button class="pw-btn secondary" onclick="openLogin('login')">已有账户</button>
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line)">
+      <div style="font-size:10px;letter-spacing:.12em;color:var(--t4);margin-bottom:10px">持有邀请码？</div>
+      <div style="display:flex;gap:8px;max-width:300px;margin:0 auto">
+        <input type="text" id="bypassCode" placeholder="输入邀请码" style="flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--t1);text-align:center;letter-spacing:.1em">
+        <button onclick="checkBypassCode()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--t1);color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;cursor:pointer;font-family:inherit;white-space:nowrap">验证</button>
+      </div>
+      <div id="codeError" style="font-size:11px;color:var(--huo);margin-top:8px;display:none">邀请码无效，请重试</div>
+    </div>
   </div>
 
   <div class="r-disclaimer">
@@ -2803,6 +2811,21 @@ function unlockReport(){
   if(cta) cta.style.display = 'none';
 }
 
+var VALID_CODES = ['KESVIP'];
+function checkBypassCode(){
+  var input = document.getElementById('bypassCode');
+  var err = document.getElementById('codeError');
+  var code = input.value.trim().toUpperCase();
+  if(VALID_CODES.indexOf(code) >= 0){
+    localStorage.setItem('kes_bypass', code);
+    unlockReport();
+  } else {
+    err.style.display = 'block';
+    input.style.borderColor = 'var(--huo)';
+    setTimeout(function(){ err.style.display='none'; input.style.borderColor='var(--line)'; }, 3000);
+  }
+}
+
 function updateUserUI(){
   var acctLink = document.getElementById('n-acct');
   if(kesUser && acctLink){
@@ -2821,6 +2844,7 @@ if(sessionStorage.getItem('kes_disc')==='1'){
 }
 
 /* Init */
+if(localStorage.getItem('kes_bypass')) unlockReport();
 updateUserUI();
 </script>
 </body>
