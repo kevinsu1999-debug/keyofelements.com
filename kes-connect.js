@@ -302,48 +302,76 @@ function fillReport(data,dateStr,shichen,gender,isZh){
     freeTable.innerHTML=fHead+fRows;
   }
 
-  /* 09 大运 */
+  /* 09 大运 — 每步都显示内容和吉凶 */
   if(dayun.periods&&dayun.periods.length){
-    var dsc=document.querySelector('.r-dy-scroll');
-    if(dsc){var dH='',cy=new Date().getFullYear(),by=parseInt(dateStr.split('-')[0]),cd=null;
-      for(var d=0;d<Math.min(dayun.periods.length,8);d++){
-        var dp=dayun.periods[d],sa=Math.round(dp.start_age);
-        var ea=d+1<dayun.periods.length?Math.round(dayun.periods[d+1].start_age):sa+10;
-        var sy=by+sa,ey=by+ea,ic=cy>=sy&&cy<ey;
-        if(ic)cd={s:dp.stem,b:dp.branch,sg:getTenGod(ds,dp.stem),bg:getTenGodBr(ds,dp.branch),sa:sa,ea:ea};
-        dH+='<div class="r-dy-item'+(ic?' cur':'')+'">'+
-          (ic?'<div class="r-dy-label">当前</div>':'')+
-          '<div class="r-dy-gz">'+dp.stem+dp.branch+'</div>'+
-          '<div class="r-dy-age">'+sa+'至'+ea+'岁</div></div>';
+    var sec09=findSection('09');
+    if(sec09){
+      var cy=new Date().getFullYear(),by=parseInt(dateStr.split('-')[0]);
+      var MKD={'辰':'水库','戌':'火库','丑':'金库','未':'木库'};
+      // 起运偏移
+      var dyOffset=Math.round((dayun.start_age_days||0)/365.25);
+
+      function rateDY(stem,branch){
+        var sE=STEM_ELEM[stem],bE=BRANCH_ELEM[branch],sc=3;
+        if(ug.use.indexOf(sE)>=0)sc+=1;if(ug.use.indexOf(bE)>=0)sc+=0.8;
+        if(ug.avoid.indexOf(sE)>=0)sc-=1;if(ug.avoid.indexOf(bE)>=0)sc-=0.8;
+        return Math.max(1,Math.min(5,Math.round(sc)));
       }
-      dsc.innerHTML=dH;
-      if(cd&&isZh){
-        // 替换整个大运摘要为横条布局
-        var dySummary=document.querySelector('.r-dy-summary');
-        if(dySummary){
-          var MK3={'辰':'辰为水库','戌':'戌为火库','丑':'丑为金库','未':'未为木库'};
-          var s1=cd.sg+'大运：'+(LN_DESC[cd.sg]||'');
-          var s2=cd.bg+'坐支：'+(LN_DESC[cd.bg]||'');
-          if(MK3[cd.b])s2+='。'+MK3[cd.b]+'，关注墓库开合';
-          dySummary.innerHTML=
-            '<div style="display:flex;gap:24px;align-items:flex-start;padding:20px 0">'+
-              '<div style="flex-shrink:0;text-align:center;min-width:80px">'+
-                '<div style="font-size:28px;font-weight:700;letter-spacing:2px" class="e-'+WX_CLASS[STEM_ELEM[cd.s]]+'">'+cd.s+cd.b+'</div>'+
-                '<div style="font-size:11px;color:var(--t3);margin-top:4px">'+cd.sa+'至'+cd.ea+'岁</div>'+
-                '<div style="font-size:11px;color:var(--t3)">当前大运</div>'+
+
+      var allHtml='', curIdx=-1;
+      for(var d=0;d<Math.min(dayun.periods.length,8);d++){
+        var dp=dayun.periods[d];
+        var sa=Math.round(dp.start_age)+dyOffset;
+        var ea=d+1<dayun.periods.length?Math.round(dayun.periods[d+1].start_age)+dyOffset:sa+10;
+        var sy=by+sa,ey=by+ea,ic=cy>=sy&&cy<ey;
+        if(ic) curIdx=d;
+        var dsg=getTenGod(ds,dp.stem),dbg=getTenGodBr(ds,dp.branch);
+        var dsc2=rateDY(dp.stem,dp.branch);
+        var dst='';for(var s=0;s<5;s++)dst+=s<dsc2?'\u2605':'\u2606';
+        var stColor=dsc2>=4?'--mu':dsc2>=3?'--tu':'--huo';
+        var desc=(isZh?'\u5929\u5E72':'Stem ')+dp.stem+'\uff08'+dsg+'\uff09\uff1a'+(isZh?(LN_DESC[dsg]||''):(dsg+' energy'))+'\n';
+        desc+=(isZh?'\u5730\u652F':'Branch ')+dp.branch+'\uff08'+dbg+'\uff09\uff1a'+(isZh?(LN_DESC[dbg]||''):(dbg+' energy'));
+        if(MKD[dp.branch]) desc+='\u3002'+dp.branch+(isZh?'\u4E3A'+MKD[dp.branch]+'\uff0c\u5173\u6CE8\u58A8\u5E93\u5F00\u5408':' is a storage branch');
+        var sWxC=WX_CLASS[STEM_ELEM[dp.stem]],bWxC=WX_CLASS[BRANCH_ELEM[dp.branch]];
+
+        // 付费墙：当前及之前免费，之后付费
+        var isPaid=(curIdx>=0 && d>curIdx);
+        var wrapStart=isPaid?'<div style="filter:blur(4px);pointer-events:none">':'';
+        var wrapEnd=isPaid?'</div>':'';
+
+        allHtml+=wrapStart+
+          '<div style="display:flex;gap:20px;align-items:flex-start;padding:18px 0;border-bottom:1px solid var(--line)'+(ic?';background:var(--bg2);margin:0 -16px;padding:18px 16px;border-radius:var(--r)':'')+'">' +
+            '<div style="flex-shrink:0;text-align:center;min-width:72px">' +
+              (ic?'<div style="font-size:9px;color:var(--mu);font-weight:700;letter-spacing:1.5px;margin-bottom:3px">'+(isZh?'\u5F53\u524D':'CURRENT')+'</div>':'')+
+              '<div style="font-size:24px;font-weight:700;letter-spacing:3px"><span class="e-'+sWxC+'">'+dp.stem+'</span><span class="e-'+bWxC+'">'+dp.branch+'</span></div>'+
+              '<div style="font-size:11px;color:var(--t3);margin-top:3px">'+sa+(isZh?'\u81F3':'—')+ea+(isZh?'\u5C81':'')+'</div>'+
+              '<div style="font-size:11px;color:var(--t4)">'+sy+'—'+ey+'</div>'+
+            '</div>'+
+            '<div style="flex:1;min-width:0">'+
+              '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+                '<span style="font-size:12px;letter-spacing:1px;color:var('+stColor+')">'+dst+'</span>'+
+                '<span style="font-size:12px;color:var(--t3);font-weight:500">'+dsg+' / '+dbg+'</span>'+
               '</div>'+
-              '<div style="flex:1;line-height:1.9;font-size:13px;color:var(--t2)">'+
-                '<p style="margin:0 0 8px"><b>天干'+cd.s+'（'+cd.sg+'）：</b>'+s1+'。</p>'+
-                '<p style="margin:0 0 8px"><b>地支'+cd.b+'（'+cd.bg+'）：</b>'+s2+'。</p>'+
-                '<p style="margin:0;font-size:12px;color:var(--t3)">大运运支代替月令重新审视旺衰，当运十年喜忌随之调整。</p>'+
-              '</div>'+
-            '</div>';
-        }
+              '<div style="font-size:13px;line-height:1.85;color:var(--t2)">'+desc.replace(/\n/g,'<br>')+'</div>'+
+            '</div>'+
+          '</div>'+wrapEnd;
+      }
+
+      // 隐藏旧的scroll和summary，直接写入section
+      var dyScroll=sec09.querySelector('.r-dy-scroll');
+      var dySummary=sec09.querySelector('.r-dy-summary');
+      if(dyScroll) dyScroll.style.display='none';
+      if(dySummary) dySummary.innerHTML=allHtml;
+      else{
+        var newDiv=document.createElement('div');
+        newDiv.className='r-dy-summary';
+        newDiv.innerHTML=allHtml;
+        if(dyScroll) dyScroll.parentNode.insertBefore(newDiv,dyScroll.nextSibling);
       }
     }
   }
 
-  /* 09+ 流年(付费墙内) */
+    /* 09+ 流年(付费墙内) */
   fillFlowYears(data,ds,dwx,ug.use,ug.avoid,isZh);
   /* 10 流月 */
   analysis._str=str; analysis._sc=sc;
