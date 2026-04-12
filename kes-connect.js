@@ -221,7 +221,7 @@ function fillReport(data,dateStr,shichen,gender,isZh){
       var fsc=3;if(ug.use.indexOf(fsE)>=0)fsc+=0.8;if(ug.use.indexOf(fbE)>=0)fsc+=0.7;if(ug.avoid.indexOf(fsE)>=0)fsc-=0.8;if(ug.avoid.indexOf(fbE)>=0)fsc-=0.7;
       fsc=Math.max(1,Math.min(5,Math.round(fsc)));
       var frw=['凶','不利','平','吉','大吉'][fsc-1]||'平';
-      fRows+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+fy+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[fsE]+'">'+fgz.stem+'</span><span class="e-'+WX_CLASS[fbE]+'">'+fgz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+fst+'</div><div class="r-a-note">'+fgz.stem+fgz.branch+'（'+fsg+'）：'+(LN_DESC[fsg]||'')+'</div></div></div>';
+      fRows+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+fy+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[fsE]+'">'+fgz.stem+'</span><span class="e-'+WX_CLASS[fbE]+'">'+fgz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+frw+'</div><div class="r-a-note">'+fgz.stem+fgz.branch+'（'+fsg+'）：'+(LN_DESC[fsg]||'')+'</div></div></div>';
     }
     freeTable.innerHTML=fHead+fRows;
   }
@@ -319,7 +319,7 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
     sc=Math.max(1,Math.min(5,Math.round(sc)));
     var rateWord=['凶','不利','平','吉','大吉'][sc-1]||'平';
     var nt=isZh?gz.stem+gz.branch+'（'+sg+'）：'+(LN_DESC[sg]||''):sg+' year';
-    rw+='<div class="r-tbl-row r-tbl-3'+(y===new Date().getFullYear()?' now':'')+'"><div class="r-a-year">'+y+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+gz.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+gz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+st+'</div><div class="r-a-note">'+nt+'</div></div></div>';
+    rw+='<div class="r-tbl-row r-tbl-3'+(y===new Date().getFullYear()?' now':'')+'"><div class="r-a-year">'+y+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+gz.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+gz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+rateWord+'</div><div class="r-a-note">'+nt+'</div></div></div>';
   }
   tbl[0].innerHTML=hd+rw;
 }
