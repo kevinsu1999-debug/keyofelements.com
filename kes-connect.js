@@ -183,12 +183,48 @@ function fillReport(data,dateStr,shichen,gender,isZh){
     if(chart.tiaohuo_gods&&chart.tiaohuo_gods.length){yH+='<div class="r-yj-card"><div class="r-yj-label">调候用神</div><div class="r-yj-chars">';chart.tiaohuo_gods.forEach(function(t){yH+='<span class="r-yj-char '+WX_CLASS[GAN_WX[t]||'水']+'">'+t+'</span>';});yH+='</div></div>';}
     yg.innerHTML=yH;}
 
-  /* 05-08 分析文本 */
+  /* 05 性格：日主图标 + 滴天髓 + 分析文本 */
+  var DTL={'甲':'甲木参天，脱胎要火。春不容金，秋不容土。火炽乘龙，水宕骑虎。地润天和，植立千古。',
+    '乙':'乙木虽柔，刲羊解牛。怀丁抱丙，跨凤乘猴。虚湿之地，骑马亦忧。藤萝系甲，可春可秋。',
+    '丙':'丙火猛烈，欺霜侮雪。能煅庚金，逢辛反怯。土众成慈，水猖显节。虎马犬乡，甲来焚灭。',
+    '丁':'丁火柔中，内性昭融。抱乙而孝，合壬而忠。旺而不烈，衰而不穷。如有嫡母，可秋可冬。',
+    '戊':'戊土固重，既中且正。静翕动辟，万物司命。水润物生，火燥喜病。若在艮坤，怕冲宜静。',
+    '己':'己土卑湿，中正蓄藏。不愁木盛，不畏水狂。火少火晦，金多金光。若要物旺，宜助宜帮。',
+    '庚':'庚金带煞，刚健为最。得水而清，得火而锐。土润则生，土干则脆。能赢甲兄，输于乙妹。',
+    '辛':'辛金软弱，温润而清。畏土之叠，乐水之盈。能扶社稷，能救生灵。热则喜母，寒则喜丁。',
+    '壬':'壬水通河，能泄金气。刚中之德，周流不滞。通根透癸，冲天奔地。化则有情，从则相济。',
+    '癸':'癸水至弱，达于天津。得龙而运，功化斯神。不愁火土，不论庚辛。合戊见火，化象斯真。'};
+  var DM_DESC={'甲':'参天大树，正直向上，有栋梁之材的潜质','乙':'花草藤蔓，柔韧灵活，善于适应环境',
+    '丙':'太阳光辉，光明磊落，热情大方','丁':'烛火星光，温暖细腻，心思缜密',
+    '戊':'高山大地，稳重厚实，包容力强','己':'田园沃土，温和谦逊，善于滋养',
+    '庚':'刀剑金属，果断刚毅，有原则有魄力','辛':'珠宝首饰，精致敏感，追求完美',
+    '壬':'江河大海，奔放豁达，胸怀宽广','癸':'雨露溪流，温润细腻，直觉敏锐'};
+
+  var eId=document.querySelector('.r-elem-id');
+  if(eId) eId.innerHTML='<div class="r-elem-icon '+dwxc+'">'+ds+'</div><div><div class="r-elem-id-name">'+ds+dwx+'日主</div><div class="r-elem-id-desc">'+(DM_DESC[ds]||'')+'</div></div>';
+  var pq=document.querySelector('.r-pq-text');
+  if(pq) pq.textContent=DTL[ds]||'';
+
   fillText('性格',analysis.personality);fillText('Personality',analysis.personality);
   fillText('事业',analysis.career);fillText('Career',analysis.career);
   fillText('财运',analysis.wealth);fillText('Wealth',analysis.wealth);
   fillText('感情',analysis.relationship);fillText('Relationship',analysis.relationship);
   fillText('健康',analysis.health);fillText('Health',analysis.health);
+
+  /* 09 前的2024-2025流年（免费区） */
+  var freeTable=document.querySelector('.report-wrap .r-tbl');
+  if(freeTable && !freeTable.closest('#paywallGate')){
+    var fHead='<div class="r-tbl-head r-tbl-3"><div>年份</div><div>干支</div><div>运势概要</div></div>';
+    var fRows='';
+    for(var fy=2024;fy<=2025;fy++){
+      var fgz=yearGZ(fy),fsg=getTenGod(ds,fgz.stem),fsE=STEM_ELEM[fgz.stem],fbE=BRANCH_ELEM[fgz.branch];
+      var fsc=3;if(ug.use.indexOf(fsE)>=0)fsc+=0.8;if(ug.use.indexOf(fbE)>=0)fsc+=0.7;if(ug.avoid.indexOf(fsE)>=0)fsc-=0.8;if(ug.avoid.indexOf(fbE)>=0)fsc-=0.7;
+      fsc=Math.max(1,Math.min(5,Math.round(fsc)));
+      var frw=['凶','不利','平','吉','大吉'][fsc-1]||'平';
+      fRows+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+fy+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[fsE]+'">'+fgz.stem+'</span><span class="e-'+WX_CLASS[fbE]+'">'+fgz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+fst+'</div><div class="r-a-note">'+fgz.stem+fgz.branch+'（'+fsg+'）：'+(LN_DESC[fsg]||'')+'</div></div></div>';
+    }
+    freeTable.innerHTML=fHead+fRows;
+  }
 
   /* 09 大运 */
   if(dayun.periods&&dayun.periods.length){
@@ -225,6 +261,44 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   fillFlowYears(data,ds,dwx,ug.use,ug.avoid,isZh);
   /* 10 流月 */
   fillFlowMonths(analysis,ds,isZh);
+
+  /* Claude API 润色（仅中文，异步） */
+  if(isZh) enrichWithClaude(data, ds, dwx, str, sc, ug, gender);
+}
+
+/* ═══ Claude API 润色 ═══ */
+function enrichWithClaude(data, ds, dwx, str, sc, ug, gender){
+  var chart=data.chart||{}, analysis=data.analysis||{}, pillars=chart.pillars||{};
+  var tg=chart.ten_gods||{};
+  var body={
+    chart:{
+      day_master:ds, day_master_element:dwx, strength:str, score:sc,
+      year_pillar:(pillars.year?pillars.year.stem+pillars.year.branch:''),
+      month_pillar:(pillars.month?pillars.month.stem+pillars.month.branch:''),
+      day_pillar:(pillars.day?pillars.day.stem+pillars.day.branch:''),
+      hour_pillar:(pillars.hour?pillars.hour.stem+pillars.hour.branch:''),
+      year_god:tg.year_stem||'', month_god:tg.month_stem||'', hour_god:tg.hour_stem||'',
+      use_gods:ug.use.join('、'), avoid_gods:ug.avoid.join('、'),
+      kong_wang:(chart.kong_wang&&chart.kong_wang.day_kong)?chart.kong_wang.day_kong.join(','):'',
+      gender:gender
+    },
+    analysis:analysis, lang:'zh', isPaid:false
+  };
+  fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+    if(!d||!d.enriched)return;
+    var e=d.enriched;
+    if(e.personality) fillText('性格',e.personality);
+    if(e.career) fillText('事业',e.career);
+    if(e.relationship) fillText('感情',e.relationship);
+    if(e.health) fillText('健康',e.health);
+    if(e.dayun_detail){
+      var di=document.querySelectorAll('.r-dy-s-item .r-dy-s-body');
+      if(di.length>=1) di[0].innerHTML=e.dayun_detail.replace(/\n/g,'<br>');
+    }
+  })
+  .catch(function(err){console.warn('Enrich skipped:',err);});
 }
 
 /* ═══ 工具函数 ═══ */
@@ -243,8 +317,8 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
     var gz=yearGZ(y),sg=getTenGod(ds,gz.stem),sE=STEM_ELEM[gz.stem],bE=BRANCH_ELEM[gz.branch];
     var sc=3;if(use.indexOf(sE)>=0)sc+=0.8;if(use.indexOf(bE)>=0)sc+=0.7;if(avoid.indexOf(sE)>=0)sc-=0.8;if(avoid.indexOf(bE)>=0)sc-=0.7;
     sc=Math.max(1,Math.min(5,Math.round(sc)));
-    var st='';for(var s=0;s<5;s++)st+=s<sc?'★':'☆';
-    var nt=isZh?sg+'年，'+gz.stem+sE+'透干，'+(LN_DESC[sg]||''):sg+' year';
+    var rateWord=['凶','不利','平','吉','大吉'][sc-1]||'平';
+    var nt=isZh?gz.stem+gz.branch+'（'+sg+'）：'+(LN_DESC[sg]||''):sg+' year';
     rw+='<div class="r-tbl-row r-tbl-3'+(y===new Date().getFullYear()?' now':'')+'"><div class="r-a-year">'+y+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+gz.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+gz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+st+'</div><div class="r-a-note">'+nt+'</div></div></div>';
   }
   tbl[0].innerHTML=hd+rw;
