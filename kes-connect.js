@@ -48,8 +48,10 @@ function deriveUseGods(wx,str,sc,breakdown){
   var c={'木':'土','火':'金','土':'水','金':'木','水':'火'};
   var gb={'火':'木','土':'火','金':'土','水':'金','木':'水'};
   var cb={'土':'木','金':'火','水':'土','木':'金','火':'水'};
-  // 身强 → 泄耗克
-  if(/旺|强/.test(str))return{use:[g[wx],c[wx],cb[wx]],avoid:[gb[wx],wx]};
+  // 身强 → 泄耗克（含官杀）
+  if(/身强|极旺/.test(str))return{use:[g[wx],c[wx],cb[wx]],avoid:[gb[wx],wx]};
+  // 偏强 → 泄耗（不含官杀）
+  if(/偏强|偏旺/.test(str))return{use:[g[wx],c[wx]],avoid:[gb[wx],wx]};
   // 身弱 → 生扶
   if(/弱/.test(str))return{use:[gb[wx],wx],avoid:[g[wx],c[wx],cb[wx]]};
   // 中和 → 用三分法+得众判断偏向
@@ -140,7 +142,25 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   var str=chart.day_master_strength||'中和',sc=chart.day_master_score||0;
   var tg=chart.ten_gods||{},wx=chart.wuxing_counts||{};
   var kl=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
-  var bd=chart.strength_breakdown||{};var ug=deriveUseGods(dwx,str,sc,bd);
+  // 前端自算四维度用于用神推导
+  var shengWo={'木':'水','火':'木','土':'火','金':'土','水':'金'};
+  var HS_MAP={'子':['癸'],'丑':['己','辛','癸'],'寅':['甲','丙','戊'],'卯':['乙'],'辰':['戊','乙','癸'],'巳':['丙','庚','戊'],'午':['丁','己'],'未':['己','丁','乙'],'申':['庚','壬','戊'],'酉':['辛'],'戌':['戊','辛','丁'],'亥':['壬','甲']};
+  var klArr=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
+  var _mb=pillars.month?pillars.month.branch:'';
+  var _mbHS=HS_MAP[_mb]||[];
+  var _deLing=_mbHS.length&&(GAN_WX[_mbHS[0]]===dwx||GAN_WX[_mbHS[0]]===shengWo[dwx]);
+  var _deDi=false;
+  ['year','month','day','hour'].forEach(function(p){var br=pillars[p]?pillars[p].branch:'';var bHS=HS_MAP[br]||[];if(bHS.length&&GAN_WX[bHS[0]]===dwx&&klArr.indexOf(br)<0)_deDi=true;});
+  var _deShi=false;
+  ['year','month','hour'].forEach(function(p){var st=pillars[p]?pillars[p].stem:'';if(GAN_WX[st]===dwx)_deShi=true;});
+  var _allWx={'木':0,'火':0,'土':0,'金':0,'水':0};
+  ['year','month','day','hour'].forEach(function(p){var st=pillars[p]?pillars[p].stem:'';_allWx[GAN_WX[st]]=(_allWx[GAN_WX[st]]||0)+1;var br=pillars[p]?pillars[p].branch:'';(HS_MAP[br]||[]).forEach(function(h,hi){_allWx[GAN_WX[h]]=(_allWx[GAN_WX[h]]||0)+[0.7,0.3,0.1][Math.min(hi,2)];});});
+  var _wxT=0;for(var wk in _allWx)_wxT+=_allWx[wk];
+  var _dayPct=(_allWx[dwx]||0)/(_wxT||1);
+  var _helpPct=((_allWx[dwx]||0)+(_allWx[shengWo[dwx]]||0))/(_wxT||1);
+  var _deZhong=(_dayPct>=0.28||_helpPct>=0.45);
+  var _frontBD={'三分法':{'得令':_deLing,'得地':_deDi,'得势':_deShi,'得众':_deZhong}};
+  var ug=deriveUseGods(dwx,str,sc,_frontBD);
 
   console.log('=== REPORT ===','DM:',ds+dwx,'Str:',str,'Score:',sc,'Use:',ug.use,'Avoid:',ug.avoid);
 
@@ -189,41 +209,62 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   var ml=document.querySelector('.r-meter-labels');
   if(ml)ml.innerHTML=['身弱','偏弱','中和','偏强','身强'].map(function(l,i){return'<span'+(i===si?' class="on"':'')+'>'+l+'</span>';}).join('');
   var vd=document.querySelector('.r-str-verdict');if(vd)vd.textContent=str;
-  // 填充得令得地得势详细grid
-  var bd=chart.strength_breakdown||{};
-  var sf=bd['三分法']||{};
-  var details=bd.details||[];
+  // 前端自算四维度（不依赖后端breakdown）
   var strGrid=document.querySelector('.r-str-grid');
-  if(strGrid){
+  if(strGrid&&isZh){
     var mb=pillars.month?pillars.month.branch:'';
-    var mbWx=ZHI_WX[mb]||'土';
-    var wxS=getWxStatus(mb);
-    var dayStatus=wxS[dwx]||'休';
-    // 得令
-    var dlDetail=sf['得令']?mb+'月主气助'+dwx+'，得令有力':mb+'月'+mbWx+'当令，'+dwx+'处'+dayStatus+'位，月令不助日元';
-    // 得地
-    var ddDetail='';
-    if(sf['得地']){
-      ddDetail='地支有'+dwx+'行通根';
-      details.forEach(function(d){if(d.indexOf('得地')>=0)ddDetail=d.replace(/得地：/,'');});
-    } else {
-      ddDetail='地支无'+dwx+'行有力通根';
-      var kl2=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
-      if(kl2.length)ddDetail+='（'+kl2.join('、')+'空亡）';
-    }
-    // 得势
-    var dsDetail='';
-    if(sf['得势']){
-      dsDetail='天干有比劫或印星帮扶';
-      details.forEach(function(d){if(d.indexOf('得势')>=0)dsDetail=d.replace(/得势：/,'');});
-    } else {
-      dsDetail='天干缺少比劫印星帮扶';
-    }
+    var mbWx=BRANCH_ELEM[mb]||'土';
+    var shengWo={'木':'水','火':'木','土':'火','金':'土','水':'金'};
+    var klArr=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
+    var HS_MAP={'子':['癸'],'丑':['己','辛','癸'],'寅':['甲','丙','戊'],'卯':['乙'],'辰':['戊','乙','癸'],'巳':['丙','庚','戊'],'午':['丁','己'],'未':['己','丁','乙'],'申':['庚','壬','戊'],'酉':['辛'],'戌':['戊','辛','丁'],'亥':['壬','甲']};
+
+    // 1.得令：月支主气
+    var mbHS=HS_MAP[mb]||[];
+    var mbMainWx=mbHS.length?GAN_WX[mbHS[0]]:'';
+    var deLing=(mbMainWx===dwx||mbMainWx===shengWo[dwx]);
+    var dlDetail=deLing?mb+'月主气'+mbHS[0]+'（'+mbMainWx+'）助'+dwx+'，得令有力':mb+'月'+mbWx+'当令，'+dwx+'处休囚位，月令不助日元';
+
+    // 2.得地：地支主气通根（非空亡）
+    var deDi=false,ddParts=[];
+    ['year','month','day','hour'].forEach(function(p){
+      var br=pillars[p]?pillars[p].branch:'';
+      var bHS=HS_MAP[br]||[];
+      if(bHS.length&&GAN_WX[bHS[0]]===dwx){
+        if(klArr.indexOf(br)>=0){ddParts.push(p+'支'+br+'主气通根（空亡减力）');}
+        else{deDi=true;ddParts.push(p+'支'+br+'本气'+bHS[0]+'通根');}
+      }
+    });
+    var ddDetail=deDi?ddParts.join('，'):'地支无'+dwx+'行有力通根'+(klArr.length?'（'+klArr.join('、')+'空亡）':'');
+
+    // 3.得势：其他天干比劫印星
+    var deShi=false,dsParts=[];
+    ['year','month','hour'].forEach(function(p){
+      var st=pillars[p]?pillars[p].stem:'';
+      var stWx=GAN_WX[st];
+      if(stWx===dwx){deShi=true;dsParts.push(p+'干'+st+'（比劫）帮身');}
+      else if(stWx===shengWo[dwx]){dsParts.push(p+'干'+st+'（印星）生身');if(dsParts.length>=2)deShi=true;}
+    });
+    var dsDetail=deShi?dsParts.join('，'):'天干缺少比劫印星帮扶';
+
+    // 4.得众：五行总量
+    var allWx2={'木':0,'火':0,'土':0,'金':0,'水':0};
+    ['year','month','day','hour'].forEach(function(p){
+      var st=pillars[p]?pillars[p].stem:'';
+      allWx2[GAN_WX[st]]=(allWx2[GAN_WX[st]]||0)+1.0;
+      var br=pillars[p]?pillars[p].branch:'';
+      (HS_MAP[br]||[]).forEach(function(h,hi){allWx2[GAN_WX[h]]=(allWx2[GAN_WX[h]]||0)+[0.7,0.3,0.1][Math.min(hi,2)];});
+    });
+    var wxTotal2=0;for(var wk in allWx2)wxTotal2+=allWx2[wk];
+    var dayPct=Math.round((allWx2[dwx]||0)/(wxTotal2||1)*100);
+    var helpPct=Math.round(((allWx2[dwx]||0)+(allWx2[shengWo[dwx]]||0))/(wxTotal2||1)*100);
+    var deZhong=(dayPct>=28||helpPct>=45);
+    var dzDetail=deZhong?'得众：'+dwx+'占'+dayPct+'%，'+dwx+'+'+shengWo[dwx]+'占'+helpPct+'%':'不得众：'+dwx+'占'+dayPct+'%，'+dwx+'+'+shengWo[dwx]+'占'+helpPct+'%';
+
     strGrid.innerHTML=
-      '<div class="r-str-item"><div class="r-str-label">得　令</div><div class="r-str-val '+(sf['得令']?'yes':'no')+'">'+(sf['得令']?'已得':'未得')+'</div><div class="r-str-detail">'+dlDetail+'</div></div>'+
-      '<div class="r-str-item"><div class="r-str-label">得　地</div><div class="r-str-val '+(sf['得地']?'yes':'no')+'">'+(sf['得地']?'已得':'未得')+'</div><div class="r-str-detail">'+ddDetail+'</div></div>'+
-      '<div class="r-str-item"><div class="r-str-label">得　势</div><div class="r-str-val '+(sf['得势']?'yes':'no')+'">'+(sf['得势']?'已得':'未得')+'</div><div class="r-str-detail">'+dsDetail+'</div></div>'+
-      '<div class="r-str-item"><div class="r-str-label">得　众</div><div class="r-str-val '+(sf['得众']?'yes':'no')+'">'+(sf['得众']?'已得':'未得')+'</div><div class="r-str-detail">'+(details.filter(function(d){return d.indexOf('得众')>=0||d.indexOf('不得众')>=0;})[0]||'五行总量参考')+'</div></div>';
+      '<div class="r-str-item"><div class="r-str-label">得　令</div><div class="r-str-val '+(deLing?'yes':'no')+'">'+(deLing?'已得':'未得')+'</div><div class="r-str-detail">'+dlDetail+'</div></div>'+
+      '<div class="r-str-item"><div class="r-str-label">得　地</div><div class="r-str-val '+(deDi?'yes':'no')+'">'+(deDi?'已得':'未得')+'</div><div class="r-str-detail">'+ddDetail+'</div></div>'+
+      '<div class="r-str-item"><div class="r-str-label">得　势</div><div class="r-str-val '+(deShi?'yes':'no')+'">'+(deShi?'已得':'未得')+'</div><div class="r-str-detail">'+dsDetail+'</div></div>'+
+      '<div class="r-str-item"><div class="r-str-label">得　众</div><div class="r-str-val '+(deZhong?'yes':'no')+'">'+(deZhong?'已得':'未得')+'</div><div class="r-str-detail">'+dzDetail+'</div></div>';
   }
   var ex=document.querySelector('.r-str-explain');
   if(ex) ex.textContent=ds+dwx+'生于'+(pillars.month?pillars.month.branch:'')+'月，综合判定为'+str+'。';
@@ -316,12 +357,10 @@ function fillReport(data,dateStr,shichen,gender,isZh){
         if(MKD[dp.branch]) desc+='\u3002'+dp.branch+(isZh?'\u4E3A'+MKD[dp.branch]+'\uff0c\u5173\u6CE8\u58A8\u5E93\u5F00\u5408':' is a storage branch');
         var sWxC=WX_CLASS[STEM_ELEM[dp.stem]],bWxC=WX_CLASS[BRANCH_ELEM[dp.branch]];
 
-        // 付费墙：检查是否已解锁
-        var pwGate=document.getElementById('paywallGate');
-        var isUnlocked=pwGate&&!pwGate.classList.contains('locked');
-        var isPaid=!isUnlocked&&(curIdx>=0 && d>curIdx);
-        var wrapStart=isPaid?'<div style="filter:blur(4px);pointer-events:none">':'';
-        var wrapEnd=isPaid?'</div>':'';
+        // 付费墙：用data属性标记，bypass后可清除
+        var isPaidDy=(curIdx>=0 && d>curIdx);
+        var wrapStart=isPaidDy?'<div class="dy-paid-blur" style="filter:blur(4px);pointer-events:none">':'';
+        var wrapEnd=isPaidDy?'</div>':'';
 
         allHtml+=wrapStart+
           '<div style="display:flex;gap:20px;align-items:flex-start;padding:18px 0;border-bottom:1px solid var(--line)'+(ic?';background:var(--bg2);margin:0 -16px;padding:18px 16px;border-radius:var(--r)':'')+'">' +
@@ -371,7 +410,8 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   /* 12 建议 */
   fillRecommendations(data,ds,dwx,ug,gender,isZh);
   /* 13 紫微 */
-  fillZiwei(data,ds,dwx,str,isZh);
+  // 紫微已移除
+  var sec13=findSection('13');if(sec13)sec13.style.display='none';
 
   /* Claude API 润色（仅中文，异步） */
   if(isZh) enrichWithClaude(data, ds, dwx, str, sc, ug, gender);
@@ -462,6 +502,15 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
       if(bg&&bg!==sg) nt+='地支'+gz.branch+'（'+bg+'）辅助。';
       var MKY={'辰':'辰为水库，有收藏之象','戌':'戌为火库，有肃杀之气','丑':'丑为金库，有收敛之力','未':'未为木库，有滋养之功'};
       if(MKY[gz.branch]) nt+=MKY[gz.branch]+'。';
+      // 刑冲克合
+      var CHONG={'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'};
+      var HE={'子':'丑','丑':'子','寅':'亥','亥':'寅','卯':'戌','戌':'卯','辰':'酉','酉':'辰','巳':'申','申':'巳','午':'未','未':'午'};
+      var posNames={'year':'年支','month':'月支','day':'日支','hour':'时支'};
+      ['year','month','day','hour'].forEach(function(pos){
+        var pBr=data.chart.pillars[pos]?data.chart.pillars[pos].branch:'';
+        if(CHONG[gz.branch]===pBr) nt+='流年'+gz.branch+'冲'+posNames[pos]+pBr+'，'+(pos==='day'?'婚姻宫受冲，感情有变。':'该宫位有动荡。');
+        if(HE[gz.branch]===pBr) nt+='流年'+gz.branch+'合'+posNames[pos]+pBr+'，'+(pos==='day'?'感情有合意之象。':'有牵绊。');
+      });
       if(sc>=4) nt+='宜积极把握机遇，适合拓展、投资、社交。';
       else if(sc<=2) nt+='宜守不宜攻，避免重大财务决策和冒险行为。';
       else nt+='整体平稳，稳中求进。';
@@ -601,12 +650,32 @@ function fillWarnings(data,ds,dwx,ug,isZh){
       if(b)b.textContent='四柱地支均不落空亡，根基稳固。';
     }
   }
-  // 警告4: 婚姻宫（如果有第4个warn）
+  // 警告3+: 具体年份预警
+  var CHONGW={'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'};
+  var dayBr=data.chart.pillars.day.branch;
+  if(warns.length>=3){
+    var t=warns[2].querySelector('.r-warn-title'),b=warns[2].querySelector('.r-warn-body');
+    if(t)t.textContent='婚姻宫（日支'+dayBr+'）预警';
+    // 找出冲日支的具体年份
+    var chongYears=[];
+    for(var cy2=curYear;cy2<=curYear+8;cy2++){
+      var cGz=yearGZ(cy2);
+      if(CHONGW[cGz.branch]===dayBr) chongYears.push(cy2+'年'+cGz.stem+cGz.branch);
+    }
+    var bTxt='日支'+dayBr+'为婚姻宫。';
+    if(chongYears.length) bTxt+='冲日支年份：'+chongYears.join('、')+'，这些年份感情或家庭容易出现变化，注意沟通。';
+    else bTxt+='近十年无流年冲日支，婚姻宫相对稳定。';
+    if(b)b.innerHTML=bTxt;
+  }
   if(warns.length>=4){
     var t=warns[3].querySelector('.r-warn-title'),b=warns[3].querySelector('.r-warn-body');
-    var dayBr=data.chart.pillars.day.branch;
-    if(t)t.textContent='婚姻宫（日支'+dayBr+'）提示';
-    if(b)b.textContent='日支'+dayBr+'为婚姻宫，'+BRANCH_ELEM[dayBr]+'行坐支。关注流年冲合日支的年份，感情容易有变化。';
+    if(kl.length){
+      if(t)t.textContent='空亡：'+kl.join('、');
+      if(b)b.textContent=kl.join('、')+'为日柱空亡。空亡代表对应六亲和事象虚而不实，需要流年大运引动才能激活。空亡也意味着不执着，反而可能在对应领域有超脱的智慧。';
+    } else {
+      if(t)t.textContent='命局无空亡';
+      if(b)b.textContent='四柱地支均不落空亡，根基稳固。';
+    }
   }
 }
 
@@ -624,7 +693,21 @@ function fillRecommendations(data,ds,dwx,ug,gender,isZh){
   var gz=yearGZ(curYear),sg=getTenGod(ds,gz.stem);
 
   var cards=[
-    {title:curYear+'年度策略',body:curYear+'年'+gz.stem+gz.branch+'（'+sg+'）。'+(LN_DESC[sg]||'')+'。'+(ug.avoid.indexOf(STEM_ELEM[gz.stem])>=0?'今年天干为忌神方向，整体宜守不宜攻。财务上保持保守，工作以维稳为主，不宜做重大投资或职业变动。':'今年天干为喜用方向，可适当拓展事业版图，主动争取机会。')},
+    {title:curYear+'年度策略',body:function(){
+      var t=curYear+'年'+gz.stem+gz.branch+'（'+sg+'）。'+(LN_DESC[sg]||'')+'。';
+      t+=ug.avoid.indexOf(STEM_ELEM[gz.stem])>=0?'今年天干为忌神方向，整体宜守不宜攻。财务保守，工作维稳。':'今年天干为喜用方向，可主动争取机会。';
+      // 找最佳和最差年份
+      var bestY='',worstY='',bestSc=0,worstSc=6;
+      for(var fy=curYear;fy<=curYear+7;fy++){
+        var fGz=yearGZ(fy),fSe=STEM_ELEM[fGz.stem],fBe=BRANCH_ELEM[fGz.branch];
+        var fSc=3;if(ug.use.indexOf(fSe)>=0)fSc+=1;if(ug.use.indexOf(fBe)>=0)fSc+=0.8;if(ug.avoid.indexOf(fSe)>=0)fSc-=1;if(ug.avoid.indexOf(fBe)>=0)fSc-=0.8;
+        if(fSc>bestSc){bestSc=fSc;bestY=fy+'年'+fGz.stem+fGz.branch;}
+        if(fSc<worstSc){worstSc=fSc;worstY=fy+'年'+fGz.stem+fGz.branch;}
+      }
+      if(bestY) t+=' 近8年最利年份：'+bestY+'。';
+      if(worstY) t+=' 最需谨慎年份：'+worstY+'。';
+      return t;
+    }()},
     {title:'事业行业方向',body:'最适合的五行行业方向：'+ug.use.map(function(e){return e+'属性——'+WXC[e];}).join('。')+'。核心原则是选择与喜用神五行属性匹配的行业，能借行业之势助力自身发展。'},
     {title:'幸运颜色与穿搭',body:'日常宜多用的颜色：'+ug.use.map(function(e){return WXL[e];}).join('。')+'。应用场景包括：日常穿搭、办公用品、手机壳、家居装饰、车内饰等。尽量减少使用'+ug.avoid.map(function(e){return WXL[e];}).join('、')+'。'},
     {title:'有利方位与季节',body:'居住和办公最利方位：'+ug.use.map(function(e){return WXD[e]+'（'+e+'）';}).join('、')+'。有利季节：'+ug.use.map(function(e){return WXS[e]||'';}).join('、')+'。如有搬迁、出差、旅行计划，优先考虑有利方位。'},
@@ -680,6 +763,18 @@ function fillZiwei(data,ds,dwx,str,isZh){
   }
 }
 
+
+// 解锁后清除大运模糊
+var _origCheckBypass=window.checkBypassCode;
+window.checkBypassCode=function(){
+  if(_origCheckBypass)_origCheckBypass();
+  setTimeout(function(){
+    var pw=document.getElementById('paywallGate');
+    if(pw&&!pw.classList.contains('locked')){
+      document.querySelectorAll('.dy-paid-blur').forEach(function(el){el.style.filter='none';el.style.pointerEvents='auto';});
+    }
+  },500);
+};
 /* ═══ 初始化 ═══ */
 document.addEventListener('DOMContentLoaded',function(){
   var btn=document.querySelector('.f-btn');if(btn)btn.setAttribute('onclick','kesSubmit()');
