@@ -588,6 +588,7 @@ function fillReport(data, dateStr, shichen, gender){
     if(dyScroll){
       var dyHtml = '';
       var curYear = new Date().getFullYear();
+      var curDyInfo = null;
       for(var d=0;d<Math.min(dayun.periods.length,8);d++){
         var dp = dayun.periods[d];
         var startAge = Math.round(dp.start_age);
@@ -597,12 +598,41 @@ function fillReport(data, dateStr, shichen, gender){
         var dpEndYear = parseInt(dateStr.split('-')[0]) + endAge;
         var isCur = (curYear >= dpStartYear && curYear < dpEndYear);
 
+        // 计算大运十神
+        var dpStemGod = getTenGod(dayStem, dp.stem) || dp.ten_god_stem || '';
+        var dpBranchGod = getTenGodFromBranch(dayStem, dp.branch) || dp.ten_god_branch || '';
+
         dyHtml += '<div class="r-dy-item'+(isCur?' cur':'')+'">'+
           (isCur ? '<div class="r-dy-label">当前</div>' : '')+
           '<div class="r-dy-gz">'+dp.stem+dp.branch+'</div>'+
           '<div class="r-dy-age">'+startAge+'至'+endAge+'岁</div></div>';
+
+        // 保存当前大运信息
+        if(isCur) curDyInfo = {stem:dp.stem, branch:dp.branch, stemGod:dpStemGod, branchGod:dpBranchGod, startAge:startAge, endAge:endAge};
       }
       dyScroll.innerHTML = dyHtml;
+    }
+
+    // ── 当前大运十神描述（中文） ──
+    if(curDyInfo && isZhPage){
+      var dySummary = document.querySelector('.r-dy-summary-grid');
+      if(!dySummary){
+        // 创建大运摘要区域
+        addContentToSection('大运', function(){
+          var godDesc = DAYUN_DESC_ZH[curDyInfo.stemGod] || '';
+          var brGodDesc = '';
+          if(curDyInfo.branchGod && curDyInfo.branchGod !== curDyInfo.stemGod){
+            brGodDesc = DAYUN_DESC_ZH[curDyInfo.branchGod] || '';
+          }
+          var html = '<div style="margin-top:16px;padding:18px 20px;background:var(--card);border:1px solid var(--line);border-radius:8px">';
+          html += '<div style="font-size:15px;font-weight:700;margin-bottom:10px">当前大运：'+curDyInfo.stem+curDyInfo.branch+'（'+curDyInfo.startAge+'至'+curDyInfo.endAge+'岁）</div>';
+          html += '<div style="font-size:12px;color:var(--t3);margin-bottom:8px">天干 '+curDyInfo.stem+' → <b>'+curDyInfo.stemGod+'</b>大运 | 地支 '+curDyInfo.branch+' → <b>'+curDyInfo.branchGod+'</b></div>';
+          if(godDesc) html += '<p style="font-size:13px;line-height:1.85;color:var(--t2);margin:8px 0"><b>'+curDyInfo.stemGod+'运：</b>'+godDesc+'。</p>';
+          if(brGodDesc) html += '<p style="font-size:13px;line-height:1.85;color:var(--t2);margin:8px 0"><b>'+curDyInfo.branchGod+'运（地支）：</b>'+brGodDesc+'。</p>';
+          html += '</div>';
+          return html;
+        });
+      }
     }
   }
 
@@ -619,7 +649,7 @@ function fillReport(data, dateStr, shichen, gender){
   fillAnalysisSection('Relationship', analysis ? analysis.relationship : '');
   fillAnalysisSection('Marriage', analysis ? analysis.relationship : '');
 
-  // ── 大运详情(Claude 生成) ──
+  // ── 大运详情(Claude 生成 覆盖上面的十神描述) ──
   if(analysis && analysis.dayun_detail){
     addContentToSection(isZhPage?'大运':'Luck', function(){
       return '<div style="margin-top:16px;line-height:1.9;font-size:13px;color:var(--t2)">'+formatParagraphs(analysis.dayun_detail)+'</div>';
@@ -753,6 +783,74 @@ var TIAN_GAN_LIST = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'
 var DI_ZHI_LIST = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
 var STEM_ELEM = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
 var BRANCH_ELEM = {'子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水'};
+// 地支主气藏干
+var BRANCH_MAIN_HIDDEN = {'子':'癸','丑':'己','寅':'甲','卯':'乙','辰':'戊','巳':'丙','午':'丁','未':'己','申':'庚','酉':'辛','戌':'戊','亥':'壬'};
+
+/* ── 十神计算 ── */
+function getTenGod(dayStem, otherStem){
+  if(!dayStem || !otherStem) return '';
+  var di = TIAN_GAN_LIST.indexOf(dayStem);
+  var oi = TIAN_GAN_LIST.indexOf(otherStem);
+  if(di<0||oi<0) return '';
+  var dElem = STEM_ELEM[dayStem];
+  var oElem = STEM_ELEM[otherStem];
+  var samePol = (di%2) === (oi%2);
+  var wxOrder = ['木','火','土','金','水'];
+  var dWi = wxOrder.indexOf(dElem);
+  var oWi = wxOrder.indexOf(oElem);
+  var rel = (oWi - dWi + 5) % 5;
+  // rel: 0=同 1=我生 2=我克 3=克我 4=生我
+  if(rel===0) return samePol ? '比肩' : '劫财';
+  if(rel===1) return samePol ? '食神' : '伤官';
+  if(rel===2) return samePol ? '偏财' : '正财';
+  if(rel===3) return samePol ? '七杀' : '正官';
+  if(rel===4) return samePol ? '偏印' : '正印';
+  return '';
+}
+function getTenGodFromBranch(dayStem, branch){
+  var mainH = BRANCH_MAIN_HIDDEN[branch];
+  return mainH ? getTenGod(dayStem, mainH) : '';
+}
+
+/* ── 流年十神描述（中文） ── */
+var LIUNIAN_DESC_ZH = {
+  '比肩':'比劫帮身，社交活跃人脉拓展，但开支增大、竞争加剧，合作机会与利益纷争并存',
+  '劫财':'劫财夺财，钱财进出频繁，投资需极度谨慎，防小人争利，感情有第三方干扰之象',
+  '食神':'食神泄秀，才华展现期，创作灵感充沛，口福佳学业有利，心态轻松但防过于安逸',
+  '伤官':'伤官透出，锋芒毕露之年，才华与叛逆并存，容易口舌是非，女命注意感情波动',
+  '偏财':'偏财入命，商机与意外之财并现，投资有机遇但波动大，男命桃花旺异性缘增多',
+  '正财':'正财稳健，正当收入增加，理财有方，感情稳定期，适合置业购产，脚踏实地得回报',
+  '七杀':'七杀攻身，压力与挑战之年，外部环境变动大，有贵人提携也有小人暗算，需刚柔并济',
+  '正官':'正官当头，事业正轨期，升迁考核有利，责任加重但名声提升，女命正缘出现之年',
+  '偏印':'偏印主事，思想深沉转变期，适合学习进修、研究玄学，但易感孤独，精神层面变化大',
+  '正印':'正印生身，贵人扶持之年，学业考试有利，购房置产吉，心态平和但需主动出击避免错过机会'
+};
+var LIUNIAN_DESC_EN = {
+  '比肩':'Peer energy year - networking active, competition increases',
+  '劫财':'Wealth rivalry - financial fluctuations, guard against disputes',
+  '食神':'Creative expression - talents shine, good for learning and enjoyment',
+  '伤官':'Bold expression - talent with friction, watch for conflicts',
+  '偏财':'Windfall opportunities - investment chances but volatile',
+  '正财':'Steady income - stable finances, good for property',
+  '七杀':'Challenge year - pressure and transformation, stay resilient',
+  '正官':'Career advancement - promotions likely, responsibility grows',
+  '偏印':'Introspection - deep thinking, spiritual growth',
+  '正印':'Mentor support - education favored, noble help arrives'
+};
+
+/* ── 大运十神描述（中文） ── */
+var DAYUN_DESC_ZH = {
+  '比肩':'比劫大运，自主意识增强，人脉拓展期。竞争压力加大但也带来合作机遇。财务方面需注意节制，防同辈竞争分财',
+  '劫财':'劫财大运，社交圈活跃，赚钱欲望强但花销也大。投资需保守，防合伙纠纷。感情上有竞争者出现之象',
+  '食神':'食神大运，才华展现的黄金期。学业、创作、艺术方面有突破。心态轻松，享受生活。但防过于安逸丧失进取心',
+  '伤官':'伤官大运，个性张扬锋芒毕露。适合创新创业、艺术表达。但口舌是非增多，需注意人际关系和言辞。女命注意感情变动',
+  '偏财':'偏财大运，财运活跃期。商业机会增多，投资有收获但波动大。人脉广阔，异性缘旺。适合把握商机但防贪心冒进',
+  '正财':'正财大运，稳定发展期。正当收入稳步增长，适合置业储蓄。感情趋于稳定，家庭和睦。脚踏实地最有利',
+  '七杀':'七杀大运，压力与突破并存。外部环境变化剧烈，挑战多但成长也快。有贵人暗中帮助，需要魄力与智慧并用',
+  '正官':'正官大运，事业上升期。升职加薪机会增多，社会地位提升。责任加重但名望也随之而来。适合走正规路线发展',
+  '偏印':'偏印大运，精神世界丰富期。适合学习新技能、研究深层知识。但容易感到孤独，需注意心理健康。有特殊才能被发掘',
+  '正印':'正印大运，贵人运最旺的时期。学业考证有利，事业得上级提携。身体健康改善，心态平和。适合进修深造、买房置产'
+};
 
 function yearToGanZhi(year){
   var si = (year - 4) % 10;
@@ -827,15 +925,26 @@ function fillFlowYears(data, dateStr, gender){
       var stemWxClass = WX_CLASS[STEM_ELEM[gz.stem]] || 'tu';
       var branchWxClass = WX_CLASS[BRANCH_ELEM[gz.branch]] || 'tu';
 
-      // 生成简要说明
+      // 生成十神关系描述
       var stemE = STEM_ELEM[gz.stem];
       var branchE = BRANCH_ELEM[gz.branch];
+      var stemGod = getTenGod(dayStem, gz.stem);
+      var branchGod = getTenGodFromBranch(dayStem, gz.branch);
+
       var note = '';
-      if(score <= 1) note = isZh ? '<b>极不利年，</b>需极度谨慎' : '<b>Most challenging year.</b> Proceed with caution.';
-      else if(score <= 2) note = isZh ? '压力较大，宜守不宜攻' : 'Challenging year. Stay defensive.';
-      else if(score <= 3) note = isZh ? '平稳过渡，稳中有变' : 'Transitional year. Steady progress.';
-      else if(score <= 4) note = isZh ? '运势回升，贵人有助' : 'Favorable energy. Mentors support.';
-      else note = isZh ? '<b>大吉之年，</b>积极把握机遇' : '<b>Excellent year.</b> Seize opportunities.';
+      if(isZh){
+        note = stemGod + '年，' + gz.stem + stemE + '透干';
+        // 天干十神解读
+        var stemDesc = LIUNIAN_DESC_ZH[stemGod] || '';
+        if(stemDesc) note += '，' + stemDesc;
+        // 地支十神
+        if(branchGod && branchGod !== stemGod){
+          var brDesc = LIUNIAN_DESC_ZH[branchGod] || '';
+          if(brDesc) note += '。地支' + gz.branch + branchE + '（' + branchGod + '）' + brDesc;
+        }
+      } else {
+        note = stemGod + ' year. ' + (LIUNIAN_DESC_EN[stemGod] || '');
+      }
 
       // 如果API有详细流年数据，使用它
       if(liunianData && liunianData[y]){
