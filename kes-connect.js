@@ -322,13 +322,12 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   // 健康详情grid
   var hGrid=document.querySelector('.r-health-grid');
   if(hGrid&&isZh){
-    var wxOrgan={'木':'肝胆','火':'心脑血管','土':'脾胃消化','金':'肺部呼吸','水':'肾脏泌尿'};
+    var wxOrgan2={'木':'肝胆、眼睛','火':'心脏、血压、血液循环','土':'脾胃、消化系统','金':'肺部、呼吸道、皮肤','水':'肾脏、泌尿系统、腰部'};
+    var wxAdvice={'木':'少熬夜、护眼、多吃绿色蔬菜','火':'控制情绪、规律作息、监测血压','土':'规律饮食、少食生冷油腻、健脾养胃','金':'秋冬保暖、注意呼吸道、多做有氧运动','水':'避免受寒、充足睡眠、保养腰肾'};
     var hCards=[];
-    var wxArr=['木','火','土','金','水'];
-    wxArr.forEach(function(w){
-      var pct=Math.round((wx[w]||0)/(Object.values(wx).reduce(function(a,b){return a+b;},0)||1)*100);
-      if(pct>30) hCards.push({wx:w,label:w+'偏旺（'+pct+'%），'+wxOrgan[w],body:wxOrgan[w]+'系统承压，需定期检查。',color:'var(--'+WX_CLASS[w]+')'});
-      if(pct<10) hCards.push({wx:w,label:w+'偏弱（'+pct+'%），'+wxOrgan[w],body:wxOrgan[w]+'功能偏弱，日常注意养护。',color:'var(--'+WX_CLASS[w]+')'});
+    // 忌神五行对应的器官最需关注
+    ug.avoid.forEach(function(w){
+      hCards.push({wx:w,label:w+'行（忌神）——'+wxOrgan2[w],body:'忌神五行对应器官最易出问题。建议：'+wxAdvice[w]+'。',color:'var(--'+WX_CLASS[w]+')'});
     });
     if(hCards.length){
       hGrid.innerHTML=hCards.map(function(h){
@@ -464,13 +463,11 @@ function enrichWithClaude(data, ds, dwx, str, sc, ug, gender){
     if(e.career) fillText('事业',e.career);
     if(e.relationship) fillText('感情',e.relationship);
     if(e.health) fillText('健康',e.health);
-    if(e.dayun_detail){
-      var dyGrid=document.querySelector('.r-dy-summary-grid');
-      if(dyGrid) dyGrid.innerHTML='<div style="line-height:1.9;font-size:13px;color:var(--t2);padding:16px 0">'+cleanText(e.dayun_detail).replace(/\n/g,'<br>')+'</div>';
-    }
+    // dayun_detail不再覆盖，前端自己生成
   })
   .catch(function(err){console.warn('Enrich skipped:',err);})
-  .finally(function(){if(window._kesShowReport)window._kesShowReport();});
+  .then(function(){if(window._kesShowReport)window._kesShowReport();})
+  .catch(function(){if(window._kesShowReport)window._kesShowReport();});
 }
 
 
@@ -640,75 +637,91 @@ function fillWarnings(data,ds,dwx,ug,isZh){
   if(!isZh)return;
   var sec=findSection('11');if(!sec)return;
   var warns=sec.querySelectorAll('.r-warn');
-  var chart=data.chart||{},kl=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
-  var wx=chart.wuxing_counts||{},wxT=0;
-  ['木','火','土','金','水'].forEach(function(w){wxT+=(wx[w]||0);});
+  var pils=data.chart.pillars||{};
+  var klArr=(data.chart.kong_wang&&data.chart.kong_wang.day_kong)||[];
+  var wx=data.chart.wuxing_counts||{};
   var curYear=new Date().getFullYear();
-  var gz=yearGZ(curYear),sE=STEM_ELEM[gz.stem],bE=BRANCH_ELEM[gz.branch];
-  var sg=getTenGod(ds,gz.stem),bg=getTenGodBr(ds,gz.branch);
+  var dayBr=pils.day?pils.day.branch:'';
+  var CHONG={'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'};
+  var wxOrgan={'木':'肝胆、眼睛','火':'心脏、血压','土':'脾胃、消化','金':'肺部、呼吸','水':'肾脏、泌尿'};
+  var wxEmo={'木':'情绪急躁、易怒','火':'焦虑、失眠','土':'思虑过重、多愁','金':'悲观、呼吸不畅','水':'恐惧、精力不足'};
 
-  // 警告1: 流年
+  // 警告1：流年具体预警（逐年列出忌神年）
   if(warns.length>=1){
     var t=warns[0].querySelector('.r-warn-title'),b=warns[0].querySelector('.r-warn-body');
-    if(t)t.textContent=curYear+'年'+gz.stem+gz.branch+'流年提醒';
-    var txt=sg+'年，天干'+gz.stem+'（'+STEM_ELEM[gz.stem]+'）';
-    txt+=ug.avoid.indexOf(sE)>=0?'为忌神，注意压力':'为喜用，整体有利';
-    txt+='。地支'+gz.branch+'（'+BRANCH_ELEM[gz.branch]+'）';
-    txt+=ug.avoid.indexOf(bE)>=0?'亦为忌神方向，需保守应对。':'相对平稳。';
-    if(b)b.innerHTML=txt;
-  }
-  // 警告2: 五行
-  if(warns.length>=2){
-    var t=warns[1].querySelector('.r-warn-title'),b=warns[1].querySelector('.r-warn-body');
-    var weak=[],strong=[];
-    ['木','火','土','金','水'].forEach(function(w){
-      var p=Math.round((wx[w]||0)/(wxT||1)*100);
-      if(p<8)weak.push(w+'（'+p+'%）');
-      if(p>35)strong.push(w+'（'+p+'%）');
-    });
-    if(t)t.textContent='五行能量分布提醒';
-    var txt2='';
-    if(strong.length)txt2+=strong.join('、')+'偏旺。';
-    if(weak.length)txt2+=weak.join('、')+'偏弱，对应器官和事象需注意后天调补。';
-    if(!txt2)txt2='五行分布相对均衡，无明显偏枯。';
-    if(b)b.innerHTML=txt2;
-  }
-  // 警告3: 空亡
-  if(warns.length>=3){
-    var t=warns[2].querySelector('.r-warn-title'),b=warns[2].querySelector('.r-warn-body');
-    if(kl.length){
-      if(t)t.textContent='空亡：'+kl.join('、');
-      if(b)b.textContent=kl.join('、')+'为日柱空亡，对应的六亲和事象虚而不实，遇到有利流年大运引动方可激活。空亡也意味着不执着，反而可能在对应领域有超脱的智慧。';
-    } else {
-      if(t)t.textContent='命局无空亡';
-      if(b)b.textContent='四柱地支均不落空亡，根基稳固。';
+    if(t)t.textContent='近年忌神流年提醒';
+    var badYears=[];
+    for(var cy=curYear;cy<=curYear+5;cy++){
+      var cGz=yearGZ(cy),cSE=STEM_ELEM[cGz.stem],cBE=BRANCH_ELEM[cGz.branch];
+      if(ug.avoid.indexOf(cSE)>=0&&ug.avoid.indexOf(cBE)>=0)
+        badYears.push({y:cy,gz:cGz.stem+cGz.branch,reason:'干支均忌，压力较大'});
+      else if(ug.avoid.indexOf(cSE)>=0)
+        badYears.push({y:cy,gz:cGz.stem+cGz.branch,reason:'天干'+cSE+'为忌'});
     }
-  }
-  // 警告3+: 具体年份预警
-  var CHONGW={'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'};
-  var dayBr=data.chart.pillars.day.branch;
-  if(warns.length>=3){
-    var t=warns[2].querySelector('.r-warn-title'),b=warns[2].querySelector('.r-warn-body');
-    if(t)t.textContent='婚姻宫（日支'+dayBr+'）预警';
-    // 找出冲日支的具体年份
-    var chongYears=[];
-    for(var cy2=curYear;cy2<=curYear+8;cy2++){
-      var cGz=yearGZ(cy2);
-      if(CHONGW[cGz.branch]===dayBr) chongYears.push(cy2+'年'+cGz.stem+cGz.branch);
-    }
-    var bTxt='日支'+dayBr+'为婚姻宫。';
-    if(chongYears.length) bTxt+='冲日支年份：'+chongYears.join('、')+'，这些年份感情或家庭容易出现变化，注意沟通。';
-    else bTxt+='近十年无流年冲日支，婚姻宫相对稳定。';
+    var bTxt='';
+    if(badYears.length){
+      bTxt=badYears.map(function(by){return '<b>'+by.y+'年'+by.gz+'</b>：'+by.reason+'。建议该年减少大额支出，不宜跳槽或重大投资。';}).join(' ');
+    } else bTxt='近6年无严重忌神流年，整体运势平稳。';
     if(b)b.innerHTML=bTxt;
   }
+
+  // 警告2：健康（用人话说）
+  if(warns.length>=2){
+    var t=warns[1].querySelector('.r-warn-title'),b=warns[1].querySelector('.r-warn-body');
+    if(t)t.textContent='健康关注重点';
+    var hTxt='';
+    ug.avoid.forEach(function(w){
+      hTxt+=w+'行偏忌，'+wxOrgan[w]+'需要关注。日常可能出现'+wxEmo[w]+'的倾向。建议：';
+      if(w==='火')hTxt+='控制情绪，保证睡眠，定期测血压。';
+      else if(w==='木')hTxt+='少熬夜，护眼，适度运动释放压力。';
+      else if(w==='土')hTxt+='规律饮食，少食生冷，避免过度思虑。';
+      else if(w==='金')hTxt+='注意呼吸系统，秋冬保暖，练习深呼吸。';
+      else if(w==='水')hTxt+='保暖避寒，注意腰肾保养，保持充足睡眠。';
+      hTxt+=' ';
+    });
+    if(b)b.innerHTML=hTxt;
+  }
+
+  // 警告3：婚姻宫+具体冲年
+  if(warns.length>=3){
+    var t=warns[2].querySelector('.r-warn-title'),b=warns[2].querySelector('.r-warn-body');
+    if(t)t.textContent='婚姻宫预警（日支'+dayBr+'）';
+    var chongYears=[];
+    for(var cy2=curYear;cy2<=curYear+8;cy2++){
+      var cGz2=yearGZ(cy2);
+      if(CHONG[cGz2.branch]===dayBr) chongYears.push(cy2+'年（'+cGz2.stem+cGz2.branch+'）');
+    }
+    var bTxt2='日支'+dayBr+'为婚姻宫，代表配偶和婚姻关系。';
+    if(chongYears.length) bTxt2+='<b>冲婚姻宫年份：'+chongYears.join('、')+'</b>。这些年份感情容易出现波动或变化，可能是搬家、分居、争吵加剧。建议：提前沟通，预留缓冲空间，避免在冲年做离婚等重大决定。';
+    else bTxt2+='近10年无流年冲日支，婚姻宫相对稳定。保持沟通即可。';
+    if(b)b.innerHTML=bTxt2;
+  }
+
+  // 警告4：空亡+具体影响
   if(warns.length>=4){
     var t=warns[3].querySelector('.r-warn-title'),b=warns[3].querySelector('.r-warn-body');
-    if(kl.length){
-      if(t)t.textContent='空亡：'+kl.join('、');
-      if(b)b.textContent=kl.join('、')+'为日柱空亡。空亡代表对应六亲和事象虚而不实，需要流年大运引动才能激活。空亡也意味着不执着，反而可能在对应领域有超脱的智慧。';
+    if(klArr.length){
+      if(t)t.textContent='空亡影响：'+klArr.join('、');
+      var klPosMap={'year':'父母宫','month':'兄弟/事业宫','day':'婚姻宫','hour':'子女宫'};
+      var klEffects=[];
+      ['year','month','day','hour'].forEach(function(pos){
+        var pBr=pils[pos]?pils[pos].branch:'';
+        if(klArr.indexOf(pBr)>=0) klEffects.push(klPosMap[pos]+'（'+pBr+'）落空亡');
+      });
+      // 空亡被填实的年份
+      var klFillYears=[];
+      for(var cy3=curYear;cy3<=curYear+8;cy3++){
+        var cGz3=yearGZ(cy3);
+        if(klArr.indexOf(cGz3.branch)>=0) klFillYears.push(cy3+'年（'+cGz3.stem+cGz3.branch+'）');
+      }
+      var bTxt3='';
+      if(klEffects.length) bTxt3+=klEffects.join('，')+'。这些宫位对应的六亲关系有"虚"的特征——不是没有，而是缘分偏淡或来得较晚。';
+      else bTxt3+='空亡未落在四柱主位，影响较小。';
+      if(klFillYears.length) bTxt3+=' <b>空亡被填实年份：'+klFillYears.join('、')+'</b>，这些年份空亡被引动，对应事项会有实质性变化。';
+      if(b)b.innerHTML=bTxt3;
     } else {
       if(t)t.textContent='命局无空亡';
-      if(b)b.textContent='四柱地支均不落空亡，根基稳固。';
+      if(b)b.textContent='四柱地支均不落空亡，各宫位根基稳固。';
     }
   }
 }
@@ -718,41 +731,41 @@ function fillRecommendations(data,ds,dwx,ug,gender,isZh){
   if(!isZh)return;
   var sec=findSection('12');if(!sec)return;
   var grid=sec.querySelector('.r-rec-grid');if(!grid)return;
-  var WXC={'金':'金融、银行、法律、医疗器械、IT硬件、珠宝首饰、机械制造','木':'教育、出版、设计、文创、园艺、家具、纺织服装','水':'物流、传媒、咨询、旅游、航运、贸易、酒水饮料','火':'科技、能源、餐饮、美容、演艺、广告、电子商务','土':'房地产、建筑、农业、保险、陶瓷、矿业、仓储'};
-  var WXL={'木':'绿色系——鼠尾草绿、森林绿、橄榄绿、薄荷绿','火':'红橙色系——砖红、珊瑚红、铁锈红、橘色','土':'棕黄色系——驼色、卡其、焦糖棕、大地色','金':'白银色系——香槟、象牙白、珍珠白、银灰','水':'蓝黑色系——藏蓝、墨黑、深灰、靛蓝'};
-  var WXD={'木':'东方','火':'南方','土':'中央','金':'西方','水':'北方'};
-  var WXS={'木':'春季（2-4月）','火':'夏季（5-7月）','土':'四季交替月','金':'秋季（8-10月）','水':'冬季（11-1月）'};
-  var wxOrgan={'木':'肝胆、眼睛、筋骨','火':'心脏、小肠、血液循环','土':'脾胃、消化系统、肌肉','金':'肺部、大肠、呼吸系统','水':'肾脏、膀胱、泌尿生殖'};
   var curYear=new Date().getFullYear();
-  var gz=yearGZ(curYear),sg=getTenGod(ds,gz.stem);
+  var pils=data.chart.pillars||{};
+
+  // 找最佳和最差年份
+  var bestY='',worstY='',bestSc=0,worstSc=6;
+  for(var fy=curYear;fy<=curYear+7;fy++){
+    var fGz=yearGZ(fy),fSe=STEM_ELEM[fGz.stem],fBe=BRANCH_ELEM[fGz.branch];
+    var fSc=3;if(ug.use.indexOf(fSe)>=0)fSc+=1;if(ug.use.indexOf(fBe)>=0)fSc+=0.8;if(ug.avoid.indexOf(fSe)>=0)fSc-=1;if(ug.avoid.indexOf(fBe)>=0)fSc-=0.8;
+    if(fSc>bestSc){bestSc=fSc;bestY=fy+'年'+fGz.stem+fGz.branch;}
+    if(fSc<worstSc){worstSc=fSc;worstY=fy+'年'+fGz.stem+fGz.branch;}
+  }
+
+  var WXC={'金':'金融、银行、法律、IT硬件、珠宝','木':'教育、出版、设计、文创、园艺','水':'物流、传媒、咨询、旅游、贸易','火':'科技、能源、餐饮、美容、电商','土':'房产、建筑、农业、保险、矿业'};
+  var WXD={'木':'东方','火':'南方','土':'中央','金':'西方','水':'北方'};
+  var wxSport={'水':'游泳、泡温泉','金':'深呼吸、登山、瑜伽','木':'户外散步、园艺、伸展','火':'跑步、晒太阳、温热饮食','土':'太极、冥想、规律作息'};
+  var wxColor={'木':'绿色系','火':'红橙色系','土':'棕黄色系','金':'白银色系','水':'蓝黑色系'};
 
   var cards=[
-    {title:curYear+'年度策略',body:function(){
-      var t=curYear+'年'+gz.stem+gz.branch+'（'+sg+'）。';
-      t+=ug.avoid.indexOf(STEM_ELEM[gz.stem])>=0?'今年天干为忌神方向，重心放在积累和沉淀上。减少不必要的开支和冒进。':'今年天干为喜用方向，可主动争取机会。';
-      // 找最佳和最差年份
-      var bestY='',worstY='',bestSc=0,worstSc=6;
-      for(var fy=curYear;fy<=curYear+7;fy++){
-        var fGz=yearGZ(fy),fSe=STEM_ELEM[fGz.stem],fBe=BRANCH_ELEM[fGz.branch];
-        var fSc=3;if(ug.use.indexOf(fSe)>=0)fSc+=1;if(ug.use.indexOf(fBe)>=0)fSc+=0.8;if(ug.avoid.indexOf(fSe)>=0)fSc-=1;if(ug.avoid.indexOf(fBe)>=0)fSc-=0.8;
-        if(fSc>bestSc){bestSc=fSc;bestY=fy+'年'+fGz.stem+fGz.branch;}
-        if(fSc<worstSc){worstSc=fSc;worstY=fy+'年'+fGz.stem+fGz.branch;}
-      }
-      if(bestY) t+=' 近8年最利年份：'+bestY+'。';
-      if(worstY) t+=' 最需谨慎年份：'+worstY+'。';
+    {title:'综合行动建议',body:function(){
+      var t='';
+      if(worstY) t+='<b>'+worstY+'</b>：这一年干支对你最不利，建议该年不做重大投资、不跳槽、不借贷担保，以守为主。';
+      if(bestY) t+=' <b>'+bestY+'</b>：这一年干支最有利，适合投资、创业、求职、买房等重大决策。';
+      t+=' 大运转换期前后一年也需谨慎，新旧能量交替容易出现波动。';
       return t;
     }()},
-    {title:'事业行业方向',body:'最适合的五行行业方向：'+ug.use.map(function(e){return e+'属性——'+WXC[e];}).join('。')+'。核心原则是选择与喜用神五行属性匹配的行业，能借行业之势助力自身发展。'},
-    {title:'幸运颜色与穿搭',body:'日常宜多用的颜色：'+ug.use.map(function(e){return WXL[e];}).join('。')+'。应用场景包括：日常穿搭、办公用品、手机壳、家居装饰、车内饰等。尽量减少使用'+ug.avoid.map(function(e){return WXL[e];}).join('、')+'。'},
-    {title:'有利方位与季节',body:'居住和办公最利方位：'+ug.use.map(function(e){return WXD[e]+'（'+e+'）';}).join('、')+'。有利季节：'+ug.use.map(function(e){return WXS[e]||'';}).join('、')+'。如有搬迁、出差、旅行计划，优先考虑有利方位。'},
-    {title:'感情择偶方向',body:'最佳配偶特征：八字中'+ug.use.join('、')+'旺的人与你能量互补。配偶的五行能量能补充你命局的不足。日支为婚姻宫，关注流年冲合日支的年份，感情容易出现重要转折。'+(gender==='M'?'男命以财星为妻星，关注财星在命局中的位置。':'女命以官杀为夫星，关注官杀在命局中的位置。')},
-    {title:'养生与健康管理',body:'需要重点关注的器官：'+ug.avoid.map(function(e){return e+'行——'+wxOrgan[e];}).join('；')+'。日常调理建议：'+ug.use.map(function(e){var sp={'水':'游泳、泡温泉、多喝水','金':'深呼吸练习、登山、瑜伽','木':'户外散步、园艺、伸展运动','火':'跑步、晒太阳、温热饮食','土':'太极、冥想、规律作息'};return sp[e]||'';}).join('；')+'。'}
+    {title:'事业与行业',body:'最适合的行业：'+ug.use.map(function(e){return '<b>'+e+'</b>属性——'+WXC[e];}).join('。')+'。选择与喜用神匹配的行业，能事半功倍。忌神行业（'+ug.avoid.join('、')+'属性）则容易遇阻。'},
+    {title:'颜色与方位',body:'日常多用<b>'+ug.use.map(function(e){return wxColor[e];}).join('、')+'</b>，包括穿搭、手机壳、办公用品、家居装饰。居住办公最利方位：<b>'+ug.use.map(function(e){return WXD[e]+'（'+e+'）';}).join('、')+'</b>。搬迁、出差优先选择有利方位。'},
+    {title:'感情方向',body:'最佳伴侣特征：八字中<b>'+ug.use.join('、')+'旺</b>的人，能量互补。'+(gender==='M'?'男命看财星，财星为喜用时容易遇到合适对象。':'女命看官杀，官杀为喜用时感情运较好。')+' 日支'+pils.day.branch+'为婚姻宫，关注冲合日支的年份。'},
+    {title:'健康养生',body:'推荐运动：'+ug.use.map(function(e){return wxSport[e]||'';}).filter(Boolean).join('、')+'。这些运动能补充你命局需要的五行能量。饮食上多摄入'+ug.use.join('、')+'属性食物，减少'+ug.avoid.join('、')+'属性食物的过量摄入。'},
   ];
 
   grid.style.gridTemplateColumns='1fr';
   var html='';
   cards.forEach(function(cd,i){
-    html+='<div class="r-rec-card full" style="grid-column:1/-1"><div class="r-rec-num">'+String(i+1).padStart(2,'0')+'</div><div class="r-rec-title">'+cd.title+'</div><div class="r-rec-body">'+cd.body+'</div></div>';
+    html+='<div class="r-rec-card full" style="grid-column:1/-1"><div class="r-rec-num">'+String(i+1).padStart(2,'0')+'</div><div class="r-rec-title">'+cd.title+'</div><div class="r-rec-body" style="line-height:1.9">'+cd.body+'</div></div>';
   });
   grid.innerHTML=html;
 }
