@@ -154,25 +154,68 @@ function kesSubmit(){
     else{uE=[wxGenBy[dayWxE],dayWxE];aE=[wxGen[dayWxE],wxCtrl[dayWxE]];}
 
     var tenGods = chart.ten_gods || {};
+    // 构建大运信息摘要
+    var dayunInfo = '';
+    if(data.dayun && data.dayun.periods){
+      var curYear = new Date().getFullYear();
+      var birthYear = parseInt(dateVal.split('-')[0]);
+      data.dayun.periods.forEach(function(dp, i){
+        var startAge = Math.round(dp.start_age);
+        var endAge = i+1<data.dayun.periods.length ? Math.round(data.dayun.periods[i+1].start_age) : startAge+10;
+        var dpStartYear = birthYear + startAge;
+        var dpEndYear = birthYear + endAge;
+        var isCur = (curYear >= dpStartYear && curYear < dpEndYear);
+        var label = isCur ? '[当前]' : '';
+        dayunInfo += label + dp.stem + dp.branch + '(' + startAge + '-' + endAge + '岁,' + dpStartYear + '-' + dpEndYear + ') 十神:' + (dp.ten_god_stem||'') + '/' + (dp.ten_god_branch||'') + '; ';
+      });
+    }
+
+    // 构建藏干摘要
+    var hiddenInfo = '';
+    if(chart.hidden_stems){
+      ['year','month','day','hour'].forEach(function(pos){
+        var hs = chart.hidden_stems[pos] || [];
+        if(hs.length) hiddenInfo += pos + ':' + hs.join(',') + ' ';
+      });
+    }
+
+    // 构建神煞摘要
+    var shenShaInfo = '';
+    if(chart.shen_sha){
+      var ss = chart.shen_sha;
+      if(typeof ss === 'object'){
+        for(var sk in ss){
+          if(Array.isArray(ss[sk]) && ss[sk].length) shenShaInfo += sk + ':' + ss[sk].join(',') + ' ';
+          else if(typeof ss[sk] === 'string' && ss[sk]) shenShaInfo += sk + ':' + ss[sk] + ' ';
+        }
+      }
+    }
+
     var enrichBody = {
       chart: {
         day_master: pillars.day.stem,
         day_master_element: dayWxE,
         strength: dm,
+        score: chart.day_master_score || '',
         year_pillar: pillars.year.stem + pillars.year.branch,
         month_pillar: pillars.month.stem + pillars.month.branch,
         day_pillar: pillars.day.stem + pillars.day.branch,
         hour_pillar: pillars.hour.stem + pillars.hour.branch,
+        hidden_stems: hiddenInfo,
         year_god: tenGods.year_stem || '',
         month_god: tenGods.month_stem || '',
         hour_god: tenGods.hour_stem || '',
         wuxing_summary: wxSummary,
         use_gods: uE.join('、'),
         avoid_gods: aE.join('、'),
-        kong_wang: chart.kong_wang ? JSON.stringify(chart.kong_wang) : '',
-        gender: gender
+        kong_wang: chart.kong_wang ? (chart.kong_wang.day_kong||[]).join(',') : '',
+        shen_sha: shenShaInfo,
+        tiaohuo: chart.tiaohuo_gods ? chart.tiaohuo_gods.join(',') : '',
+        gender: gender,
+        dayun_info: dayunInfo
       },
       analysis: data.analysis || {},
+      dayun: data.dayun || {},
       lang: isZh ? 'zh' : 'en',
       isPaid: false
     };
@@ -193,6 +236,7 @@ function kesSubmit(){
         if(e.career) data.analysis.career = e.career;
         if(e.relationship) data.analysis.relationship = e.relationship;
         if(e.health) data.analysis.health = e.health;
+        if(e.dayun_detail) data.analysis.dayun_detail = e.dayun_detail;
         data._enriched = e;
       }
 
@@ -568,12 +612,19 @@ function fillReport(data, dateStr, shichen, gender){
   fillAnalysisSection('健康', analysis ? analysis.health : '');
   fillAnalysisSection('感情', analysis ? analysis.relationship : '');
 
-  // English page: also fill with English keywords, then translate
+  // English
   fillAnalysisSection('Career', analysis ? analysis.career : '');
   fillAnalysisSection('Wealth', analysis ? analysis.wealth : '');
   fillAnalysisSection('Health', analysis ? analysis.health : '');
   fillAnalysisSection('Relationship', analysis ? analysis.relationship : '');
   fillAnalysisSection('Marriage', analysis ? analysis.relationship : '');
+
+  // ── 大运详情(Claude 生成) ──
+  if(analysis && analysis.dayun_detail){
+    addContentToSection(isZhPage?'大运':'Luck', function(){
+      return '<div style="margin-top:16px;line-height:1.9;font-size:13px;color:var(--t2)">'+formatParagraphs(analysis.dayun_detail)+'</div>';
+    });
+  }
 
   /* ── 扩充免费板块内容 ── */
   enrichFreeContent(data, useElems, avoidElems, gender);

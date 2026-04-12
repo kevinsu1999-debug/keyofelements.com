@@ -1,5 +1,5 @@
-// api/enrich.js — Claude API 全报告深度润色
-// 后端数据为事实基础，Claude只负责润色文字，不改变计算结果
+// api/enrich.js — Claude API 深度命理分析
+// 注入完整十神知识库 + 四柱时空 + 合冲刑害 + 过旺缺失
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,13 +12,11 @@ module.exports = async (req, res) => {
   if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { chart, analysis, lang, isPaid } = req.body;
+    const { chart, analysis, dayun, lang, isPaid } = req.body;
     if (!chart) return res.status(400).json({ error: 'No chart data' });
 
     const isZh = lang !== 'en';
-    const existingAnalysis = analysis || {};
-
-    const prompt = isZh ? buildZhPrompt(chart, existingAnalysis, isPaid) : buildEnPrompt(chart, existingAnalysis, isPaid);
+    const prompt = isZh ? buildZhPrompt(chart, analysis || {}, dayun, isPaid) : buildEnPrompt(chart, analysis || {}, dayun, isPaid);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -29,7 +27,7 @@ module.exports = async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
+        max_tokens: 8000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
@@ -52,89 +50,114 @@ module.exports = async (req, res) => {
   }
 };
 
-function buildZhPrompt(chart, analysis, isPaid) {
-  return `你是一位资深八字命理师，文笔兼具古典韵味与现代洞察力。请根据以下八字命盘的【确定事实】，为每个板块生成深入、有温度的分析文字。
+function buildZhPrompt(chart, a, dayun, isPaid) {
+  return `你是一位拥有30年经验的八字命理大师,文笔兼具古典韵味与现代洞察力。请根据以下命盘数据和分析引擎的原始结果,生成专业深度的命理报告。
 
-⚠️ 最重要的规则：
-1. 所有计算结果（四柱、五行比例、身强弱、喜用忌神）都是已确定的事实，你不能修改或质疑
-2. 你的任务是：基于这些事实，写出有深度、有共鸣、有文化底蕴的分析
-3. 每段分析必须引用具体的命盘数据（天干地支、十神、五行），不要泛泛而谈
-4. 语气温和专业，像是一位智慧长者在为你娓娓道来
+最重要的规则(必须严格遵守):
+1. 后端计算的四柱、五行、身强弱、喜用忌神都是已确定事实,不可修改
+2. 基于这些事实+十神知识体系,生成有深度、有洞察、有共鸣的分析
+3. 每段分析必须引用具体命盘数据(天干地支、十神、五行比例),不可泛泛而谈
+4. 结合四柱宫位时空含义(年柱=祖辈早年,月柱=事业社会,日柱=自我配偶,时柱=子女晚年)
+5. 免费板块(personality/career/relationship/health/dayun_detail)只做分析和描述,绝对不给任何建议、策略、推荐、指导。所有建议类内容只放在付费板块(use_god_guide/career_detail/relationship_detail/health_detail)
 
-═══ 命盘事实 ═══
-日主：${chart.day_master}（${chart.day_master_element}）
-身强弱：${chart.strength}
-四柱：年${chart.year_pillar} 月${chart.month_pillar} 日${chart.day_pillar} 时${chart.hour_pillar}
-十神：年干${chart.year_god} 月干${chart.month_god} 时干${chart.hour_god}
-五行：${chart.wuxing_summary}
-喜用神：${chart.use_gods}
-忌神：${chart.avoid_gods}
-空亡：${chart.kong_wang || '无'}
-性别：${chart.gender === 'F' ? '女' : '男'}
+=== 命盘确定事实 ===
+日主:${chart.day_master}(${chart.day_master_element})
+身强弱:${chart.strength}(评分${chart.score||''})
+四柱:年${chart.year_pillar} 月${chart.month_pillar} 日${chart.day_pillar} 时${chart.hour_pillar}
+藏干:${chart.hidden_stems||''}
+十神:年干${chart.year_god} 月干${chart.month_god} 时干${chart.hour_god}
+五行:${chart.wuxing_summary}
+喜用神:${chart.use_gods}
+忌神:${chart.avoid_gods}
+空亡:${chart.kong_wang||'无'}
+神煞:${chart.shen_sha||''}
+性别:${chart.gender==='F'?'女':'男'}
+调候用神:${chart.tiaohuo||''}
 
-已有分析（需要润色扩充）：
-性格：${analysis.personality || '无'}
-事业：${analysis.career || '无'}
-感情：${analysis.relationship || '无'}
-健康：${analysis.health || '无'}
-财运：${analysis.wealth || '无'}
+=== 后端分析引擎原始结果(需要深度扩展) ===
+性格:${a.personality||''}
+事业:${a.career||''}
+财运:${a.wealth||''}
+感情:${a.relationship||''}
+健康:${a.health||''}
+格局:${a.pattern_analysis||''}
+用神详解:${a.use_god_summary||''}
 
-═══ 请生成（JSON格式）═══
+=== 大运信息 ===
+${chart.dayun_info||''}
+
+=== 十神四柱解读核心知识 ===
+年柱=1-16岁/祖辈/早年环境; 月柱=17-32岁/父母/事业; 日柱=33-48岁/自我/配偶/婚姻宫; 时柱=49岁后/子女/晚年
+
+正印:学业保护贵人;年柱=家境好受母影响;月柱=人际好有书卷气;日柱=配偶按父母意愿;时柱=子女聪明晚年好
+偏印:玄学天赋孤独创意;年柱=思想不被理解;月柱=悲观但有深度;日柱=择偶极端;时柱=子女有特殊才能
+食神:才华口福享乐;年柱=聪明学东西快;月柱=乐天随和好脾气;日柱=重精神享受纯爱;时柱=晚年安逸子女乖
+伤官:才华锋芒叛逆;年柱=父母差异大;月柱=与父母冲突多有艺术天赋;日柱=感情起伏;时柱=子女难管教
+正官:工作压力责任;年柱=教育严格;月柱=按预期走事业体面;日柱=家庭稳定;时柱=子女孝顺
+七杀:挑战魄力小人;年柱=独立自强;月柱=掌控欲强领导力;日柱=相爱相杀;时柱=子女叛逆但有成
+比肩:独立竞争朋友;年柱=靠自己力量;月柱=女命事业型;日柱=配偶独立进取;时柱=晚年体力透支
+劫财:破财赌博社交;年柱=祖业一般;月柱=占有欲强好面子;日柱=缺安全感;时柱=子女关系浅
+正财:合法收入稳定;年柱=有家产;月柱=看重积累理财强;日柱=所爱之人;时柱=晚年富足
+偏财:意外之财人脉;年柱=祖辈经商;月柱=学生创业;日柱=为异性花钱;时柱=大器晚成
+
+缺财星:不为钱活/父亲缘浅/男命异性缘一般
+缺官杀:追求自由/不守规则/女命难遇适合另一半
+缺印星:学非所用/缺稳定性/母亲贵人交集少
+缺比劫:自主意识差/喜独来独往
+缺食伤:不善表达/低调安静/行事专一
+
+分析要点:合化(天干五合、地支六合三合)、冲克、刑害、墓库(辰戌丑未)、空亡影响
+
+=== 请生成(JSON格式) ===
 {
-  "wuxing_narrative": "五行能量叙事（80-120字）：用优美的语言描述此人五行分布特征，像在描绘一幅命运画卷。",
-  "strength_detail": "身强弱详解（100-150字）：解释为什么是${chart.strength}，三个维度（得令、得地、得势）的具体情况，以及这种状态的生命特质。",
-  "personality": "性格深度分析（250-350字）：从日主${chart.day_master}${chart.day_master_element}的本质特征出发，结合月干${chart.month_god}、年干${chart.year_god}、时干${chart.hour_god}的十神影响，分析性格底色、思维方式、为人处世。要有洞察力，让人觉得'被看透了'。",
-  "career": "事业财运分析（200-300字）：基于喜用神${chart.use_gods}分析适合的事业方向和赚钱模式。注意身${chart.strength}的人有什么样的事业特点。",
-  "relationship": "感情婚姻分析（200-300字）：基于命盘中的夫妻宫（日支）、婚姻星等分析感情模式和婚姻特点。${chart.gender === 'F' ? '女命以官杀为夫星' : '男命以财星为妻星'}。",
-  "health": "健康养生分析（150-200字）：基于五行分布${chart.wuxing_summary}分析体质特点和需要关注的健康领域。五行对应器官（木-肝胆，火-心脑，土-脾胃，金-肺肠，水-肾膀胱）。"${isPaid ? `,
-  "use_god_guide": "喜用神实操指南（200-250字）：基于喜用${chart.use_gods}和忌神${chart.avoid_gods}，给出具体的幸运颜色（每个喜用对应3-4个具体颜色名）、有利方位、有利季节、日常调理建议。",
-  "career_detail": "事业深度建议（150-200字）：具体行业推荐、事业策略、合作模式建议。",
-  "relationship_detail": "感情深度建议（150-200字）：择偶方向、感情经营策略、桃花运提升方法。",
-  "health_detail": "健康深度建议（150-200字）：具体养生方法、运动建议、饮食方向。"` : ''}
+  "personality": "性格特质深度分析(400-500字):从日主${chart.day_master}${chart.day_master_element}本质出发。逐一分析年干${chart.year_god}在年柱含义、月干${chart.month_god}在月柱含义、时干${chart.hour_god}在时柱含义。分析十神过旺或缺失。分析四柱合冲关系对性格的影响。分析早年(年柱)、青年(月柱)、中年(日柱)、晚年(时柱)的人生轨迹。要让人觉得被看透。",
+
+  "career": "事业与财运命局分析(400-500字):从月柱(事业宫)十神组合分析天生的事业类型和发展模式。分析命局中财星(正财偏财)的有无多寡,判断先天赚钱模式和财运特征。分析食伤生财或官印相生的格局是否存在及其含义。身${chart.strength}对事业的影响。分析正官七杀与事业野心的关系。注意:只做命局分析,不给具体行业推荐和策略建议。",
+
+  "relationship": "感情与婚姻深度分析(400-500字):从日柱(夫妻宫)十神分析感情模式。${chart.gender==='F'?'女命以官杀为夫星,分析官杀在四柱位置和状态,正官=正缘/七杀=情人':'男命以财星为妻星,分析财星在四柱位置和状态'}。分析配偶宫(日支)五行和藏干暗示的配偶特征。分析空亡对婚姻的影响。分析桃花星和感情相关神煞。分析感情模式和婚姻特征。注意:只分析命局中的感情特征,不给择偶建议和感情策略。",
+
+  "health": "健康体质命局分析(300-400字):基于五行${chart.wuxing_summary}分析先天体质类型。木=肝胆/火=心脑/土=脾胃/金=肺肠/水=肾膀胱。分析过旺和偏弱五行对应的健康风险区域。七杀在哪个五行那里容易得病。注意:只分析体质特征和风险,不给养生运动饮食建议。",
+
+  "dayun_detail": "当前大运命局分析(300-400字):${chart.dayun_info||'分析当前大运'}。核心原理:大运运支代替月令重新看运盘,旺衰和喜用随大运变化。分析当前大运十神含义、与原局合冲关系、对事业财运感情健康各方面的影响和变化趋势。注意:只做趋势分析,不给策略建议。"${isPaid ? `,
+
+  "use_god_guide": "喜用神实操指南(300-400字):基于喜用${chart.use_gods}:1)幸运颜色(每个喜用对应3-4个具体色名+穿搭建议)2)有利方位(居住办公)3)有利季节4)日常调理5)择偶五行匹配",
+
+  "career_detail": "事业深度策略(200-300字):具体行业推荐(按五行)、创业vs打工、合伙注意、投资方向、房地产时机",
+
+  "relationship_detail": "感情深度建议(200-300字):最佳配偶特征、感情经营、桃花提升、婚姻时机",
+
+  "health_detail": "养生深度指南(200-300字):运动建议、饮食方向、重点检查器官、精神健康"` : ''}
 }
 
-返回纯JSON，不要markdown。`;
+返回纯JSON,不要markdown。`;
 }
 
-function buildEnPrompt(chart, analysis, isPaid) {
-  return `You are a senior BaZi (Four Pillars of Destiny) analyst with elegant, insightful writing. Generate deep analysis based on the CONFIRMED FACTS below.
+function buildEnPrompt(chart, a, dayun, isPaid) {
+  return `You are a master BaZi analyst with 30 years of experience. Generate comprehensive analysis.
 
-⚠️ CRITICAL RULES:
-1. All calculations (pillars, elements, strength, favorable elements) are CONFIRMED FACTS — do not modify or question them
-2. Your job: write deep, resonant, culturally rich analysis based on these facts
-3. Each section must reference specific chart data (stems, branches, ten gods, elements)
-4. Tone: professional yet warm, like a wise mentor sharing insights
+RULES: All calculations are CONFIRMED FACTS. Reference specific chart data in every paragraph.
+Four Pillar positions: Year=ancestors/childhood, Month=career, Day=self/spouse, Hour=children/late life
 
-═══ CHART FACTS ═══
-Day Master: ${chart.day_master} (${chart.day_master_element})
-Strength: ${chart.strength}
-Pillars: Year ${chart.year_pillar}, Month ${chart.month_pillar}, Day ${chart.day_pillar}, Hour ${chart.hour_pillar}
-Ten Gods: Year ${chart.year_god}, Month ${chart.month_god}, Hour ${chart.hour_god}
-Five Elements: ${chart.wuxing_summary}
-Favorable: ${chart.use_gods}
-Unfavorable: ${chart.avoid_gods}
-Void: ${chart.kong_wang || 'None'}
-Gender: ${chart.gender === 'F' ? 'Female' : 'Male'}
+CHART: Day Master ${chart.day_master}(${chart.day_master_element}), Strength ${chart.strength}
+Pillars: Y${chart.year_pillar} M${chart.month_pillar} D${chart.day_pillar} H${chart.hour_pillar}
+Ten Gods: Y-${chart.year_god} M-${chart.month_god} H-${chart.hour_god}
+Elements: ${chart.wuxing_summary} | Favorable: ${chart.use_gods} | Avoid: ${chart.avoid_gods}
+Gender: ${chart.gender==='F'?'Female':'Male'} | Void: ${chart.kong_wang||'None'}
 
-Existing analysis to expand:
-Personality: ${analysis.personality || 'N/A'}
-Career: ${analysis.career || 'N/A'}
-Relationship: ${analysis.relationship || 'N/A'}
-Health: ${analysis.health || 'N/A'}
+Analysis to expand: personality:${a.personality||''} career:${a.career||''} relationship:${a.relationship||''} health:${a.health||''}
+Dayun: ${chart.dayun_info||''}
 
-═══ GENERATE (JSON) ═══
+GENERATE (JSON):
 {
-  "wuxing_narrative": "Five Elements narrative (80-120 words): Describe the elemental distribution poetically.",
-  "strength_detail": "Strength analysis (100-150 words): Why they are ${chart.strength}, what this means.",
-  "personality": "Deep personality (250-350 words): From Day Master traits + Ten Gods influence. Be insightful.",
-  "career": "Career & wealth (200-300 words): Based on favorable elements ${chart.use_gods}.",
-  "relationship": "Relationship (200-300 words): Based on spouse palace and marriage stars.",
-  "health": "Health (150-200 words): Based on Five Elements distribution."${isPaid ? `,
-  "use_god_guide": "Practical guide (200-250 words): Lucky colors (3-4 specific colors per element), directions, seasons.",
-  "career_detail": "Career deep advice (150-200 words): Specific industries, strategies.",
-  "relationship_detail": "Relationship advice (150-200 words): Partner selection, relationship tips.",
-  "health_detail": "Health advice (150-200 words): Exercise, diet, wellness strategies."` : ''}
+  "personality": "Deep personality (400-500 words): Day Master + Ten Gods in each pillar + combinations/clashes + life trajectory by pillar.",
+  "career": "Career & wealth (400-500 words): Industries by favorable elements, wealth star analysis, business vs employment.",
+  "relationship": "Relationship (400-500 words): Spouse palace, marriage stars, compatibility, timing.",
+  "health": "Health (300-400 words): Five element organs, constitution, wellness.",
+  "dayun_detail": "Current luck period (300-400 words): How it transforms the chart."${isPaid ? `,
+  "use_god_guide": "Practical guide (300-400 words): Colors, directions, seasons.",
+  "career_detail": "Career strategy (200-300 words)",
+  "relationship_detail": "Relationship advice (200-300 words)",
+  "health_detail": "Wellness guide (200-300 words)"` : ''}
 }
-
 Return pure JSON only.`;
 }
