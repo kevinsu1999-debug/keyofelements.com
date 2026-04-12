@@ -112,17 +112,18 @@ function kesSubmit(){
     if(typeof lockReport==='function')lockReport();
     // 先填报告骨架但不显示
     fillReport(data,dateVal,shichen,gender,isZh);
-    // 等Claude润色完成后再显示（最多12秒超时）
-    var showTimer=setTimeout(function(){
-      goPage('report');if(ld)ld.classList.remove('on');
-      if(btn){btn.disabled=false;btn.style.opacity='1';}
-    },12000);
+    // 等Claude润色完成后再显示（最多18秒超时）
+    function showFinal(){
+      setTimeout(function(){
+        goPage('report');
+        if(ld)ld.classList.remove('on');
+        if(btn){btn.disabled=false;btn.style.opacity='1';}
+      },600);
+    }
+    var showTimer=setTimeout(showFinal,18000);
     window._kesShowReport=function(){
       clearTimeout(showTimer);
-      setTimeout(function(){
-        goPage('report');if(ld)ld.classList.remove('on');
-        if(btn){btn.disabled=false;btn.style.opacity='1';}
-      },500); // 额外延迟确保DOM更新完成
+      showFinal();
     };
   })
   .catch(function(e){
@@ -283,25 +284,6 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   }
 
 
-  /* 09 前的2024-2025流年（免费区） */
-  var freeTable=document.querySelector('.report-wrap .r-tbl');
-  if(freeTable && !freeTable.closest('#paywallGate')){
-    var fHead='<div class="r-tbl-head r-tbl-3"><div>年份</div><div>干支</div><div>运势概要</div></div>';
-    var fRows='';
-    var curYr=new Date().getFullYear();for(var fy=curYr-2;fy<=curYr-1;fy++){
-      var fgz=yearGZ(fy),fsg=getTenGod(ds,fgz.stem),fsE=STEM_ELEM[fgz.stem],fbE=BRANCH_ELEM[fgz.branch];
-      var fsc=3;if(ug.use.indexOf(fsE)>=0)fsc+=0.8;if(ug.use.indexOf(fbE)>=0)fsc+=0.7;if(ug.avoid.indexOf(fsE)>=0)fsc-=0.8;if(ug.avoid.indexOf(fbE)>=0)fsc-=0.7;
-      fsc=Math.max(1,Math.min(5,Math.round(fsc)));
-      var fst='';for(var fs=0;fs<5;fs++)fst+=fs<fsc?'★':'☆';
-      var fbg=getTenGodBr(ds,fgz.branch);
-      var fnt=fgz.stem+fgz.branch+'（'+fsg+'）：'+(LN_DESC[fsg]||'')+'。';
-      if(fbg&&fbg!==fsg) fnt+='地支'+fgz.branch+'（'+fbg+'）辅助。';
-      if(fsc<=2) fnt='<b>'+fnt+'</b>';
-      fRows+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+fy+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[fsE]+'">'+fgz.stem+'</span><span class="e-'+WX_CLASS[fbE]+'">'+fgz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+fst+'</div><div class="r-a-note">'+fnt+'</div></div></div>';
-    }
-    freeTable.innerHTML=fHead+fRows;
-  }
-
   /* 09 大运 — 每步都显示内容和吉凶 */
   if(dayun.periods&&dayun.periods.length){
     var sec09=findSection('09');
@@ -334,8 +316,10 @@ function fillReport(data,dateStr,shichen,gender,isZh){
         if(MKD[dp.branch]) desc+='\u3002'+dp.branch+(isZh?'\u4E3A'+MKD[dp.branch]+'\uff0c\u5173\u6CE8\u58A8\u5E93\u5F00\u5408':' is a storage branch');
         var sWxC=WX_CLASS[STEM_ELEM[dp.stem]],bWxC=WX_CLASS[BRANCH_ELEM[dp.branch]];
 
-        // 付费墙：当前及之前免费，之后付费
-        var isPaid=(curIdx>=0 && d>curIdx);
+        // 付费墙：检查是否已解锁
+        var pwGate=document.getElementById('paywallGate');
+        var isUnlocked=pwGate&&!pwGate.classList.contains('locked');
+        var isPaid=!isUnlocked&&(curIdx>=0 && d>curIdx);
         var wrapStart=isPaid?'<div style="filter:blur(4px);pointer-events:none">':'';
         var wrapEnd=isPaid?'</div>':'';
 
@@ -360,6 +344,9 @@ function fillReport(data,dateStr,shichen,gender,isZh){
       // 隐藏旧的scroll和summary，直接写入section
       var dyScroll=sec09.querySelector('.r-dy-scroll');
       var dySummary=sec09.querySelector('.r-dy-summary');
+      // 也隐藏旧的2024-2025表格
+      var dyOldTbl=sec09.querySelector('.r-tbl');
+      if(dyOldTbl) dyOldTbl.style.display='none';
       if(dyScroll) dyScroll.style.display='none';
       if(dySummary) dySummary.innerHTML=allHtml;
       else{
@@ -463,7 +450,7 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
   var tbl=document.querySelectorAll('#paywallGate .r-tbl');if(!tbl.length)return;
   var hd='<div class="r-tbl-head r-tbl-3"><div>'+(isZh?'年份':'Year')+'</div><div>'+(isZh?'干支':'Stems')+'</div><div>'+(isZh?'运势概要':'Summary')+'</div></div>';
   var rw='';
-  var curYr2=new Date().getFullYear();for(var y=curYr2;y<=curYr2+7;y++){
+  var curYr2=new Date().getFullYear();for(var y=curYr2-2;y<=curYr2+7;y++){
     var gz=yearGZ(y),sg=getTenGod(ds,gz.stem),sE=STEM_ELEM[gz.stem],bE=BRANCH_ELEM[gz.branch];
     var sc=3;if(use.indexOf(sE)>=0)sc+=0.8;if(use.indexOf(bE)>=0)sc+=0.7;if(avoid.indexOf(sE)>=0)sc-=0.8;if(avoid.indexOf(bE)>=0)sc-=0.7;
     sc=Math.max(1,Math.min(5,Math.round(sc)));
@@ -560,12 +547,8 @@ function fillAnnualDetail(a,ds,dwx,ug,isZh){
     t+=(sg==='七杀'||sg==='伤官')?'今年感情容易有波动和冲突，注意沟通方式。':'整体感情运势平稳。';
     t+='</p>';
     lyB.innerHTML=t;
-  }
-
-  // 月度表格（section 10 内的表格）
-  var tbl=sec.querySelector('.r-tbl');
-  if(tbl&&a.yearly_forecast&&Array.isArray(a.yearly_forecast)){
-    fillFlowMonths(a,ds,isZh);
+    lyB.style.lineHeight='1.9';
+    lyB.style.fontSize='13px';
   }
 }
 
@@ -632,23 +615,27 @@ function fillRecommendations(data,ds,dwx,ug,gender,isZh){
   if(!isZh)return;
   var sec=findSection('12');if(!sec)return;
   var grid=sec.querySelector('.r-rec-grid');if(!grid)return;
-  var WXC={'金':'金融、法律、医疗器械、IT硬件','木':'教育、出版、设计、文创','水':'物流、传媒、咨询、旅游','火':'科技、能源、美容、餐饮','土':'房产、建筑、农业、保险'};
-  var WXL={'木':'绿色系（鼠尾草绿、森林绿、橄榄绿）','火':'红橙色系（砖红、珊瑚红、铁锈红）','土':'棕黄色系（驼色、卡其、焦糖棕）','金':'白银色系（香槟、象牙白、珍珠白）','水':'蓝黑色系（藏蓝、墨黑、深灰）'};
+  var WXC={'金':'金融、银行、法律、医疗器械、IT硬件、珠宝首饰、机械制造','木':'教育、出版、设计、文创、园艺、家具、纺织服装','水':'物流、传媒、咨询、旅游、航运、贸易、酒水饮料','火':'科技、能源、餐饮、美容、演艺、广告、电子商务','土':'房地产、建筑、农业、保险、陶瓷、矿业、仓储'};
+  var WXL={'木':'绿色系——鼠尾草绿、森林绿、橄榄绿、薄荷绿','火':'红橙色系——砖红、珊瑚红、铁锈红、橘色','土':'棕黄色系——驼色、卡其、焦糖棕、大地色','金':'白银色系——香槟、象牙白、珍珠白、银灰','水':'蓝黑色系——藏蓝、墨黑、深灰、靛蓝'};
   var WXD={'木':'东方','火':'南方','土':'中央','金':'西方','水':'北方'};
+  var WXS={'木':'春季（2-4月）','火':'夏季（5-7月）','土':'四季交替月','金':'秋季（8-10月）','水':'冬季（11-1月）'};
+  var wxOrgan={'木':'肝胆、眼睛、筋骨','火':'心脏、小肠、血液循环','土':'脾胃、消化系统、肌肉','金':'肺部、大肠、呼吸系统','水':'肾脏、膀胱、泌尿生殖'};
   var curYear=new Date().getFullYear();
   var gz=yearGZ(curYear),sg=getTenGod(ds,gz.stem);
 
   var cards=[
-    {num:'01',title:curYear+'年度策略',body:curYear+'年'+gz.stem+gz.branch+'（'+sg+'），'+(LN_DESC[sg]||'')+'。'+(ug.avoid.indexOf(STEM_ELEM[gz.stem])>=0?'今年忌神当道，整体宜守不宜攻，财务保守，工作以维稳为主。':'今年喜用得力，可适当拓展事业，把握机遇。'),full:true},
-    {num:'02',title:'事业行业方向',body:'适合的五行行业：'+ug.use.map(function(e){return e+'属性——'+WXC[e];}).join('。')+'。'},
-    {num:'03',title:'幸运颜色',body:ug.use.map(function(e){return WXL[e];}).join('；')+'。日常穿搭、办公用品、手机壳等小物件都可以选用这些色系。'},
-    {num:'04',title:'有利方位',body:'居住和办公最利方位：'+ug.use.map(function(e){return WXD[e]+'（'+e+'）';}).join('、')+'。如有搬迁计划，优先考虑这些方位。'},
-    {num:'05',title:'感情择偶',body:'最佳配偶八字中'+ug.use.join('、')+'旺。配偶的五行能量能补充你命局的不足，形成互补的能量场。日支为婚姻宫，关注日支被冲合的流年。'},
-    {num:'06',title:'养生重点',body:'重点关注'+dwx+'行对应的器官。日常可通过'+ug.use.join('、')+'属性的运动和饮食调理：'+(ug.use.indexOf('水')>=0?'游泳、泡温泉；':'')+(ug.use.indexOf('金')>=0?'呼吸练习、登山；':'')+(ug.use.indexOf('木')>=0?'瑜伽、户外散步；':'')+(ug.use.indexOf('火')>=0?'跑步、晒太阳；':'')+(ug.use.indexOf('土')>=0?'太极、散步；':'')},
+    {title:curYear+'年度策略',body:curYear+'年'+gz.stem+gz.branch+'（'+sg+'）。'+(LN_DESC[sg]||'')+'。'+(ug.avoid.indexOf(STEM_ELEM[gz.stem])>=0?'今年天干为忌神方向，整体宜守不宜攻。财务上保持保守，工作以维稳为主，不宜做重大投资或职业变动。':'今年天干为喜用方向，可适当拓展事业版图，主动争取机会。')},
+    {title:'事业行业方向',body:'最适合的五行行业方向：'+ug.use.map(function(e){return e+'属性——'+WXC[e];}).join('。')+'。核心原则是选择与喜用神五行属性匹配的行业，能借行业之势助力自身发展。'},
+    {title:'幸运颜色与穿搭',body:'日常宜多用的颜色：'+ug.use.map(function(e){return WXL[e];}).join('。')+'。应用场景包括：日常穿搭、办公用品、手机壳、家居装饰、车内饰等。尽量减少使用'+ug.avoid.map(function(e){return WXL[e];}).join('、')+'。'},
+    {title:'有利方位与季节',body:'居住和办公最利方位：'+ug.use.map(function(e){return WXD[e]+'（'+e+'）';}).join('、')+'。有利季节：'+ug.use.map(function(e){return WXS[e]||'';}).join('、')+'。如有搬迁、出差、旅行计划，优先考虑有利方位。'},
+    {title:'感情择偶方向',body:'最佳配偶特征：八字中'+ug.use.join('、')+'旺的人与你能量互补。配偶的五行能量能补充你命局的不足。日支为婚姻宫，关注流年冲合日支的年份，感情容易出现重要转折。'+(gender==='M'?'男命以财星为妻星，关注财星在命局中的位置。':'女命以官杀为夫星，关注官杀在命局中的位置。')},
+    {title:'养生与健康管理',body:'需要重点关注的器官：'+ug.avoid.map(function(e){return e+'行——'+wxOrgan[e];}).join('；')+'。日常调理建议：'+ug.use.map(function(e){var sp={'水':'游泳、泡温泉、多喝水','金':'深呼吸练习、登山、瑜伽','木':'户外散步、园艺、伸展运动','火':'跑步、晒太阳、温热饮食','土':'太极、冥想、规律作息'};return sp[e]||'';}).join('；')+'。'}
   ];
+
+  grid.style.gridTemplateColumns='1fr';
   var html='';
-  cards.forEach(function(cd){
-    html+='<div class="r-rec-card'+(cd.full?' full':'')+'"><div class="r-rec-num">'+cd.num+'</div><div class="r-rec-title">'+cd.title+'</div><div class="r-rec-body">'+cd.body+'</div></div>';
+  cards.forEach(function(cd,i){
+    html+='<div class="r-rec-card full" style="grid-column:1/-1"><div class="r-rec-num">'+String(i+1).padStart(2,'0')+'</div><div class="r-rec-title">'+cd.title+'</div><div class="r-rec-body">'+cd.body+'</div></div>';
   });
   grid.innerHTML=html;
 }
@@ -657,23 +644,38 @@ function fillRecommendations(data,ds,dwx,ug,gender,isZh){
 function fillZiwei(data,ds,dwx,str,isZh){
   if(!isZh)return;
   var sec=findSection('13');if(!sec)return;
-  // 清空硬编码的meta数据
+
+  // 清空硬编码
   var meta=sec.querySelector('.r-zw-meta');
-  if(meta) meta.innerHTML='<div class="r-zw-meta-item"><span class="r-zw-meta-label">日主</span>'+ds+dwx+'</div><div class="r-zw-meta-item"><span class="r-zw-meta-label">身强弱</span><b>'+str+'</b></div>';
+  if(meta) meta.innerHTML='<div class="r-zw-meta-item"><span class="r-zw-meta-label">日主</span>'+ds+dwx+'</div><div class="r-zw-meta-item"><span class="r-zw-meta-label">身强弱</span><b>'+str+'</b></div><div class="r-zw-meta-item"><span class="r-zw-meta-label">喜用</span>'+deriveUseGods(dwx,str,0,null).use.join('、')+'</div>';
+
   var sihua=sec.querySelector('.r-zw-sihua');
-  if(sihua) sihua.style.display='none'; // 暂隐藏四化（需后端数据）
-  // 填交叉验证结论
+  if(sihua) sihua.style.display='none';
+
+  // 12宫验证
+  var WXT={'木':'仁慈上进、有创造力','火':'热情光明、表现力佳','土':'诚信稳重、包容踏实','金':'果断义气、执行力强','水':'智慧灵活、适应力强'};
+  var pillars=data.chart.pillars||{};
+  var dayBr=pillars.day?pillars.day.branch:'';
+
+  var palaces=[
+    {name:'命宫',desc:'日主'+ds+dwx+'，'+WXT[dwx]+'。性格底色由日主决定。'},
+    {name:'事业宫',desc:/旺|强/.test(str)?'身强有力，事业宫能量充足，适合主动开拓、独立发展。':'身弱需借力，事业宫显示宜团队协作、借势发展。'},
+    {name:'财帛宫',desc:'与八字财星格局呼应。'+(dwx==='土'||dwx==='金'?'理财偏稳健保守型。':'理财灵活，善于把握机会。')},
+    {name:'夫妻宫',desc:'日支'+dayBr+'为婚姻宫，'+BRANCH_ELEM[dayBr]+'行坐支。配偶特征与日支藏干暗示一致。'},
+    {name:'子女宫',desc:'时柱代表子女宫，关注时柱十神与日主的关系。'},
+    {name:'兄弟宫',desc:'月柱代表兄弟宫，比劫星的强弱反映手足缘分。'},
+    {name:'迁移宫',desc:'出行、搬迁运势与喜用方位有关。有利方向为喜用神五行对应方位。'},
+    {name:'疾厄宫',desc:'健康重点关注'+dwx+'行对应器官，以及忌神五行所主器官。'},
+    {name:'田宅宫',desc:'房产运势与正财、印星的力量有关。关注流年财印旺衰。'},
+    {name:'福德宫',desc:'精神生活与食伤星有关。'+(/旺|强/.test(str)?'身强者福德充实，精力旺盛。':'身弱者需注意精神调养。')},
+    {name:'父母宫',desc:'年柱代表父母宫，印星强弱反映与父母的缘分。'},
+    {name:'交友宫',desc:'社交人脉与比劫星有关。喜用五行行业的朋友对你最有助力。'}
+  ];
+
   var list=sec.querySelector('.r-zw-verify-list');
   if(list){
-    var WXT={'木':'仁慈上进，创造力强','火':'热情光明，表现力佳','土':'诚信稳重，包容踏实','金':'果断义气，执行力强','水':'智慧灵活，适应力强'};
-    var items=[
-      {ok:true,text:'日主'+ds+dwx+'：'+WXT[dwx]+'，与紫微命宫主星特质呼应'},
-      {ok:/旺|强/.test(str),text:'身'+str+'：'+(/旺|强/.test(str)?'命宫能量充足，紫微事业宫亦显主动开拓之象':'命宫需借力，紫微格局显示宜团队协作、借势发展')},
-      {ok:true,text:'财帛宫：与八字财星格局相互印证，理财模式一致'},
-      {ok:true,text:'夫妻宫：配偶特征与八字日支藏干暗示一致，可作为择偶参考'},
-    ];
-    list.innerHTML=items.map(function(it){
-      return '<div class="r-zw-v-item '+(it.ok?'ok':'warn')+'">'+it.text+'</div>';
+    list.innerHTML=palaces.map(function(p){
+      return '<div class="r-zw-v-item ok" style="padding:8px 0;border-bottom:1px solid var(--line)"><b>'+p.name+'：</b>'+p.desc+'</div>';
     }).join('');
   }
 }
