@@ -1105,6 +1105,26 @@ body{font-size:15px;line-height:1.75}
 }
 .r-disclaimer b{color:var(--t2);font-weight:600}
 .paywall-gate{position:relative}
+.kes-loading{
+  display:none;position:fixed;inset:0;z-index:20000;
+  background:var(--bg);
+  flex-direction:column;align-items:center;justify-content:center;gap:32px;
+}
+.kes-loading.on{display:flex}
+.kes-loading .wuxing-ring{width:120px;height:120px;position:relative;animation:wuxing-spin 8s linear infinite}
+@keyframes wuxing-spin{to{transform:rotate(360deg)}}
+.kes-loading .wx-dot{
+  position:absolute;width:18px;height:18px;border-radius:50%;
+  animation:wx-pulse 2s ease-in-out infinite;
+}
+.kes-loading .wx-dot:nth-child(1){top:0;left:51px;background:var(--mu);animation-delay:0s}
+.kes-loading .wx-dot:nth-child(2){top:36px;right:0;background:var(--huo);animation-delay:.4s}
+.kes-loading .wx-dot:nth-child(3){bottom:8px;right:12px;background:var(--tu);animation-delay:.8s}
+.kes-loading .wx-dot:nth-child(4){bottom:8px;left:12px;background:var(--jin);animation-delay:1.2s}
+.kes-loading .wx-dot:nth-child(5){top:36px;left:0;background:var(--shui);animation-delay:1.6s}
+@keyframes wx-pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.5);opacity:1}}
+.kes-loading .load-text{font-size:13px;color:var(--t3);letter-spacing:.06em;text-align:center;line-height:1.8}
+.kes-loading .load-step{font-size:11px;color:var(--t4);margin-top:-16px;letter-spacing:.04em;min-height:20px}
 .paywall-gate.locked::after{
   content:'';position:absolute;bottom:0;left:0;right:0;height:200px;
   background:linear-gradient(to bottom,rgba(244,242,238,0) 0%,rgba(244,242,238,1) 70%);
@@ -2666,6 +2686,15 @@ function pickSize(el){
     
   </div>
 </div>
+<!-- ═══ LOADING OVERLAY ═══ -->
+<div class="kes-loading" id="kesLoading">
+  <div class="wuxing-ring">
+    <div class="wx-dot"></div><div class="wx-dot"></div><div class="wx-dot"></div><div class="wx-dot"></div><div class="wx-dot"></div>
+  </div>
+  <div class="load-text">Key of Elements<br>Reading your destiny</div>
+  <div class="load-step" id="loadStep"></div>
+</div>
+
 <!-- ═══ DISCLAIMER BANNER ═══ -->
 <div class="disclaimer-banner" id="disclaimerBanner">
   <div class="disc-icon">!</div>

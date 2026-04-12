@@ -97,12 +97,18 @@ function kesSubmit(){
 
   console.log('城市坐标:', cityVal, 'lon:', lon, 'lat:', lat, 'tz:', tz);
 
-  /* 显示加载状态 */
+  /* ── 显示全屏加载 ── */
+  var loading = document.getElementById('kesLoading');
+  var loadStep = document.getElementById('loadStep');
+  if(loading) loading.classList.add('on');
+
   var btn = document.querySelector('.f-btn');
   var origText = btn.textContent;
-  btn.textContent = isZh ? '正在排盘计算中…' : 'Calculating...';
   btn.disabled = true;
   btn.style.opacity = '0.6';
+
+  function setStep(msg){ if(loadStep) loadStep.textContent = msg; }
+  setStep(isZh ? '正在排盘计算…' : 'Calculating chart...');
 
   var body = {
     birth_year: year, birth_month: month, birth_day: day,
@@ -122,15 +128,88 @@ function kesSubmit(){
     return res.json();
   })
   .then(function(data){
+    setStep(isZh ? '排盘完成，正在生成深度分析…' : 'Chart ready, generating deep analysis...');
+
     if(typeof lockReport==='function') lockReport();
-    fillReport(data, dateVal, shichen, gender);
-    goPage('report');
-    btn.textContent = origText;
-    btn.disabled = false;
-    btn.style.opacity = '1';
+
+    // 准备 Claude 润色请求
+    var chart = data.chart;
+    var pillars = chart.pillars;
+    var wuxing = chart.wuxing_counts || {};
+    var wxTotal = 0;
+    ['木','火','土','金','水'].forEach(function(w){ wxTotal += (wuxing[w]||0); });
+    var wxSummary = ['木','火','土','金','水'].map(function(w){
+      return w + Math.round((wuxing[w]||0)/(wxTotal||1)*100) + '%';
+    }).join(' ');
+
+    var dayWxE = GAN_WX[pillars.day.stem];
+    var dm = chart.day_master_strength || '';
+    var wxGen={'木':'火','火':'土','土':'金','金':'水','水':'木'};
+    var wxCtrl={'木':'土','火':'金','土':'水','金':'木','水':'火'};
+    var wxGenBy={'火':'木','土':'火','金':'土','水':'金','木':'水'};
+    var wxCtrlBy={'土':'木','金':'火','水':'土','木':'金','火':'水'};
+    var uE=[],aE=[];
+    if(dm.indexOf('强')>=0){uE=[wxGen[dayWxE],wxCtrl[dayWxE],wxCtrlBy[dayWxE]];aE=[wxGenBy[dayWxE],dayWxE];}
+    else if(dm.indexOf('弱')>=0){uE=[wxGenBy[dayWxE],dayWxE];aE=[wxGen[dayWxE],wxCtrl[dayWxE],wxCtrlBy[dayWxE]];}
+    else{uE=[wxGen[dayWxE],wxCtrl[dayWxE]];aE=[wxCtrlBy[dayWxE]];}
+
+    var tenGods = chart.ten_gods || {};
+    var enrichBody = {
+      chart: {
+        day_master: pillars.day.stem,
+        day_master_element: dayWxE,
+        strength: dm,
+        year_pillar: pillars.year.stem + pillars.year.branch,
+        month_pillar: pillars.month.stem + pillars.month.branch,
+        day_pillar: pillars.day.stem + pillars.day.branch,
+        hour_pillar: pillars.hour.stem + pillars.hour.branch,
+        year_god: tenGods.year_stem || '',
+        month_god: tenGods.month_stem || '',
+        hour_god: tenGods.hour_stem || '',
+        wuxing_summary: wxSummary,
+        use_gods: uE.join('、'),
+        avoid_gods: aE.join('、'),
+        kong_wang: chart.kong_wang ? JSON.stringify(chart.kong_wang) : '',
+        gender: gender
+      },
+      analysis: data.analysis || {},
+      lang: isZh ? 'zh' : 'en',
+      isPaid: false
+    };
+
+    return fetch('/api/enrich', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(enrichBody)
+    })
+    .then(function(res2){ return res2.ok ? res2.json() : null; })
+    .then(function(enrichData){
+      setStep(isZh ? '分析完成，正在渲染报告…' : 'Rendering report...');
+
+      if(enrichData && enrichData.enriched){
+        var e = enrichData.enriched;
+        if(!data.analysis) data.analysis = {};
+        if(e.personality) data.analysis.personality = e.personality;
+        if(e.career) data.analysis.career = e.career;
+        if(e.relationship) data.analysis.relationship = e.relationship;
+        if(e.health) data.analysis.health = e.health;
+        data._enriched = e;
+      }
+
+      fillReport(data, dateVal, shichen, gender);
+      goPage('report');
+
+      setTimeout(function(){
+        if(loading) loading.classList.remove('on');
+      }, 300);
+      btn.textContent = origText;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    });
   })
   .catch(function(err){
-    alert('计算出错：' + err.message + '\n请稍后重试');
+    alert(isZh ? '计算出错：' + err.message : 'Error: ' + err.message);
+    if(loading) loading.classList.remove('on');
     btn.textContent = origText;
     btn.disabled = false;
     btn.style.opacity = '1';
@@ -529,13 +608,33 @@ var SHISHEN_ZH = {
 
 function enrichFreeContent(data, useElems, avoidElems, gender){
   var chart = data.chart;
+  var enriched = data._enriched || {};
   var isZh = document.documentElement.lang === 'zh';
-  var pillars = chart.pillars;
-  var dayStem = pillars.day.stem;
-  var dayWx = GAN_WX[dayStem];
   var wuxing = chart.wuxing_counts || {};
-  var tenGods = chart.ten_gods || {};
-  var strength = chart.day_master_strength || '';
+
+  // ── 02 五行：Claude 叙事 ──
+  if(enriched.wuxing_narrative){
+    addContentToSection(isZh?'五行':'Element', function(){
+      return '<div style="line-height:1.9;font-size:13px;color:var(--t2);margin-top:10px;font-family:\'Noto Serif SC\',serif">'+formatParagraphs(enriched.wuxing_narrative)+'</div>';
+    });
+  } else {
+    // 回退：基础五行分析
+    addContentToSection(isZh?'五行':'Element', function(){
+      var wxTotal=0,wxOrder=['木','火','土','金','水'];
+      wxOrder.forEach(function(w){wxTotal+=(wuxing[w]||0);});
+      if(wxTotal===0) return '';
+      var strongest='',weakest='',sPct=0,wPct=100;
+      wxOrder.forEach(function(w){var pct=Math.round((wuxing[w]||0)/wxTotal*100);if(pct>sPct){sPct=pct;strongest=w;}if(pct<wPct){wPct=pct;weakest=w;}});
+      return '<p>'+strongest+'最旺（'+sPct+'%），'+weakest+'最弱（'+wPct+'%）。</p>';
+    });
+  }
+
+  // ── 03 身强弱：Claude 详解 ──
+  if(enriched.strength_detail){
+    addContentToSection(isZh?'身强':'strength', function(){
+      return '<div style="line-height:1.9;font-size:13px;color:var(--t2);margin-top:10px">'+formatParagraphs(enriched.strength_detail)+'</div>';
+    });
+  }
 
   // ── 04 喜用忌神：引导付费 ──
   addContentToSection(isZh?'喜用忌神':'Favorable', function(){
@@ -551,89 +650,12 @@ function enrichFreeContent(data, useElems, avoidElems, gender){
     }
   });
 
-  // ── 五行分布简述 ──
-  addContentToSection(isZh?'五行':'Element', function(){
-    var wxTotal = 0;
-    var wxOrder = ['木','火','土','金','水'];
-    wxOrder.forEach(function(w){ wxTotal += (wuxing[w]||0); });
-    if(wxTotal === 0) return '';
-    var strongest='',weakest='',sPct=0,wPct=100;
-    wxOrder.forEach(function(w){
-      var pct=Math.round((wuxing[w]||0)/wxTotal*100);
-      if(pct>sPct){sPct=pct;strongest=w;}
-      if(pct<wPct){wPct=pct;weakest=w;}
+  // ── 05 四柱宫位解读（如有） ──
+  if(enriched.pillars_insight){
+    addContentToSection(isZh?'四柱':'Four', function(){
+      return '<div style="line-height:1.9;font-size:13px;color:var(--t2);margin-top:12px;padding:14px 18px;background:var(--bg2);border-radius:8px">'+formatParagraphs(enriched.pillars_insight)+'</div>';
     });
-    if(isZh){
-      return '<p>命局中<b class="e-'+WX_CLASS[strongest]+'">'+strongest+'</b>最旺（'+sPct+'%），<b class="e-'+WX_CLASS[weakest]+'">'+weakest+'</b>最弱（'+wPct+'%）。'+(sPct>40?'五行分布偏枯，需要后天调和。':'')+'</p>';
-    } else {
-      return '<p><b class="e-'+WX_CLASS[strongest]+'">'+WX_NAME_EN[strongest]+'</b> dominates ('+sPct+'%), <b class="e-'+WX_CLASS[weakest]+'">'+WX_NAME_EN[weakest]+'</b> is weakest ('+wPct+'%).</p>';
-    }
-  });
-
-  // ── 调用 Claude API 生成深度分析 ──
-  var wxSummary = '';
-  ['木','火','土','金','水'].forEach(function(w){
-    var wxTotal = 0;
-    ['木','火','土','金','水'].forEach(function(x){ wxTotal += (wuxing[x]||0); });
-    wxSummary += w + Math.round((wuxing[w]||0)/(wxTotal||1)*100) + '% ';
-  });
-
-  var chartSummary = {
-    day_master: dayStem,
-    day_master_element: dayWx,
-    strength: strength,
-    year_pillar: pillars.year.stem + pillars.year.branch,
-    month_pillar: pillars.month.stem + pillars.month.branch,
-    day_pillar: pillars.day.stem + pillars.day.branch,
-    hour_pillar: pillars.hour.stem + pillars.hour.branch,
-    year_god: tenGods.year_stem || '',
-    month_god: tenGods.month_stem || '',
-    hour_god: tenGods.hour_stem || '',
-    wuxing_summary: wxSummary.trim(),
-    kong_wang: chart.kong_wang ? JSON.stringify(chart.kong_wang) : ''
-  };
-
-  // 显示加载动画
-  var loadingIds = ['enrich-loading-personality','enrich-loading-pillars','enrich-loading-wuxing','enrich-loading-strength'];
-  var sectionKeywords = isZh ? ['性格','四柱','五行','身强'] : ['Traits','Four','Element','strength'];
-  sectionKeywords.forEach(function(kw, idx){
-    addContentToSection(kw, function(){
-      return '<div id="'+loadingIds[idx]+'" style="padding:12px 0;display:flex;align-items:center;gap:8px"><div style="width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--t3);border-radius:50%;animation:spin .8s linear infinite"></div><span style="font-size:11px;color:var(--t4)">'+
-        (isZh?'正在生成深度分析…':'Generating deep analysis…')+'</span></div>';
-    });
-  });
-
-  // 添加 spin 动画
-  if(!document.getElementById('spinStyle')){
-    var style = document.createElement('style');
-    style.id = 'spinStyle';
-    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
-    document.head.appendChild(style);
   }
-
-  // 调用 API
-  fetch('/api/enrich', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ chart: chartSummary, lang: isZh ? 'zh' : 'en' })
-  })
-  .then(function(res){ return res.ok ? res.json() : Promise.reject('API error'); })
-  .then(function(data){
-    var e = data.enriched;
-    if(e.personality) replaceLoading('enrich-loading-personality', '<div style="line-height:1.9;font-size:13px;color:var(--t2)">'+formatParagraphs(e.personality)+'</div>');
-    if(e.pillars_insight) replaceLoading('enrich-loading-pillars', '<div style="line-height:1.9;font-size:13px;color:var(--t2);margin-top:10px;padding:14px 18px;background:var(--bg2);border-radius:8px">'+formatParagraphs(e.pillars_insight)+'</div>');
-    if(e.wuxing_narrative) replaceLoading('enrich-loading-wuxing', '<div style="line-height:1.9;font-size:13px;color:var(--t2);font-family:\'Noto Serif SC\',serif;font-style:italic">'+formatParagraphs(e.wuxing_narrative)+'</div>');
-    if(e.strength_explanation) replaceLoading('enrich-loading-strength', '<div style="line-height:1.9;font-size:13px;color:var(--t2)">'+formatParagraphs(e.strength_explanation)+'</div>');
-  })
-  .catch(function(err){
-    console.warn('Enrichment failed:', err);
-    loadingIds.forEach(function(id){ replaceLoading(id, ''); });
-  });
-}
-
-function replaceLoading(id, html){
-  var el = document.getElementById(id);
-  if(el) el.outerHTML = html;
 }
 
 function formatParagraphs(text){
