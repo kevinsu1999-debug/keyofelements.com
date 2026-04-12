@@ -114,19 +114,19 @@ function kesSubmit(){
     if(typeof lockReport==='function')lockReport();
     // 先填报告骨架但不显示
     fillReport(data,dateVal,shichen,gender,isZh);
-    // 等Claude润色完成后再显示（最多18秒超时）
-    function showFinal(){
+    // Loading：设置回调，等Claude完成才显示
+    var _reportReady=false;
+    window._kesShowReport=function(){
+      if(_reportReady)return;_reportReady=true;
+      ss(isZh?'报告生成完毕':'Report ready');
       setTimeout(function(){
         goPage('report');
         if(ld)ld.classList.remove('on');
         if(btn){btn.disabled=false;btn.style.opacity='1';}
-      },600);
-    }
-    var showTimer=setTimeout(showFinal,18000);
-    window._kesShowReport=function(){
-      clearTimeout(showTimer);
-      showFinal();
+      },800);
     };
+    // 超时兜底：25秒后强制展示
+    setTimeout(function(){window._kesShowReport();},25000);
   })
   .catch(function(e){
     alert((isZh?'出错：':'Error: ')+e.message);
@@ -218,6 +218,7 @@ function fillReport(data,dateStr,shichen,gender,isZh){
     var klArr=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
     var HS_MAP={'子':['癸'],'丑':['己','辛','癸'],'寅':['甲','丙','戊'],'卯':['乙'],'辰':['戊','乙','癸'],'巳':['丙','庚','戊'],'午':['丁','己'],'未':['己','丁','乙'],'申':['庚','壬','戊'],'酉':['辛'],'戌':['戊','辛','丁'],'亥':['壬','甲']};
 
+    var PZH={'year':'年','month':'月','day':'日','hour':'时'};
     // 1.得令：月支主气
     var mbHS=HS_MAP[mb]||[];
     var mbMainWx=mbHS.length?GAN_WX[mbHS[0]]:'';
@@ -230,8 +231,8 @@ function fillReport(data,dateStr,shichen,gender,isZh){
       var br=pillars[p]?pillars[p].branch:'';
       var bHS=HS_MAP[br]||[];
       if(bHS.length&&GAN_WX[bHS[0]]===dwx){
-        if(klArr.indexOf(br)>=0){ddParts.push(p+'支'+br+'主气通根（空亡减力）');}
-        else{deDi=true;ddParts.push(p+'支'+br+'本气'+bHS[0]+'通根');}
+        if(klArr.indexOf(br)>=0){ddParts.push('（空亡减力）');}
+        else{deDi=true;ddParts.push(({'year':'年','month':'月','day':'日','hour':'时'}[p])+'支'+br+'本气'+bHS[0]+'通根');}
       }
     });
     var ddDetail=deDi?ddParts.join('，'):'地支无'+dwx+'行有力通根'+(klArr.length?'（'+klArr.join('、')+'空亡）':'');
@@ -241,8 +242,8 @@ function fillReport(data,dateStr,shichen,gender,isZh){
     ['year','month','hour'].forEach(function(p){
       var st=pillars[p]?pillars[p].stem:'';
       var stWx=GAN_WX[st];
-      if(stWx===dwx){deShi=true;dsParts.push(p+'干'+st+'（比劫）帮身');}
-      else if(stWx===shengWo[dwx]){dsParts.push(p+'干'+st+'（印星）生身');if(dsParts.length>=2)deShi=true;}
+      if(stWx===dwx){deShi=true;dsParts.push(PZH[p]+'干'+st+'（比劫）帮身');}
+      else if(stWx===shengWo[dwx]){dsParts.push(PZH[p]+'干'+st+'（印星）生身');if(dsParts.length>=2)deShi=true;}
     });
     var dsDetail=deShi?dsParts.join('，'):'天干缺少比劫印星帮扶';
 
@@ -267,7 +268,12 @@ function fillReport(data,dateStr,shichen,gender,isZh){
       '<div class="r-str-item"><div class="r-str-label">得　众</div><div class="r-str-val '+(deZhong?'yes':'no')+'">'+(deZhong?'已得':'未得')+'</div><div class="r-str-detail">'+dzDetail+'</div></div>';
   }
   var ex=document.querySelector('.r-str-explain');
-  if(ex) ex.textContent=ds+dwx+'生于'+(pillars.month?pillars.month.branch:'')+'月，综合判定为'+str+'。';
+  if(ex){
+    var reasons=[];
+    if(_deLing)reasons.push('得令');if(_deDi)reasons.push('得地');if(_deShi)reasons.push('得势');if(_deZhong)reasons.push('得众');
+    if(reasons.length) ex.textContent='综合'+reasons.join('、')+'，判定日主'+ds+dwx+'为'+str+'。';
+    else ex.textContent='四维度均不得，判定日主'+ds+dwx+'为'+str+'。';
+  }
 
   /* 04 喜用忌神 */
   var yg=document.querySelector('.r-yj-grid');
@@ -357,10 +363,7 @@ function fillReport(data,dateStr,shichen,gender,isZh){
         if(MKD[dp.branch]) desc+='\u3002'+dp.branch+(isZh?'\u4E3A'+MKD[dp.branch]+'\uff0c\u5173\u6CE8\u58A8\u5E93\u5F00\u5408':' is a storage branch');
         var sWxC=WX_CLASS[STEM_ELEM[dp.stem]],bWxC=WX_CLASS[BRANCH_ELEM[dp.branch]];
 
-        // 付费墙：用data属性标记，bypass后可清除
-        var isPaidDy=(curIdx>=0 && d>curIdx);
-        var wrapStart=isPaidDy?'<div class="dy-paid-blur" style="filter:blur(4px);pointer-events:none">':'';
-        var wrapEnd=isPaidDy?'</div>':'';
+        var wrapStart='';var wrapEnd='';
 
         allHtml+=wrapStart+
           '<div style="display:flex;gap:20px;align-items:flex-start;padding:18px 0;border-bottom:1px solid var(--line)'+(ic?';background:var(--bg2);margin:0 -16px;padding:18px 16px;border-radius:var(--r)':'')+'">' +
@@ -512,7 +515,7 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
         if(HE[gz.branch]===pBr) nt+='流年'+gz.branch+'合'+posNames[pos]+pBr+'，'+(pos==='day'?'感情有合意之象。':'有牵绊。');
       });
       if(sc>=4) nt+='宜积极把握机遇，适合拓展、投资、社交。';
-      else if(sc<=2) nt+='宜守不宜攻，避免重大财务决策和冒险行为。';
+      else if(sc<=2) nt+='注意控制风险，财务以稳健为主。';
       else nt+='整体平稳，稳中求进。';
       if(sc<=2) nt='<b>'+nt+'</b>';
     } else { nt=sg+' year'; }
@@ -584,13 +587,13 @@ function fillAnnualDetail(a,ds,dwx,ug,isZh){
     if(MK[gz.branch])t+=MK[gz.branch]+'，注意墓库开合对运势的影响。';
     t+='</p>';
     t+='<p><b>事业方面：</b>';
-    if(ug.avoid.indexOf(sE)>=0)t+='天干忌神透出，事业上面临压力和挑战，宜守成不宜冒进。';
-    else t+='天干喜用得力，事业上有拓展空间，可主动争取。';
+    if(ug.avoid.indexOf(sE)>=0)t+=sg+'透干为忌，工作中可能遇到阻力或竞争。重心放在巩固现有成果和人脉维护上。';
+    else t+=sg+'透干为喜，事业有拓展窗口，适合主动争取新项目或晋升机会。';
     t+='</p>';
     t+='<p><b>财务方面：</b>';
-    if(sc<=2)t+='今年财务风险偏高，避免大额投资和借贷。现金为王，量入为出。';
-    else if(sc>=4)t+='财运相对顺畅，正财偏财均有机会。但仍需理性，不可盲目扩张。';
-    else t+='财务平稳，无大起大落。日常开支注意节制即可。';
+    if(sc<=2)t+='流年干支均不利财运，控制支出为主，延后大额投资计划。';
+    else if(sc>=4)t+='财星得力，正财偏财均有进账机会，适合稳健理财和资产配置。';
+    else t+='财务整体平稳，维持现有收支节奏即可。';
     t+='</p>';
     t+='<p><b>感情方面：</b>关注日支婚姻宫与流年地支的互动，';
     t+=(sg==='七杀'||sg==='伤官')?'今年感情容易有波动和冲突，注意沟通方式。':'整体感情运势平稳。';
@@ -695,7 +698,7 @@ function fillRecommendations(data,ds,dwx,ug,gender,isZh){
   var cards=[
     {title:curYear+'年度策略',body:function(){
       var t=curYear+'年'+gz.stem+gz.branch+'（'+sg+'）。'+(LN_DESC[sg]||'')+'。';
-      t+=ug.avoid.indexOf(STEM_ELEM[gz.stem])>=0?'今年天干为忌神方向，整体宜守不宜攻。财务保守，工作维稳。':'今年天干为喜用方向，可主动争取机会。';
+      t+=ug.avoid.indexOf(STEM_ELEM[gz.stem])>=0?'今年天干为忌神方向，重心放在积累和沉淀上。减少不必要的开支和冒进。':'今年天干为喜用方向，可主动争取机会。';
       // 找最佳和最差年份
       var bestY='',worstY='',bestSc=0,worstSc=6;
       for(var fy=curYear;fy<=curYear+7;fy++){
@@ -763,18 +766,6 @@ function fillZiwei(data,ds,dwx,str,isZh){
   }
 }
 
-
-// 解锁后清除大运模糊
-var _origCheckBypass=window.checkBypassCode;
-window.checkBypassCode=function(){
-  if(_origCheckBypass)_origCheckBypass();
-  setTimeout(function(){
-    var pw=document.getElementById('paywallGate');
-    if(pw&&!pw.classList.contains('locked')){
-      document.querySelectorAll('.dy-paid-blur').forEach(function(el){el.style.filter='none';el.style.pointerEvents='auto';});
-    }
-  },500);
-};
 /* ═══ 初始化 ═══ */
 document.addEventListener('DOMContentLoaded',function(){
   var btn=document.querySelector('.f-btn');if(btn)btn.setAttribute('onclick','kesSubmit()');
