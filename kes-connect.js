@@ -516,8 +516,8 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
     if(isZh){
       var bg=getTenGodBr(ds,gz.branch);
       // 具体分析：天干忌喜 + 地支刑冲克合
-      var sUse=ug.use.indexOf(sE)>=0,bUse=ug.use.indexOf(bE)>=0;
-      var sAvd=ug.avoid.indexOf(sE)>=0,bAvd=ug.avoid.indexOf(bE)>=0;
+      var sUse=use.indexOf(sE)>=0,bUse=use.indexOf(bE)>=0;
+      var sAvd=avoid.indexOf(sE)>=0,bAvd=avoid.indexOf(bE)>=0;
       if(sUse&&bUse) nt+='干支均为喜用，整体有利，可主动把握机会。';
       else if(sAvd&&bAvd) nt+='干支均为忌神，压力较大，重心放在积累沉淀。';
       else if(sUse) nt+='天干'+sE+'为喜用有利，地支'+bE+'为忌有阻，外顺内紧。';
