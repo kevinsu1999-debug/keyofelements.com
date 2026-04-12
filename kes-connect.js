@@ -100,12 +100,21 @@ function kesSubmit(){
   })
   .then(function(r){if(!r.ok)throw new Error('API '+r.status);return r.json();})
   .then(function(data){
-    ss(isZh?'排盘完成，渲染报告…':'Rendering...');
+    ss(isZh?'排盘完成，正在深度分析…':'Deep analysis...');
     if(typeof lockReport==='function')lockReport();
+    // 先填报告骨架但不显示
     fillReport(data,dateVal,shichen,gender,isZh);
-    goPage('report');
-    setTimeout(function(){if(ld)ld.classList.remove('on');},300);
-    if(btn){btn.disabled=false;btn.style.opacity='1';}
+    // 等Claude润色完成后再显示（最多8秒超时）
+    var showTimer=setTimeout(function(){
+      goPage('report');if(ld)ld.classList.remove('on');
+      if(btn){btn.disabled=false;btn.style.opacity='1';}
+    },8000);
+    // Claude完成回调会触发提前显示
+    window._kesShowReport=function(){
+      clearTimeout(showTimer);
+      goPage('report');if(ld)ld.classList.remove('on');
+      if(btn){btn.disabled=false;btn.style.opacity='1';}
+    };
   })
   .catch(function(e){
     alert((isZh?'出错：':'Error: ')+e.message);
@@ -262,11 +271,12 @@ function fillReport(data,dateStr,shichen,gender,isZh){
         // 替换卡片为综述
         var dyGrid=document.querySelector('.r-dy-summary-grid');
         if(dyGrid){
-          var summary=cd.sg+'大运（'+cd.s+cd.b+'），'+(LN_DESC[cd.sg]||'')+'。';
-          summary+='地支'+cd.b+'（'+cd.bg+'），'+BRANCH_ELEM[cd.b]+'行入运';
-          if(cd.bg!==cd.sg) summary+='，'+cd.bg+'的能量同时作用于命局';
-          summary+='。大运运支代替月令重新审视命盘旺衰，当运期间的喜忌会随之调整。';
-          dyGrid.innerHTML='<div style="line-height:1.9;font-size:13px;color:var(--t2);padding:16px 0">'+summary+'</div>';
+          var MK2={'辰':'辰为水库','戌':'戌为火库','丑':'丑为金库','未':'未为木库'};
+          var s1='<b>天干'+cd.s+'（'+cd.sg+'）：</b>'+(LN_DESC[cd.sg]||'')+'。';
+          var s2='<b>地支'+cd.b+'（'+cd.bg+'）：</b>'+BRANCH_ELEM[cd.b]+'行入运，'+(LN_DESC[cd.bg]||'')+'。';
+          if(MK2[cd.b]) s2+=MK2[cd.b]+'，注意墓库的收藏与开启。';
+          var s3='大运运支代替月令重新审视命盘旺衰，当运十年的喜忌会随之调整。';
+          dyGrid.innerHTML='<div style="line-height:1.9;font-size:13px;color:var(--t2);padding:16px 0"><p style="margin:0 0 10px">'+s1+'</p><p style="margin:0 0 10px">'+s2+'</p><p style="margin:0;color:var(--t3);font-size:12px">'+s3+'</p></div>';
         }
       }
     }
@@ -323,7 +333,8 @@ function enrichWithClaude(data, ds, dwx, str, sc, ug, gender){
       if(dyGrid) dyGrid.innerHTML='<div style="line-height:1.9;font-size:13px;color:var(--t2);padding:16px 0">'+cleanText(e.dayun_detail).replace(/\n/g,'<br>')+'</div>';
     }
   })
-  .catch(function(err){console.warn('Enrich skipped:',err);});
+  .catch(function(err){console.warn('Enrich skipped:',err);})
+  .finally(function(){if(window._kesShowReport)window._kesShowReport();});
 }
 
 
@@ -362,6 +373,8 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
       var bg=getTenGodBr(ds,gz.branch);
       nt=gz.stem+gz.branch+'（'+sg+'）：'+(LN_DESC[sg]||'')+'。';
       if(bg&&bg!==sg) nt+='地支'+gz.branch+'（'+bg+'）辅助。';
+      var MKY={'辰':'辰为水库，有收藏之象','戌':'戌为火库，有肃杀之气','丑':'丑为金库，有收敛之力','未':'未为木库，有滋养之功'};
+      if(MKY[gz.branch]) nt+=MKY[gz.branch]+'。';
       if(sc>=4) nt+='宜积极把握机遇，适合拓展、投资、社交。';
       else if(sc<=2) nt+='宜守不宜攻，避免重大财务决策和冒险行为。';
       else nt+='整体平稳，稳中求进。';
@@ -377,9 +390,10 @@ function fillFlowMonths(a,ds,isZh){
   var tbl=document.querySelectorAll('#paywallGate .r-tbl');if(tbl.length<2)return;
   var dwx=GAN_WX[ds],str=a._str||'',sc=a._sc||0;
   var ug=deriveUseGods(dwx,str,sc);
+  var MK={'辰':'辰为水库，有收藏之象','戌':'戌为火库，有肃杀之气','丑':'丑为金库，有收敛之力','未':'未为木库，有滋养之功'};
   var hd='<div class="r-tbl-head r-tbl-3"><div>'+(isZh?'月份':'Month')+'</div><div>'+(isZh?'干支':'Stems')+'</div><div>'+(isZh?'运势概要':'Summary')+'</div></div>';
   var rw='';
-  a.yearly_forecast.forEach(function(f){
+  a.yearly_forecast.forEach(function(f,idx){
     if(!f.stem||!f.branch)return;
     var sE=STEM_ELEM[f.stem]||'土',bE=BRANCH_ELEM[f.branch]||'土';
     var sg=f.stem_god||getTenGod(ds,f.stem);
@@ -389,11 +403,15 @@ function fillFlowMonths(a,ds,isZh){
     if(ug.avoid.indexOf(sE)>=0)msc-=0.8;if(ug.avoid.indexOf(bE)>=0)msc-=0.7;
     msc=Math.max(1,Math.min(5,Math.round(msc)));
     var mst='';for(var s=0;s<5;s++)mst+=s<msc?'\u2605':'\u2606';
-    var note='';
-    if(f.points&&f.points.length){note=cleanText(f.points[0]);if(note.length>120)note=note.substring(0,120)+'\u2026';}
-    else{note=f.stem+f.branch+'\uff08'+sg+'\uff09\uff1a'+(LN_DESC[sg]||'');}
-    if(msc<=2)note='<b>'+note+'</b>';
-    rw+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+(f.name||'')+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+f.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+f.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+mst+'</div><div class="r-a-note">'+note+'</div></div></div>';
+    // 生成丰富的月度描述
+    var note=f.stem+f.branch+'（'+sg+'）：'+(LN_DESC[sg]||'')+'。';
+    if(bg&&bg!==sg) note+='地支'+f.branch+'（'+bg+'）辅助。';
+    if(MK[f.branch]) note+=MK[f.branch]+'。';
+    if(msc>=4) note+='本月宜积极行动，把握机遇。';
+    else if(msc<=2) note+='本月宜保守谨慎，避免重大决策。';
+    if(msc<=2) note='<b>'+note+'</b>';
+    var mLabel=(idx+1)+'月';
+    rw+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+mLabel+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+f.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+f.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+mst+'</div><div class="r-a-note">'+note+'</div></div></div>';
   });
   if(rw)tbl[1].innerHTML=hd+rw;
 }
