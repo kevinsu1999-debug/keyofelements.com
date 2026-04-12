@@ -149,9 +149,9 @@ function kesSubmit(){
     var wxGenBy={'火':'木','土':'火','金':'土','水':'金','木':'水'};
     var wxCtrlBy={'土':'木','金':'火','水':'土','木':'金','火':'水'};
     var uE=[],aE=[];
-    if(dm.indexOf('强')>=0){uE=[wxGen[dayWxE],wxCtrl[dayWxE],wxCtrlBy[dayWxE]];aE=[wxGenBy[dayWxE],dayWxE];}
+    if(dm.indexOf('旺')>=0||dm.indexOf('强')>=0){uE=[wxGen[dayWxE],wxCtrl[dayWxE],wxCtrlBy[dayWxE]];aE=[wxGenBy[dayWxE],dayWxE];}
     else if(dm.indexOf('弱')>=0){uE=[wxGenBy[dayWxE],dayWxE];aE=[wxGen[dayWxE],wxCtrl[dayWxE],wxCtrlBy[dayWxE]];}
-    else{uE=[wxGen[dayWxE],wxCtrl[dayWxE]];aE=[wxCtrlBy[dayWxE]];}
+    else{uE=[wxGenBy[dayWxE],dayWxE];aE=[wxGen[dayWxE],wxCtrl[dayWxE]];}
 
     var tenGods = chart.ten_gods || {};
     var enrichBody = {
@@ -374,7 +374,9 @@ function fillReport(data, dateStr, shichen, gender){
 
   /* ── 03 身强弱 ── */
   var strength = chart.day_master_strength || '中和';
-  var strengthMap = {'极弱':0,'身弱':0,'偏弱':1,'中和':2,'偏强':3,'身强':4};
+  // 后端新标签: 身强, 偏强, 中和, 偏弱, 身弱
+  var strengthMap = {'身弱':0,'偏弱':1,'中和':2,'偏强':3,'身强':4,
+                     '极弱':0,'极旺':4,'中性':2,'偏旺':3};
   var sIdx = strengthMap[strength];
   if(sIdx === undefined) sIdx = 2;
 
@@ -388,7 +390,7 @@ function fillReport(data, dateStr, shichen, gender){
   }
   var mLabels = document.querySelector('.r-meter-labels');
   if(mLabels){
-    var lbls = ['极弱','偏弱','中和','偏强','身强'];
+    var lbls = ['身弱','偏弱','中和','偏强','身强'];
     mLabels.innerHTML = lbls.map(function(l,i){return '<span'+(i===sIdx?' class="on"':'')+'>'+l+'</span>'}).join('');
   }
   var verdict = document.querySelector('.r-str-verdict');
@@ -408,22 +410,35 @@ function fillReport(data, dateStr, shichen, gender){
     var wxCtrlBy = {'土':'木','金':'火','水':'土','木':'金','火':'水'}; // 什么克X（官杀）
 
     var dm = chart.day_master_strength || strength || '';
+    var dmScore = chart.day_master_score || 0;
     console.log('=== 用神推导 ===');
-    console.log('日主:', dayStem, dayWxElem, '身强弱:', dm);
+    console.log('日主:', dayStem, dayWxElem, '身强弱:', dm, 'score:', dmScore);
 
-    // ★ 核心方法：根据身强弱推导（最可靠）
-    if(dm.indexOf('强') >= 0 || dm === '身强' || dm === '极旺' || dm === '偏强'){
-      // 身强：泄(食伤)+耗(财)+克(官杀)为喜
+    // ★ 核心方法：根据身强弱推导
+    // 后端标签: 极旺, 偏旺, 中性, 偏弱, 极弱
+    var isStrong = (dm.indexOf('旺') >= 0 || dm.indexOf('强') >= 0);
+    var isWeak = (dm.indexOf('弱') >= 0);
+    var isNeutral = (dm === '中性' || dm === '中和' || (!isStrong && !isWeak));
+
+    if(isStrong){
+      // 身旺：泄(食伤)+耗(财)+克(官杀)为喜
       useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem], wxCtrlBy[dayWxElem]];
       avoidElems = [wxGenBy[dayWxElem], dayWxElem];
-    } else if(dm.indexOf('弱') >= 0 || dm === '身弱' || dm === '极弱' || dm === '偏弱'){
+    } else if(isWeak){
       // 身弱：生(印星)+扶(比劫)为喜
       useElems = [wxGenBy[dayWxElem], dayWxElem];
       avoidElems = [wxGen[dayWxElem], wxCtrl[dayWxElem], wxCtrlBy[dayWxElem]];
     } else {
-      // 中和：默认食伤泄秀+财星
-      useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem]];
-      avoidElems = [wxCtrlBy[dayWxElem]];
+      // 中性：根据分数偏向判断
+      if(dmScore >= 4.8){
+        // 偏强方向
+        useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem]];
+        avoidElems = [wxGenBy[dayWxElem], dayWxElem];
+      } else {
+        // 偏弱方向（中性默认偏向扶助）
+        useElems = [wxGenBy[dayWxElem], dayWxElem];
+        avoidElems = [wxGen[dayWxElem], wxCtrl[dayWxElem]];
+      }
     }
 
     // 尝试从API覆盖（仅当API数据结构清晰且合理时）
@@ -448,12 +463,12 @@ function fillReport(data, dateStr, shichen, gender){
     // 验证API结果是否合理：身弱喜印比，身强喜泄耗
     if(apiUse.length > 0){
       var apiValid = true;
-      if(dm.indexOf('弱') >= 0){
+      if(isWeak){
         // 身弱应该喜印星(生我的)或比劫(同类)
         var yinXing = wxGenBy[dayWxElem]; // 印星
         if(apiUse.indexOf(yinXing) < 0 && apiUse.indexOf(dayWxElem) < 0) apiValid = false;
-      } else if(dm.indexOf('强') >= 0){
-        // 身强应该喜食伤(泄)或财星(耗)
+      } else if(isStrong){
+        // 身旺应该喜食伤(泄)或财星(耗)
         var shiShang = wxGen[dayWxElem]; // 食伤
         if(apiUse.indexOf(shiShang) < 0 && apiUse.indexOf(wxCtrl[dayWxElem]) < 0) apiValid = false;
       }
@@ -727,15 +742,16 @@ function fillFlowYears(data, dateStr, gender){
   var dm = chart.day_master_strength || '';
 
   var useElems = [], avoidElems = [];
-  if(dm.indexOf('强') >= 0 || dm === '偏强' || dm === '极旺'){
+  if(dm.indexOf('旺') >= 0 || dm.indexOf('强') >= 0){
     useElems = [wxGenFY[dayWxElem], wxCtrlFY[dayWxElem], wxCtrlByFY[dayWxElem]];
     avoidElems = [wxGenByFY[dayWxElem], dayWxElem];
-  } else if(dm.indexOf('弱') >= 0 || dm === '偏弱' || dm === '极弱'){
+  } else if(dm.indexOf('弱') >= 0){
     useElems = [wxGenByFY[dayWxElem], dayWxElem];
     avoidElems = [wxGenFY[dayWxElem], wxCtrlFY[dayWxElem], wxCtrlByFY[dayWxElem]];
   } else {
-    useElems = [wxGenFY[dayWxElem], wxCtrlFY[dayWxElem]];
-    avoidElems = [wxCtrlByFY[dayWxElem]];
+    // 中性默认偏向扶助
+    useElems = [wxGenByFY[dayWxElem], dayWxElem];
+    avoidElems = [wxGenFY[dayWxElem], wxCtrlFY[dayWxElem]];
   }
 
   // 如果API返回了流年数据，优先使用
