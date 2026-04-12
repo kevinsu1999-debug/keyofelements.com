@@ -171,7 +171,16 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   if(ml)ml.innerHTML=['身弱','偏弱','中和','偏强','身强'].map(function(l,i){return'<span'+(i===si?' class="on"':'')+'>'+l+'</span>';}).join('');
   var vd=document.querySelector('.r-str-verdict');if(vd)vd.textContent=str;
   var ex=document.querySelector('.r-str-explain');
-  if(ex)ex.textContent='三分法评估：'+ds+dwx+'在'+(pillars.month?pillars.month.branch:'')+'月，判定为'+str+'（评分'+sc+'）。';
+  if(ex){
+    var mb=pillars.month?pillars.month.branch:'';
+    var bd=chart.strength_breakdown||{};
+    var sf=bd['三分法']||{};
+    var parts=[];
+    parts.push(sf['得令']?'得令（'+mb+'月令助日元）':'不得令（'+mb+'月令不助日元）');
+    parts.push(sf['得地']?'得地（地支有通根）':'不得地（地支无有力通根）');
+    parts.push(sf['得势']?'得势（天干有帮扶）':'不得势（天干缺少帮扶）');
+    ex.textContent=ds+dwx+'生于'+mb+'月：'+parts.join('，')+'。综合判定为'+str+'。';
+  }
 
   /* 04 喜用忌神 */
   var yg=document.querySelector('.r-yj-grid');
@@ -221,7 +230,11 @@ function fillReport(data,dateStr,shichen,gender,isZh){
       var fsc=3;if(ug.use.indexOf(fsE)>=0)fsc+=0.8;if(ug.use.indexOf(fbE)>=0)fsc+=0.7;if(ug.avoid.indexOf(fsE)>=0)fsc-=0.8;if(ug.avoid.indexOf(fbE)>=0)fsc-=0.7;
       fsc=Math.max(1,Math.min(5,Math.round(fsc)));
       var fst='';for(var fs=0;fs<5;fs++)fst+=fs<fsc?'★':'☆';
-      fRows+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+fy+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[fsE]+'">'+fgz.stem+'</span><span class="e-'+WX_CLASS[fbE]+'">'+fgz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+fst+'</div><div class="r-a-note">'+fgz.stem+fgz.branch+'（'+fsg+'）：'+(LN_DESC[fsg]||'')+'</div></div></div>';
+      var fbg=getTenGodBr(ds,fgz.branch);
+      var fnt=fgz.stem+fgz.branch+'（'+fsg+'）：'+(LN_DESC[fsg]||'')+'。';
+      if(fbg&&fbg!==fsg) fnt+='地支'+fgz.branch+'（'+fbg+'）辅助。';
+      if(fsc<=2) fnt='<b>'+fnt+'</b>';
+      fRows+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+fy+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[fsE]+'">'+fgz.stem+'</span><span class="e-'+WX_CLASS[fbE]+'">'+fgz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+fst+'</div><div class="r-a-note">'+fnt+'</div></div></div>';
     }
     freeTable.innerHTML=fHead+fRows;
   }
@@ -245,13 +258,15 @@ function fillReport(data,dateStr,shichen,gender,isZh){
         var dsh=document.querySelector('.r-dy-summary-head');
         if(dsh)dsh.textContent='当前大运：'+cd.s+cd.b+'（'+cd.sa+'至'+cd.ea+'岁）';
         var dsb=document.querySelector('.r-dy-summary-sub');
-        if(dsb)dsb.textContent=cd.sg+'大运，'+cd.s+STEM_ELEM[cd.s]+'透干';
-        var di=document.querySelectorAll('.r-dy-s-item .r-dy-s-body');
-        if(di.length>=4){
-          di[0].textContent=cd.sg+'大运，'+(LN_DESC[cd.sg]||'');
-          di[1].textContent=cd.bg+'坐支，'+BRANCH_ELEM[cd.b]+'行入运，事业运势随大运十神变化。';
-          di[2].textContent='关注夫妻宫与配偶星在此运期间的互动关系。';
-          di[3].textContent='重点关注'+dwx+'行对应器官，结合当运五行调养。';
+        if(dsb)dsb.textContent=cd.sg+'大运，'+cd.s+STEM_ELEM[cd.s]+'透干，'+cd.b+BRANCH_ELEM[cd.b]+'坐支';
+        // 替换卡片为综述
+        var dyGrid=document.querySelector('.r-dy-summary-grid');
+        if(dyGrid){
+          var summary=cd.sg+'大运（'+cd.s+cd.b+'），'+(LN_DESC[cd.sg]||'')+'。';
+          summary+='地支'+cd.b+'（'+cd.bg+'），'+BRANCH_ELEM[cd.b]+'行入运';
+          if(cd.bg!==cd.sg) summary+='，'+cd.bg+'的能量同时作用于命局';
+          summary+='。大运运支代替月令重新审视命盘旺衰，当运期间的喜忌会随之调整。';
+          dyGrid.innerHTML='<div style="line-height:1.9;font-size:13px;color:var(--t2);padding:16px 0">'+summary+'</div>';
         }
       }
     }
@@ -260,7 +275,17 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   /* 09+ 流年(付费墙内) */
   fillFlowYears(data,ds,dwx,ug.use,ug.avoid,isZh);
   /* 10 流月 */
+  analysis._str=str; analysis._sc=sc;
   fillFlowMonths(analysis,ds,isZh);
+
+  /* 10 年度详解 */
+  fillAnnualDetail(analysis,ds,dwx,ug,isZh);
+  /* 11 预警 */
+  fillWarnings(data,ds,dwx,ug,isZh);
+  /* 12 建议 */
+  fillRecommendations(data,ds,dwx,ug,gender,isZh);
+  /* 13 紫微 */
+  fillZiwei(data,ds,dwx,str,isZh);
 
   /* Claude API 润色（仅中文，异步） */
   if(isZh) enrichWithClaude(data, ds, dwx, str, sc, ug, gender);
@@ -294,17 +319,8 @@ function enrichWithClaude(data, ds, dwx, str, sc, ug, gender){
     if(e.relationship) fillText('感情',e.relationship);
     if(e.health) fillText('健康',e.health);
     if(e.dayun_detail){
-      // 均匀分配到四个卡片
-      var di=document.querySelectorAll('.r-dy-s-item .r-dy-s-body');
-      var parts=e.dayun_detail.split(/\n+/).filter(function(p){return p.trim();});
-      if(di.length>=4 && parts.length>=4){
-        di[0].textContent=cleanText(parts[0]);
-        di[1].textContent=cleanText(parts[1]);
-        di[2].textContent=cleanText(parts[2]);
-        di[3].textContent=cleanText(parts[3]);
-      } else if(di.length>=1){
-        di[0].textContent=cleanText(e.dayun_detail).substring(0,150);
-      }
+      var dyGrid=document.querySelector('.r-dy-summary-grid');
+      if(dyGrid) dyGrid.innerHTML='<div style="line-height:1.9;font-size:13px;color:var(--t2);padding:16px 0">'+cleanText(e.dayun_detail).replace(/\n/g,'<br>')+'</div>';
     }
   })
   .catch(function(err){console.warn('Enrich skipped:',err);});
@@ -341,7 +357,16 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
     var sc=3;if(use.indexOf(sE)>=0)sc+=0.8;if(use.indexOf(bE)>=0)sc+=0.7;if(avoid.indexOf(sE)>=0)sc-=0.8;if(avoid.indexOf(bE)>=0)sc-=0.7;
     sc=Math.max(1,Math.min(5,Math.round(sc)));
     var st='';for(var s=0;s<5;s++)st+=s<sc?'★':'☆';
-    var nt=isZh?gz.stem+gz.branch+'（'+sg+'）：'+(LN_DESC[sg]||''):sg+' year';
+    var nt='';
+    if(isZh){
+      var bg=getTenGodBr(ds,gz.branch);
+      nt=gz.stem+gz.branch+'（'+sg+'）：'+(LN_DESC[sg]||'')+'。';
+      if(bg&&bg!==sg) nt+='地支'+gz.branch+'（'+bg+'）辅助。';
+      if(sc>=4) nt+='宜积极把握机遇，适合拓展、投资、社交。';
+      else if(sc<=2) nt+='宜守不宜攻，避免重大财务决策和冒险行为。';
+      else nt+='整体平稳，稳中求进。';
+      if(sc<=2) nt='<b>'+nt+'</b>';
+    } else { nt=sg+' year'; }
     rw+='<div class="r-tbl-row r-tbl-3'+(y===new Date().getFullYear()?' now':'')+'"><div class="r-a-year">'+y+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+gz.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+gz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+st+'</div><div class="r-a-note">'+nt+'</div></div></div>';
   }
   tbl[0].innerHTML=hd+rw;
@@ -350,15 +375,162 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
 function fillFlowMonths(a,ds,isZh){
   if(!a.yearly_forecast||!Array.isArray(a.yearly_forecast))return;
   var tbl=document.querySelectorAll('#paywallGate .r-tbl');if(tbl.length<2)return;
+  var dwx=GAN_WX[ds],str=a._str||'',sc=a._sc||0;
+  var ug=deriveUseGods(dwx,str,sc);
   var hd='<div class="r-tbl-head r-tbl-3"><div>'+(isZh?'月份':'Month')+'</div><div>'+(isZh?'干支':'Stems')+'</div><div>'+(isZh?'运势概要':'Summary')+'</div></div>';
   var rw='';
   a.yearly_forecast.forEach(function(f){
     if(!f.stem||!f.branch)return;
     var sE=STEM_ELEM[f.stem]||'土',bE=BRANCH_ELEM[f.branch]||'土';
-    var nt=(f.points&&f.points.length)?f.points[0].substring(0,80):(getTenGod(ds,f.stem)+'月');
-    rw+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+(f.name||'')+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+f.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+f.branch+'</span></div><div class="r-a-body"><div class="r-a-note">'+nt+'</div></div></div>';
+    var sg=f.stem_god||getTenGod(ds,f.stem);
+    var bg=f.branch_god||getTenGodBr(ds,f.branch);
+    var msc=3;
+    if(ug.use.indexOf(sE)>=0)msc+=0.8;if(ug.use.indexOf(bE)>=0)msc+=0.7;
+    if(ug.avoid.indexOf(sE)>=0)msc-=0.8;if(ug.avoid.indexOf(bE)>=0)msc-=0.7;
+    msc=Math.max(1,Math.min(5,Math.round(msc)));
+    var mst='';for(var s=0;s<5;s++)mst+=s<msc?'\u2605':'\u2606';
+    var note='';
+    if(f.points&&f.points.length){note=cleanText(f.points[0]);if(note.length>120)note=note.substring(0,120)+'\u2026';}
+    else{note=f.stem+f.branch+'\uff08'+sg+'\uff09\uff1a'+(LN_DESC[sg]||'');}
+    if(msc<=2)note='<b>'+note+'</b>';
+    rw+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+(f.name||'')+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+f.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+f.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+mst+'</div><div class="r-a-note">'+note+'</div></div></div>';
   });
   if(rw)tbl[1].innerHTML=hd+rw;
+}
+
+/* ═══ 年度详解 ═══ */
+function fillAnnualDetail(a,ds,dwx,ug,isZh){
+  if(!isZh)return;
+  var curYear=new Date().getFullYear();
+  var gz=yearGZ(curYear),sg=getTenGod(ds,gz.stem),bg=getTenGodBr(ds,gz.branch);
+  // 更新标题
+  var secs=document.querySelectorAll('#paywallGate .r-sec');
+  for(var i=0;i<secs.length;i++){
+    var h=secs[i].querySelector('.r-h');
+    if(h&&h.textContent.indexOf('运势详解')>=0){
+      h.textContent=curYear+'年运势详解';
+      var sub=secs[i].querySelector('.r-sub');
+      if(sub) sub.textContent=gz.stem+gz.branch+'年，天干'+sg+'、地支'+bg;
+      // 填充综述
+      var lyH=secs[i].querySelector('.r-ly-h');
+      if(lyH) lyH.textContent=curYear+gz.stem+gz.branch+'年综述';
+      var lyS=secs[i].querySelector('.r-ly-sub');
+      if(lyS) lyS.textContent=sg+'年，'+gz.stem+STEM_ELEM[gz.stem]+'透干，'+gz.branch+BRANCH_ELEM[gz.branch]+'坐支';
+      // 找综述文本区
+      var lyBody=secs[i].querySelector('.r-ly-body');
+      if(lyBody){
+        var sE=STEM_ELEM[gz.stem],bE=BRANCH_ELEM[gz.branch];
+        var txt=curYear+'年'+gz.stem+gz.branch+'，天干'+gz.stem+'（'+sg+'）、地支'+gz.branch+'（'+bg+'）。';
+        txt+=(LN_DESC[sg]||'')+'。';
+        if(bg!==sg) txt+='地支'+gz.branch+'带'+bg+'之气，'+(LN_DESC[bg]||'')+'。';
+        if(ug.avoid.indexOf(sE)>=0||ug.avoid.indexOf(bE)>=0)
+          txt+='今年干支五行为忌神方向，整体需保守稳健，不宜冒进。';
+        else if(ug.use.indexOf(sE)>=0&&ug.use.indexOf(bE)>=0)
+          txt+='今年干支五行均为喜用，是积极把握机遇的好年份。';
+        lyBody.textContent=txt;
+      }
+      break;
+    }
+  }
+}
+
+/* ═══ 预警 ═══ */
+function fillWarnings(data,ds,dwx,ug,isZh){
+  if(!isZh)return;
+  var warns=document.querySelectorAll('#paywallGate .r-warn');
+  var chart=data.chart||{},kl=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
+  var curYear=new Date().getFullYear();
+  var gz=yearGZ(curYear),sE=STEM_ELEM[gz.stem],bE=BRANCH_ELEM[gz.branch];
+  var sg=getTenGod(ds,gz.stem);
+
+  if(warns.length>=1){
+    var w1t=warns[0].querySelector('.r-warn-title');
+    var w1b=warns[0].querySelector('.r-warn-body');
+    if(w1t) w1t.textContent=curYear+'年流年提醒';
+    if(w1b){
+      var txt='';
+      if(ug.avoid.indexOf(sE)>=0) txt+=gz.stem+STEM_ELEM[gz.stem]+'为忌神透干，需注意'+sg+'带来的压力。';
+      if(ug.avoid.indexOf(bE)>=0) txt+=gz.branch+BRANCH_ELEM[gz.branch]+'为忌神坐支，地支能量不利。';
+      if(!txt) txt=curYear+'年流年五行尚可，保持正常节奏即可。';
+      w1b.textContent=txt;
+    }
+  }
+  if(warns.length>=2){
+    var w2t=warns[1].querySelector('.r-warn-title');
+    var w2b=warns[1].querySelector('.r-warn-body');
+    if(kl.length){
+      if(w2t) w2t.textContent='空亡影响：'+kl.join('、');
+      if(w2b) w2b.textContent=kl.join('、')+'为空亡，对应的六亲和事象虚而不实，需要有利流年大运引动方可激活。';
+    }
+  }
+  if(warns.length>=3){
+    var w3t=warns[2].querySelector('.r-warn-title');
+    var w3b=warns[2].querySelector('.r-warn-body');
+    if(w3t) w3t.textContent='五行偏枯提醒';
+    var wx=chart.wuxing_counts||{},wxT=0;
+    ['木','火','土','金','水'].forEach(function(w){wxT+=(wx[w]||0);});
+    var weakWx=[];
+    ['木','火','土','金','水'].forEach(function(w){if(Math.round((wx[w]||0)/(wxT||1)*100)<10)weakWx.push(w);});
+    if(w3b) w3b.textContent=weakWx.length?weakWx.join('、')+'行能量偏弱，对应领域需要后天补充调和。':'五行分布相对均衡。';
+  }
+}
+
+/* ═══ 建议 ═══ */
+function fillRecommendations(data,ds,dwx,ug,gender,isZh){
+  if(!isZh)return;
+  var recs=document.querySelectorAll('#paywallGate .r-rec-card');
+  var WX_COLOR={'木':'绿色系','火':'红橙色系','土':'棕黄色系','金':'白银色系','水':'蓝黑色系'};
+  var WX_DIR={'木':'东方','火':'南方','土':'中央','金':'西方','水':'北方'};
+  var WX_CAREER={'金':'金融、法律、医疗器械、IT','木':'教育、出版、设计、文创','水':'物流、媒体、咨询、旅游','火':'科技、能源、美容、餐饮','土':'房地产、建筑、农业、保险'};
+
+  var contents=[
+    {title:'幸运颜色与穿搭',body:'日常穿搭宜选'+ug.use.map(function(e){return WX_COLOR[e]||e;}).join('、')+'。避免过多使用'+ug.avoid.map(function(e){return WX_COLOR[e]||e;}).join('、')+'。'},
+    {title:'有利方位',body:'居住和办公宜选'+ug.use.map(function(e){return WX_DIR[e]||'';}).join('、')+'方位。'},
+    {title:'事业行业方向',body:'适合的五行行业：'+ug.use.map(function(e){return e+'属性（'+WX_CAREER[e]+'）';}).join('；')+'。'},
+    {title:'感情择偶方向',body:'配偶八字中'+ug.use.join('、')+'旺的人与你最为匹配，能形成互补的能量场。'},
+    {title:'养生重点',body:'重点关注'+dwx+'行对应的器官健康，日常可通过'+ug.use.join('、')+'属性的运动和饮食来调理。'},
+    {title:'贵人社交',body:'多结交'+ug.use.join('、')+'属性行业的人士，这些领域的朋友和合作伙伴对你最有助力。'}
+  ];
+  for(var i=0;i<Math.min(recs.length,contents.length);i++){
+    var rt=recs[i].querySelector('.r-rec-title');
+    var rb=recs[i].querySelector('.r-rec-body');
+    if(rt) rt.textContent=contents[i].title;
+    if(rb) rb.textContent=contents[i].body;
+  }
+}
+
+/* ═══ 紫微斗数交叉验证 ═══ */
+function fillZiwei(data,ds,dwx,str,isZh){
+  if(!isZh)return;
+  var ziwei=data.ziwei||(data.analysis&&data.analysis.raw&&data.analysis.raw.ziwei)||null;
+  var secs=document.querySelectorAll('#paywallGate .r-sec');
+  for(var i=0;i<secs.length;i++){
+    var h=secs[i].querySelector('.r-h');
+    if(h&&h.textContent.indexOf('紫微')>=0){
+      var items=secs[i].querySelectorAll('.r-zw-v-item');
+      if(ziwei&&typeof ziwei==='object'){
+        // 如果后端有紫微数据
+        var keys=Object.keys(ziwei);
+        for(var j=0;j<Math.min(items.length,keys.length);j++){
+          items[j].textContent=keys[j]+'：'+ziwei[keys[j]];
+        }
+      } else {
+        // 基于八字生成简单的交叉验证描述
+        var wxTrait={'木':'仁慈上进，适合文教创意','火':'热情礼仪，适合表现型事业','土':'诚信稳重，适合管理实业','金':'果断义气，适合金融法律','水':'智慧灵活，适合策略谋划'};
+        var descs=[
+          '命宫特征：'+ds+dwx+'日主，'+wxTrait[dwx]+'类型',
+          '事业宫：'+(/旺|强/.test(str)?'事业宫能量充足，适合主动开拓':'事业宫需借力发展，宜稳扎稳打'),
+          '财帛宫：与八字财星格局呼应，关注'+dwx+'行相关的理财方式',
+          '夫妻宫：配偶特征与八字日支藏干暗示一致，需结合流年验证感情时机'
+        ];
+        for(var j=0;j<Math.min(items.length,descs.length);j++){
+          items[j].textContent=descs[j];
+          items[j].className='r-zw-v-item ok';
+        }
+      }
+      break;
+    }
+  }
 }
 
 /* ═══ 初始化 ═══ */
