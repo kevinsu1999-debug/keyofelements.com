@@ -42,14 +42,22 @@ function getWxStatus(mb){
 }
 
 /* ── 用神推导 ── */
-function deriveUseGods(wx,str,sc){
+/* ── 用神推导（基于三分法结果）── */
+function deriveUseGods(wx,str,sc,breakdown){
   var g={'木':'火','火':'土','土':'金','金':'水','水':'木'};
   var c={'木':'土','火':'金','土':'水','金':'木','水':'火'};
   var gb={'火':'木','土':'火','金':'土','水':'金','木':'水'};
   var cb={'土':'木','金':'火','水':'土','木':'金','火':'水'};
+  // 身强 → 泄耗克
   if(/旺|强/.test(str))return{use:[g[wx],c[wx],cb[wx]],avoid:[gb[wx],wx]};
+  // 身弱 → 生扶
   if(/弱/.test(str))return{use:[gb[wx],wx],avoid:[g[wx],c[wx],cb[wx]]};
-  if((sc||0)>=4.8)return{use:[g[wx],c[wx]],avoid:[gb[wx],wx]};
+  // 中和 → 用三分法判断偏向
+  var sf=(breakdown&&breakdown['三分法'])||{};
+  var deLing=sf['得令'], deDi=sf['得地'], deShi=sf['得势'];
+  // 有根有势只缺令 OR 得令 → 偏强，宜泄耗
+  if((deDi&&deShi)||deLing)return{use:[g[wx],c[wx]],avoid:[gb[wx],wx]};
+  // 其他中和 → 偏弱，宜生扶
   return{use:[gb[wx],wx],avoid:[g[wx],c[wx]]};
 }
 
@@ -131,7 +139,7 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   var str=chart.day_master_strength||'中和',sc=chart.day_master_score||0;
   var tg=chart.ten_gods||{},wx=chart.wuxing_counts||{};
   var kl=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
-  var ug=deriveUseGods(dwx,str,sc);
+  var bd=chart.strength_breakdown||{};var ug=deriveUseGods(dwx,str,sc,bd);
 
   console.log('=== REPORT ===','DM:',ds+dwx,'Str:',str,'Score:',sc,'Use:',ug.use,'Avoid:',ug.avoid);
 
@@ -452,7 +460,7 @@ function fillFlowMonths(a,ds,isZh){
   if(!a.yearly_forecast||!Array.isArray(a.yearly_forecast))return;
   var tbl=document.querySelectorAll('#paywallGate .r-tbl');if(tbl.length<2)return;
   var dwx=GAN_WX[ds],str=a._str||'',sc=a._sc||0;
-  var ug=deriveUseGods(dwx,str,sc);
+  var bd=chart.strength_breakdown||{};var ug=deriveUseGods(dwx,str,sc,bd);
   var MK={'辰':'辰为水库，有收藏之象','戌':'戌为火库，有肃杀之气','丑':'丑为金库，有收敛之力','未':'未为木库，有滋养之功'};
   var hd='<div class="r-tbl-head r-tbl-3"><div>'+(isZh?'月份':'Month')+'</div><div>'+(isZh?'干支':'Stems')+'</div><div>'+(isZh?'运势概要':'Summary')+'</div></div>';
   var rw='';
