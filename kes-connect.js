@@ -48,20 +48,24 @@ var ZHI_WX = {'子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':
 
 function kesSubmit(){
   var isZh = document.documentElement.lang === 'zh';
-  var dateVal = document.querySelector('.form-wrap input[type="date"]').value;
-  var timeSelect = document.querySelector('.form-wrap select');
+  var yearEl = document.getElementById('birthYear');
+  var monthEl = document.getElementById('birthMonth');
+  var dayEl = document.getElementById('birthDay');
+  var timeSelect = document.querySelector('.form-wrap .f-select:not(#birthYear):not(#birthMonth):not(#birthDay)');
   var cityVal = document.getElementById('cityInput').value;
   var genderF = document.getElementById('gF').classList.contains('on');
   var gender = genderF ? 'F' : 'M';
 
-  if(!dateVal){ alert(isZh ? '请选择出生日期' : 'Please select your birth date'); return; }
+  if(!yearEl || !yearEl.value || !monthEl || !monthEl.value || !dayEl || !dayEl.value){
+    alert(isZh ? '请选择完整的出生日期' : 'Please select your complete birth date'); return;
+  }
   if(!timeSelect || !timeSelect.value){ alert(isZh ? '请选择出生时辰' : 'Please select your birth hour'); return; }
   if(!cityVal || cityVal.trim().length < 2){ alert(isZh ? '请输入出生城市' : 'Please enter your birth city'); return; }
 
-  var parts = dateVal.split('-');
-  var year = parseInt(parts[0]);
-  var month = parseInt(parts[1]);
-  var day = parseInt(parts[2]);
+  var year = parseInt(yearEl.value);
+  var month = parseInt(monthEl.value);
+  var day = parseInt(dayEl.value);
+  var dateVal = year + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0');
 
   /* 解析时辰 */
   var shichen = timeSelect.value;
@@ -467,10 +471,185 @@ function fillReport(data, dateStr, shichen, gender){
   fillAnalysisSection('Wealth', analysis ? analysis.wealth : '');
   fillAnalysisSection('Health', analysis ? analysis.health : '');
   fillAnalysisSection('Relationship', analysis ? analysis.relationship : '');
+  fillAnalysisSection('Marriage', analysis ? analysis.relationship : '');
+
+  // Debug: log full analysis for future development
+  console.log('analysis keys:', analysis ? Object.keys(analysis) : 'none');
+  console.log('dayun:', dayun ? JSON.stringify(dayun).substring(0,500) : 'none');
+
+  /* ── 09+ 付费墙内容：动态流年表 ── */
+  fillFlowYears(data, dateStr, gender);
+
+  /* ── 11 预警：动态填充 ── */
+  fillWarnings(data);
 
   /* ── Auto-translate for English page ── */
   if(document.documentElement.lang === 'en' && analysis){
     translateReport(analysis, chart);
+  }
+}
+
+/* ── 天干地支计算工具 ── */
+var TIAN_GAN_LIST = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+var DI_ZHI_LIST = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+var STEM_ELEM = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+var BRANCH_ELEM = {'子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水'};
+
+function yearToGanZhi(year){
+  var si = (year - 4) % 10;
+  var bi = (year - 4) % 12;
+  return { stem: TIAN_GAN_LIST[si], branch: DI_ZHI_LIST[bi] };
+}
+
+/* ── 流年评分（基于喜用忌神） ── */
+function rateFlowYear(gz, dayWx, useElems, avoidElems){
+  var score = 3;
+  var stemE = STEM_ELEM[gz.stem] || '';
+  var branchE = BRANCH_ELEM[gz.branch] || '';
+
+  if(useElems.indexOf(stemE) >= 0) score += 0.8;
+  if(useElems.indexOf(branchE) >= 0) score += 0.7;
+  if(avoidElems.indexOf(stemE) >= 0) score -= 0.8;
+  if(avoidElems.indexOf(branchE) >= 0) score -= 0.7;
+
+  score = Math.max(1, Math.min(5, Math.round(score)));
+  return score;
+}
+
+/* ── 动态填充流年表（2026-2033） ── */
+function fillFlowYears(data, dateStr, gender){
+  var chart = data.chart;
+  var analysis = data.analysis;
+  var dayun = data.dayun;
+  var isZh = document.documentElement.lang === 'zh';
+  var dayStem = chart.pillars.day.stem;
+  var dayWx = GAN_WX[dayStem];
+
+  // 提取喜用忌神
+  var useElems = [], avoidElems = [];
+  if(analysis && analysis.raw && analysis.raw.pattern && analysis.raw.pattern.use_gods){
+    var ug = analysis.raw.pattern.use_gods;
+    var ugStr = ug['用神'] || ug['喜神'] || '';
+    var avStr = ug['忌神'] || '';
+    ['木','火','土','金','水'].forEach(function(w){
+      if(ugStr.indexOf(w)>=0) useElems.push(w);
+      if(avStr.indexOf(w)>=0) avoidElems.push(w);
+    });
+  }
+  if(useElems.length === 0 && chart.use_god){
+    var ugObj = chart.use_god;
+    (ugObj['喜'] || []).forEach(function(e){ if(e) useElems.push(e); });
+    (ugObj['忌'] || []).forEach(function(e){ if(e) avoidElems.push(e); });
+  }
+
+  // 如果API返回了流年数据，优先使用
+  var liunianData = null;
+  if(analysis && analysis.liunian) liunianData = analysis.liunian;
+  if(analysis && analysis.flow_years) liunianData = analysis.flow_years;
+
+  // 查找付费墙内的流年表
+  var paywallTables = document.querySelectorAll('#paywallGate .r-tbl');
+  if(paywallTables.length > 0){
+    var yearTable = paywallTables[0];
+    var headHtml = '<div class="r-tbl-head r-tbl-3"><div>' + (isZh?'年份':'Year') + '</div><div>' + (isZh?'干支':'Stems') + '</div><div>' + (isZh?'运势概要':'Summary') + '</div></div>';
+    var rowsHtml = '';
+
+    for(var y=2026;y<=2033;y++){
+      var gz = yearToGanZhi(y);
+      var score = rateFlowYear(gz, dayWx, useElems, avoidElems);
+      var stars = '';
+      for(var s=0;s<5;s++) stars += s<score ? '★' : '☆';
+      var isCur = y === new Date().getFullYear();
+
+      var stemWxClass = WX_CLASS[STEM_ELEM[gz.stem]] || 'tu';
+      var branchWxClass = WX_CLASS[BRANCH_ELEM[gz.branch]] || 'tu';
+
+      // 生成简要说明
+      var stemE = STEM_ELEM[gz.stem];
+      var branchE = BRANCH_ELEM[gz.branch];
+      var note = '';
+      if(score <= 1) note = isZh ? '<b>极不利年，</b>需极度谨慎' : '<b>Most challenging year.</b> Proceed with caution.';
+      else if(score <= 2) note = isZh ? '压力较大，宜守不宜攻' : 'Challenging year. Stay defensive.';
+      else if(score <= 3) note = isZh ? '平稳过渡，稳中有变' : 'Transitional year. Steady progress.';
+      else if(score <= 4) note = isZh ? '运势回升，贵人有助' : 'Favorable energy. Mentors support.';
+      else note = isZh ? '<b>大吉之年，</b>积极把握机遇' : '<b>Excellent year.</b> Seize opportunities.';
+
+      // 如果API有详细流年数据，使用它
+      if(liunianData && liunianData[y]){
+        var ld = liunianData[y];
+        if(ld.note) note = ld.note;
+        if(ld.score) { score = ld.score; stars = ''; for(var s2=0;s2<5;s2++) stars += s2<score ? '★' : '☆'; }
+      }
+
+      rowsHtml += '<div class="r-tbl-row r-tbl-3' + (isCur?' now':'') + '"><div class="r-a-year">' + y + '</div><div class="r-a-gz"><span class="e-' + stemWxClass + '">' + gz.stem + '</span><span class="e-' + branchWxClass + '">' + gz.branch + '</span></div><div class="r-a-body"><div class="r-a-stars">' + stars + '</div><div class="r-a-note">' + note + '</div></div></div>';
+    }
+
+    yearTable.innerHTML = headHtml + rowsHtml;
+  }
+
+  // 也更新流月表（如果API有数据）
+  var liuyueData = null;
+  if(analysis && analysis.liuyue) liuyueData = analysis.liuyue;
+  if(analysis && analysis.flow_months) liuyueData = analysis.flow_months;
+
+  if(liuyueData && paywallTables.length > 1){
+    var monthTable = paywallTables[1];
+    var mHeadHtml = '<div class="r-tbl-head r-tbl-3"><div>' + (isZh?'月份':'Month') + '</div><div>' + (isZh?'干支':'Stems') + '</div><div>' + (isZh?'运势概要':'Summary') + '</div></div>';
+    var mRowsHtml = '';
+    for(var m=1;m<=12;m++){
+      var md = liuyueData[m] || liuyueData[String(m)];
+      if(md){
+        var mStarStr = '';
+        for(var ms=0;ms<5;ms++) mStarStr += ms<(md.score||3) ? '★' : '☆';
+        var mStemWx = WX_CLASS[STEM_ELEM[md.stem]] || 'tu';
+        var mBranchWx = WX_CLASS[BRANCH_ELEM[md.branch]] || 'tu';
+        mRowsHtml += '<div class="r-tbl-row r-tbl-3"><div class="r-a-year">' + m + (isZh?'月':'') + '</div><div class="r-a-gz"><span class="e-' + mStemWx + '">' + md.stem + '</span><span class="e-' + mBranchWx + '">' + md.branch + '</span></div><div class="r-a-body"><div class="r-a-stars">' + mStarStr + '</div><div class="r-a-note">' + (md.note||'') + '</div></div></div>';
+      }
+    }
+    if(mRowsHtml) monthTable.innerHTML = mHeadHtml + mRowsHtml;
+  }
+}
+
+/* ── 动态填充预警 ── */
+function fillWarnings(data){
+  var analysis = data.analysis;
+  if(!analysis) return;
+
+  var warnings = analysis.warnings || analysis.special_warnings;
+  if(!warnings) return;
+
+  var isZh = document.documentElement.lang === 'zh';
+  var warnContainer = null;
+  var allSecs = document.querySelectorAll('#paywallGate .r-sec, #p-report .r-sec');
+  for(var i=0;i<allSecs.length;i++){
+    var h = allSecs[i].querySelector('.r-h');
+    if(h && (h.textContent.includes('预警') || h.textContent.includes('Alert'))){
+      warnContainer = allSecs[i];
+      break;
+    }
+  }
+  if(!warnContainer) return;
+
+  var existingWarns = warnContainer.querySelectorAll('.r-warn');
+  if(typeof warnings === 'object'){
+    var warnHtml = '';
+    for(var key in warnings){
+      var wList = warnings[key];
+      if(Array.isArray(wList)){
+        wList.forEach(function(w){
+          var level = (w.indexOf('极') >= 0 || w.indexOf('severe') >= 0) ? 'w-red' : 'w-gold';
+          warnHtml += '<div class="r-warn ' + level + '"><div class="r-warn-title">' + key + '</div><div class="r-warn-body">' + w + '</div></div>';
+        });
+      } else if(typeof wList === 'string' && wList.trim()){
+        warnHtml += '<div class="r-warn w-gold"><div class="r-warn-title">' + key + '</div><div class="r-warn-body">' + wList + '</div></div>';
+      }
+    }
+    if(warnHtml){
+      // 替换现有预警
+      existingWarns.forEach(function(w){ w.remove(); });
+      var hrEl = warnContainer.querySelector('.r-hr');
+      if(hrEl) hrEl.insertAdjacentHTML('beforebegin', warnHtml);
+    }
   }
 }
 
@@ -551,8 +730,36 @@ function fillAnalysisSection(keyword, text){
   }
 }
 
-/* ── 覆盖按钮 ── */
+/* ── 覆盖按钮 + 初始化日期选择 ── */
 document.addEventListener('DOMContentLoaded', function(){
   var btn = document.querySelector('.f-btn');
   if(btn) btn.setAttribute('onclick','kesSubmit()');
+
+  // 初始化年份下拉 (1940-2025)
+  var yearEl = document.getElementById('birthYear');
+  if(yearEl){
+    for(var y=2025;y>=1940;y--){
+      var opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      yearEl.appendChild(opt);
+    }
+    yearEl.value = '1993';
+  }
+
+  // 初始化日期下拉 (1-31)
+  var dayEl = document.getElementById('birthDay');
+  if(dayEl){
+    for(var d=1;d<=31;d++){
+      var opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d;
+      dayEl.appendChild(opt);
+    }
+    dayEl.value = '30';
+  }
+
+  // 月份默认选6月
+  var monthEl = document.getElementById('birthMonth');
+  if(monthEl) monthEl.value = '6';
 });

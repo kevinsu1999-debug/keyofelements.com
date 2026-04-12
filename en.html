@@ -567,7 +567,8 @@ body{font-size:15px;line-height:1.75}
  .nav-links{gap:0;display:flex;overflow-x:auto;scrollbar-width:none}
  .nav-links::-webkit-scrollbar{display:none}
  .nl{padding:6px 12px;font-size:10px;white-space:nowrap}
- .lang-row,.nav-bag{display:none}
+ .lang-row{display:flex}
+ .nav-bag{display:none}
 
  /* Hero */
  .phi-hero{padding:40px 20px 0}
@@ -1266,7 +1267,16 @@ body{font-size:15px;line-height:1.75}
  <div class="f-row">
  <div class="f-field">
  <label class="f-label">Date of Birth</label>
- <input class="f-input" type="date" value="1993-06-30">
+ <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+ <select class="f-select" id="birthYear"></select>
+ <select class="f-select" id="birthMonth">
+ <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+ <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+ <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+ <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+ </select>
+ <select class="f-select" id="birthDay"></select>
+ </div>
  </div>
  <div class="f-field">
  <label class="f-label">Birth Hour</label>
@@ -1610,26 +1620,23 @@ body{font-size:15px;line-height:1.75}
  <div class="r-hr"></div></div>
 
  <!-- Paywall CTA (at top) -->
- <div class="paywall-cta" id="paywallCta">
-   <div style="font-size:11px;letter-spacing:.35em;color:var(--t4);margin-bottom:16px">P R E M I U M</div>
-   <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,3vw,28px);font-weight:300;letter-spacing:.06em;color:var(--t1);margin-bottom:8px">Unlock Your Complete Destiny Blueprint</div>
-   <div style="font-size:12px;color:var(--t3);max-width:320px;margin:0 auto 28px">Annual Forecast · Monthly Outlook · Key Alerts · Core Guidance</div>
-
-   <!-- Stripe Pricing Table -->
-   <div id="stripePricingWrap" style="max-width:480px;margin:0 auto 24px">
-     <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-     <stripe-pricing-table pricing-table-id="prctbl_1TL0nU5tISGwngzcss0E2RA1"
-       publishable-key="pk_live_51TL0bI5tISGwngzcgh9EWYF7cFlJdUatfbAvCDQ4HnuLVBJgaSKYdERtxFLuve0fjLcewdgBlQdO3CM7YKcEL3ME00qsZ1iDd3">
-     </stripe-pricing-table>
-   </div>
-
-   <div style="margin-top:16px;padding-top:20px;border-top:1px solid var(--line)">
-     <div style="font-size:10px;letter-spacing:.12em;color:var(--t4);margin-bottom:10px">Have an invite code?</div>
-     <div style="display:flex;gap:8px;max-width:300px;margin:0 auto">
-       <input type="text" id="bypassCode" placeholder="Enter code" style="flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--t1);text-align:center;letter-spacing:.1em">
-       <button onclick="checkBypassCode()" style="padding:10px 20px;border:none;border-radius:8px;background:var(--t1);color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;cursor:pointer;font-family:inherit;white-space:nowrap">Apply</button>
+ <div class="paywall-cta" id="paywallCta" style="border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:40px 32px;margin:0 auto;max-width:100%;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)">
+   <div style="max-width:480px;margin:0 auto;text-align:center">
+     <div style="font-size:10px;letter-spacing:.3em;color:var(--t4);margin-bottom:14px">FULL REPORT</div>
+     <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(18px,2.5vw,22px);font-weight:300;color:var(--t1);margin-bottom:8px;line-height:1.5">Unlock Your Complete Destiny Blueprint</div>
+     <div style="font-size:12px;color:var(--t3);line-height:1.8;margin-bottom:24px">Annual Forecast · Monthly Outlook · Key Alerts · Core Guidance</div>
+     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px">
+       <button class="pw-btn" onclick="openLogin('register')">Unlock Now →</button>
+       <button class="pw-btn secondary" onclick="openLogin('login')">Sign In</button>
      </div>
-     <div id="codeError" style="font-size:11px;color:var(--huo);margin-top:8px;display:none">Invalid code, please try again</div>
+     <div style="padding-top:16px;border-top:1px solid var(--line)">
+       <div style="font-size:10px;color:var(--t4);margin-bottom:8px">Have an invite code?</div>
+       <div style="display:flex;gap:6px;max-width:260px;margin:0 auto">
+         <input type="text" id="bypassCode" placeholder="Enter code" style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:inherit;background:var(--card);color:var(--t1);text-align:center;letter-spacing:.08em">
+         <button onclick="checkBypassCode()" style="padding:8px 16px;border:none;border-radius:6px;background:var(--t1);color:#fff;font-size:11px;cursor:pointer;font-family:inherit">Apply</button>
+       </div>
+       <div id="codeError" style="font-size:11px;color:var(--huo);margin-top:6px;display:none">Invalid code</div>
+     </div>
    </div>
  </div>
 
