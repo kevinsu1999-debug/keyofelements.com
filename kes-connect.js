@@ -220,8 +220,8 @@ function fillReport(data,dateStr,shichen,gender,isZh){
       var fgz=yearGZ(fy),fsg=getTenGod(ds,fgz.stem),fsE=STEM_ELEM[fgz.stem],fbE=BRANCH_ELEM[fgz.branch];
       var fsc=3;if(ug.use.indexOf(fsE)>=0)fsc+=0.8;if(ug.use.indexOf(fbE)>=0)fsc+=0.7;if(ug.avoid.indexOf(fsE)>=0)fsc-=0.8;if(ug.avoid.indexOf(fbE)>=0)fsc-=0.7;
       fsc=Math.max(1,Math.min(5,Math.round(fsc)));
-      var frw=['凶','不利','平','吉','大吉'][fsc-1]||'平';
-      fRows+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+fy+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[fsE]+'">'+fgz.stem+'</span><span class="e-'+WX_CLASS[fbE]+'">'+fgz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+frw+'</div><div class="r-a-note">'+fgz.stem+fgz.branch+'（'+fsg+'）：'+(LN_DESC[fsg]||'')+'</div></div></div>';
+      var fst='';for(var fs=0;fs<5;fs++)fst+=fs<fsc?'★':'☆';
+      fRows+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+fy+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[fsE]+'">'+fgz.stem+'</span><span class="e-'+WX_CLASS[fbE]+'">'+fgz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+fst+'</div><div class="r-a-note">'+fgz.stem+fgz.branch+'（'+fsg+'）：'+(LN_DESC[fsg]||'')+'</div></div></div>';
     }
     freeTable.innerHTML=fHead+fRows;
   }
@@ -248,10 +248,10 @@ function fillReport(data,dateStr,shichen,gender,isZh){
         if(dsb)dsb.textContent=cd.sg+'大运，'+cd.s+STEM_ELEM[cd.s]+'透干';
         var di=document.querySelectorAll('.r-dy-s-item .r-dy-s-body');
         if(di.length>=4){
-          di[0].innerHTML='<b>'+cd.sg+'</b>：'+(LN_DESC[cd.sg]||'');
-          di[1].textContent='地支'+cd.b+'（'+cd.bg+'），'+BRANCH_ELEM[cd.b]+'行入运。事业运势随大运十神变化。';
-          di[2].textContent='感情运势关注夫妻宫与配偶星在此运期间的互动。';
-          di[3].textContent='健康重点关注'+dwx+'行对应器官，结合当运五行调养。';
+          di[0].textContent=cd.sg+'大运，'+(LN_DESC[cd.sg]||'');
+          di[1].textContent=cd.bg+'坐支，'+BRANCH_ELEM[cd.b]+'行入运，事业运势随大运十神变化。';
+          di[2].textContent='关注夫妻宫与配偶星在此运期间的互动关系。';
+          di[3].textContent='重点关注'+dwx+'行对应器官，结合当运五行调养。';
         }
       }
     }
@@ -294,16 +294,39 @@ function enrichWithClaude(data, ds, dwx, str, sc, ug, gender){
     if(e.relationship) fillText('感情',e.relationship);
     if(e.health) fillText('健康',e.health);
     if(e.dayun_detail){
+      // 均匀分配到四个卡片
       var di=document.querySelectorAll('.r-dy-s-item .r-dy-s-body');
-      if(di.length>=1) di[0].innerHTML=e.dayun_detail.replace(/\n/g,'<br>');
+      var parts=e.dayun_detail.split(/\n+/).filter(function(p){return p.trim();});
+      if(di.length>=4 && parts.length>=4){
+        di[0].textContent=cleanText(parts[0]);
+        di[1].textContent=cleanText(parts[1]);
+        di[2].textContent=cleanText(parts[2]);
+        di[3].textContent=cleanText(parts[3]);
+      } else if(di.length>=1){
+        di[0].textContent=cleanText(e.dayun_detail).substring(0,150);
+      }
     }
   })
   .catch(function(err){console.warn('Enrich skipped:',err);});
 }
 
+
+/* ═══ 文本清理 ═══ */
+function cleanText(txt){
+  if(!txt)return'';
+  // 去掉特殊符号
+  txt=txt.replace(/[✦✧💎🔥💧🌳⚡🏔️→←↑↓●○■□▪▫☆★⭐🌟✨💫⚠️✅❌🔴🔵⚪🟢🟡📖🎯💡🔑🏆🎭🎨🎪]/g,'');
+  // 去掉十神过旺缺失段落
+  txt=txt.replace(/(?:命局缺|十神过旺|有[正偏][财官印]无[正偏][财官印]|缺失[木火土金水])[^。]*。/g,'');
+  txt=txt.replace(/💎[^\n]*/g,'');
+  // 清理多余空行
+  txt=txt.replace(/\n{3,}/g,'\n\n');
+  return txt.trim();
+}
+
 /* ═══ 工具函数 ═══ */
 function fillText(kw,txt){
-  if(!txt)return;var secs=document.querySelectorAll('#p-report .r-sec');
+  txt=cleanText(txt);if(!txt)return;var secs=document.querySelectorAll('#p-report .r-sec');
   for(var i=0;i<secs.length;i++){var h=secs[i].querySelector('.r-h');
     if(h&&h.textContent.indexOf(kw)>=0){var ps=secs[i].querySelectorAll('p');
       if(ps.length>0){ps[0].innerHTML=txt.replace(/\n/g,'<br>');for(var j=1;j<ps.length;j++)ps[j].textContent='';}break;}}
@@ -317,9 +340,9 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
     var gz=yearGZ(y),sg=getTenGod(ds,gz.stem),sE=STEM_ELEM[gz.stem],bE=BRANCH_ELEM[gz.branch];
     var sc=3;if(use.indexOf(sE)>=0)sc+=0.8;if(use.indexOf(bE)>=0)sc+=0.7;if(avoid.indexOf(sE)>=0)sc-=0.8;if(avoid.indexOf(bE)>=0)sc-=0.7;
     sc=Math.max(1,Math.min(5,Math.round(sc)));
-    var rateWord=['凶','不利','平','吉','大吉'][sc-1]||'平';
+    var st='';for(var s=0;s<5;s++)st+=s<sc?'★':'☆';
     var nt=isZh?gz.stem+gz.branch+'（'+sg+'）：'+(LN_DESC[sg]||''):sg+' year';
-    rw+='<div class="r-tbl-row r-tbl-3'+(y===new Date().getFullYear()?' now':'')+'"><div class="r-a-year">'+y+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+gz.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+gz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+rateWord+'</div><div class="r-a-note">'+nt+'</div></div></div>';
+    rw+='<div class="r-tbl-row r-tbl-3'+(y===new Date().getFullYear()?' now':'')+'"><div class="r-a-year">'+y+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+gz.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+gz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+st+'</div><div class="r-a-note">'+nt+'</div></div></div>';
   }
   tbl[0].innerHTML=hd+rw;
 }
