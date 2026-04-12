@@ -87,9 +87,15 @@ function kesSubmit(){
   if(!coords && cityInput.dataset.lon && cityInput.dataset.lat){
     coords = [parseFloat(cityInput.dataset.lon), parseFloat(cityInput.dataset.lat)];
   }
-  var lon = coords ? coords[0] : 116.4;
-  var lat = coords ? coords[1] : 39.9;
+  if(!coords){
+    alert(isZh ? '请从下拉列表中选择城市，以确保经纬度准确' : 'Please select a city from the dropdown to ensure accurate coordinates');
+    return;
+  }
+  var lon = coords[0];
+  var lat = coords[1];
   var tz = CITY_TZ[cityVal] || Math.round(lon / 15);
+
+  console.log('城市坐标:', cityVal, 'lon:', lon, 'lat:', lat, 'tz:', tz);
 
   /* 显示加载状态 */
   var btn = document.querySelector('.f-btn');
@@ -202,16 +208,16 @@ function fillReport(data, dateStr, shichen, gender){
       : 'Lon ' + localLonCorr.toFixed(1) + 'min + EoT ' + eot.toFixed(1) + 'min = ' + totalCorr + 'min';
   }
 
-  /* ── 报告头部 ── */
+  /* ── 报告头部（紧凑版） ── */
   var hdr = document.querySelector('.rpt-info-card');
   if(hdr){
     var isZhHdr = document.documentElement.lang === 'zh';
     var genderText = isZhHdr ? (gender==='F' ? '女命' : '男命') : (gender==='F' ? 'Female' : 'Male');
     hdr.innerHTML =
-      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'性　别':'Gender')+'</div><div class="rpt-f-v"><b>'+genderText+'</b></div></div>'+
-      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'出生日期':'Birth Date')+'</div><div class="rpt-f-v">'+dateDisplay+'</div></div>'+
-      (tstDisplay ? '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'真太阳时':'True Solar Time')+'</div><div class="rpt-f-v"><b>'+tstDisplay+'</b>'+(correctionNote ? '<span class="rpt-f-note">'+correctionNote+'</span>' : '')+'</div></div>' : '')+
-      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'日　主':'Day Master')+'</div><div class="rpt-f-v"><b class="e-'+dayWxClass+'">'+dayStem+dayWx+'</b></div></div>';
+      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'性别':'Gender')+'</div><div class="rpt-f-v"><b>'+genderText+'</b></div></div>'+
+      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'出生':'Birth')+'</div><div class="rpt-f-v">'+dateDisplay+'</div></div>'+
+      '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'日主':'DM')+'</div><div class="rpt-f-v"><b class="e-'+dayWxClass+'">'+dayStem+dayWx+'</b></div></div>'+
+      (tstDisplay ? '<div class="rpt-f"><div class="rpt-f-l">'+(isZhHdr?'真太阳时':'TST')+'</div><div class="rpt-f-v">'+tstDisplay+(correctionNote ? '<span class="rpt-f-note" style="font-size:9px;display:block;margin-top:2px;color:var(--t4)">'+correctionNote+'</span>' : '')+'</div></div>' : '');
   }
 
   /* ── 01 四柱 ── */
@@ -315,74 +321,106 @@ function fillReport(data, dateStr, shichen, gender){
     var wxNames = ['木','火','土','金','水'];
     var useElems = [], avoidElems = [];
 
-    /* 方法1: 从 raw.pattern.use_gods 提取 */
+    // Debug
+    console.log('=== 用神提取 ===');
+    console.log('chart.use_god:', JSON.stringify(chart.use_god));
+    console.log('chart.day_master_strength:', chart.day_master_strength);
+    if(analysis) console.log('analysis.use_god_summary:', analysis.use_god_summary);
+    if(analysis && analysis.raw) console.log('analysis.raw.pattern:', JSON.stringify(analysis.raw ? analysis.raw.pattern : null));
+
+    /* 方法1: 从 raw.pattern.use_gods */
     if(analysis && analysis.raw && analysis.raw.pattern && analysis.raw.pattern.use_gods){
       var ug = analysis.raw.pattern.use_gods;
-      var ugStr = ug['用神'] || ug['喜神'] || ug['use_god'] || '';
-      var avStr = ug['忌神'] || ug['avoid_god'] || '';
+      var ugStr = (ug['用神'] || ug['喜神'] || ug['use_god'] || ug['喜'] || '');
+      if(typeof ugStr === 'object') ugStr = JSON.stringify(ugStr);
+      var avStr = (ug['忌神'] || ug['avoid_god'] || ug['忌'] || '');
+      if(typeof avStr === 'object') avStr = JSON.stringify(avStr);
       for(var w=0;w<wxNames.length;w++){
         if(ugStr.indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
         if(avStr.indexOf(wxNames[w]) >= 0) avoidElems.push(wxNames[w]);
       }
+      console.log('方法1:', useElems, avoidElems);
     }
 
-    /* 方法2: 从 use_god_summary 文本提取 */
+    /* 方法2: 从 use_god_summary */
     if(useElems.length === 0 && analysis && analysis.use_god_summary){
-      var sumText = analysis.use_god_summary;
-      var useMatch = sumText.match(/用神[：:]\s*([^\n忌]+)/);
-      var avoidMatch = sumText.match(/忌神[：:]\s*([^\n]*)/);
-      if(useMatch){
-        for(var w=0;w<wxNames.length;w++){
-          if(useMatch[1].indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
-        }
+      var sumText = typeof analysis.use_god_summary === 'string' ? analysis.use_god_summary : JSON.stringify(analysis.use_god_summary);
+      for(var w=0;w<wxNames.length;w++){
+        if(sumText.indexOf('喜') >= 0 && sumText.indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
       }
-      if(avoidMatch){
-        for(var w=0;w<wxNames.length;w++){
-          if(avoidMatch[1].indexOf(wxNames[w]) >= 0) avoidElems.push(wxNames[w]);
-        }
+      // 更宽松的提取
+      if(useElems.length === 0){
+        var useMatch = sumText.match(/[用喜][神]?[：:]*\s*([^\n忌]{1,30})/);
+        var avoidMatch = sumText.match(/忌[神]?[：:]*\s*([^\n]{1,30})/);
+        if(useMatch) for(var w=0;w<wxNames.length;w++){ if(useMatch[1].indexOf(wxNames[w])>=0) useElems.push(wxNames[w]); }
+        if(avoidMatch) for(var w=0;w<wxNames.length;w++){ if(avoidMatch[1].indexOf(wxNames[w])>=0) avoidElems.push(wxNames[w]); }
       }
+      console.log('方法2:', useElems, avoidElems);
     }
 
-    /* 方法3: 从 chart.use_god 提取 */
+    /* 方法3: 从 chart.use_god（扫描所有可能的key） */
     if(useElems.length === 0 && chart.use_god){
       var ugObj = chart.use_god;
-      var ugList = ugObj['喜'] || ugObj['use'] || ugObj['favorable'] || [];
-      var avList = ugObj['忌'] || ugObj['avoid'] || ugObj['unfavorable'] || [];
-      if(typeof ugList === 'string') ugList = ugList.split(/[,，、\s]+/);
-      if(typeof avList === 'string') avList = avList.split(/[,，、\s]+/);
+      var allText = JSON.stringify(ugObj);
+      console.log('方法3 raw:', allText);
+      // 直接从JSON字符串里提取五行字
       for(var w=0;w<wxNames.length;w++){
-        for(var u=0;u<ugList.length;u++){
-          if(ugList[u].indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
-        }
-        for(var a=0;a<avList.length;a++){
-          if(avList[a].indexOf(wxNames[w]) >= 0) avoidElems.push(wxNames[w]);
-        }
+        // 在"喜"相关字段中找
+        if(allText.match(new RegExp('[喜用favorable].*?' + wxNames[w]))) useElems.push(wxNames[w]);
+        if(allText.match(new RegExp('[忌避unfavorable].*?' + wxNames[w]))) avoidElems.push(wxNames[w]);
       }
+      // 如果还是空，尝试直接读数组/列表
+      if(useElems.length === 0){
+        var possibleKeys = Object.keys(ugObj);
+        possibleKeys.forEach(function(pk){
+          var v = ugObj[pk];
+          if(Array.isArray(v)){
+            v.forEach(function(item){
+              for(var w=0;w<wxNames.length;w++){
+                if(String(item).indexOf(wxNames[w]) >= 0){
+                  if(pk.indexOf('喜') >= 0 || pk.indexOf('用') >= 0) useElems.push(wxNames[w]);
+                  if(pk.indexOf('忌') >= 0) avoidElems.push(wxNames[w]);
+                }
+              }
+            });
+          }
+        });
+      }
+      console.log('方法3:', useElems, avoidElems);
     }
 
-    /* 方法4: 根据身强弱自动推导 */
+    /* 方法4: 根据身强弱自动推导（保底方案） */
     if(useElems.length === 0){
       var dm = chart.day_master_strength || '';
-      var dayWxElem = dayWx;
-      var wxCycle = {木:'火',火:'土',土:'金',金:'水',水:'木'};
-      var wxCtrl = {木:'土',火:'金',土:'水',金:'木',水:'火'};
-      var genBy = {};
-      for(var k in wxCycle) genBy[wxCycle[k]] = k; // 什么生我
+      var dayWxElem = dayWx; // 日主五行
+      // 五行相生: 木→火→土→金→水→木
+      var wxGen = {'木':'火','火':'土','土':'金','金':'水','水':'木'}; // X生什么
+      var wxCtrl = {'木':'土','火':'金','土':'水','金':'木','水':'火'}; // X克什么
+      var wxGenBy = {'火':'木','土':'火','金':'土','水':'金','木':'水'}; // 什么生X (印星)
+      var wxCtrlBy = {'土':'木','金':'火','水':'土','木':'金','火':'水'}; // 什么克X (官杀)
 
-      if(dm.indexOf('强') >= 0 || dm === '身强'){
-        // 身强：泄耗克为喜
-        useElems = [wxCycle[dayWxElem], wxCtrl[dayWxElem]];
-        avoidElems = [genBy[dayWxElem], dayWxElem];
-      } else if(dm.indexOf('弱') >= 0 || dm === '身弱'){
-        // 身弱：生扶为喜
-        useElems = [genBy[dayWxElem], dayWxElem];
-        avoidElems = [wxCycle[dayWxElem], wxCtrl[dayWxElem]];
+      console.log('方法4: dm=' + dm + ', dayWx=' + dayWxElem);
+
+      if(dm.indexOf('强') >= 0 || dm === '身强' || dm === '极旺'){
+        // 身强：泄(食伤)+耗(财)+克(官杀)为喜
+        useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem], wxCtrlBy[dayWxElem]];
+        avoidElems = [wxGenBy[dayWxElem], dayWxElem];
+      } else if(dm.indexOf('弱') >= 0 || dm === '身弱' || dm === '极弱'){
+        // 身弱：生(印星)+扶(比劫)为喜
+        useElems = [wxGenBy[dayWxElem], dayWxElem];
+        avoidElems = [wxGen[dayWxElem], wxCtrl[dayWxElem], wxCtrlBy[dayWxElem]];
+      } else {
+        // 中和或其他：默认用泄秀+财星
+        useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem]];
+        avoidElems = [wxCtrlBy[dayWxElem]];
       }
+      console.log('方法4 结果:', useElems, avoidElems);
     }
 
-    // 去重
-    useElems = useElems.filter(function(v,i,a){return a.indexOf(v)===i});
-    avoidElems = avoidElems.filter(function(v,i,a){return a.indexOf(v)===i});
+    // 去重 + 过滤空值
+    useElems = useElems.filter(function(v,i,a){return v && a.indexOf(v)===i});
+    avoidElems = avoidElems.filter(function(v,i,a){return v && a.indexOf(v)===i});
+    console.log('最终用神:', useElems, '忌神:', avoidElems);
 
     var yjHtml = '<div class="r-yj-card"><div class="r-yj-label">用　神</div><div class="r-yj-chars">';
     for(var u=0;u<useElems.length;u++){
