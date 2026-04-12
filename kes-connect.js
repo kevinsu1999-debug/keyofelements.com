@@ -460,7 +460,7 @@ function fillFlowMonths(a,ds,isZh){
   if(!a.yearly_forecast||!Array.isArray(a.yearly_forecast))return;
   var tbl=document.querySelectorAll('#paywallGate .r-tbl');if(tbl.length<2)return;
   var dwx=GAN_WX[ds],str=a._str||'',sc=a._sc||0;
-  var bd=chart.strength_breakdown||{};var ug=deriveUseGods(dwx,str,sc,bd);
+  var ug=deriveUseGods(dwx,str,sc,null);
   var MK={'辰':'辰为水库，有收藏之象','戌':'戌为火库，有肃杀之气','丑':'丑为金库，有收敛之力','未':'未为木库，有滋养之功'};
   var hd='<div class="r-tbl-head r-tbl-3"><div>'+(isZh?'月份':'Month')+'</div><div>'+(isZh?'干支':'Stems')+'</div><div>'+(isZh?'运势概要':'Summary')+'</div></div>';
   var rw='';
