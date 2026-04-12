@@ -116,17 +116,24 @@ function kesSubmit(){
     fillReport(data,dateVal,shichen,gender,isZh);
     // Loading：设置回调，等Claude完成才显示
     var _reportReady=false;
-    window._kesShowReport=function(){
+    var _startTime=Date.now();
+    function _doShow(){
       if(_reportReady)return;_reportReady=true;
       ss(isZh?'报告生成完毕':'Report ready');
+      // 至少等3秒让DOM渲染完毕
+      var elapsed=Date.now()-_startTime;
+      var wait=Math.max(800,3000-elapsed);
       setTimeout(function(){
         goPage('report');
         if(ld)ld.classList.remove('on');
         if(btn){btn.disabled=false;btn.style.opacity='1';}
-      },800);
-    };
-    // 超时兜底：25秒后强制展示
-    setTimeout(function(){window._kesShowReport();},25000);
+      },wait);
+    }
+    window._kesShowReport=_doShow;
+    // 非中文不调Claude，直接等3秒后展示
+    if(!isZh)setTimeout(_doShow,3000);
+    // 超时兜底：20秒
+    setTimeout(_doShow,20000);
   })
   .catch(function(e){
     alert((isZh?'出错：':'Error: ')+e.message);
@@ -358,9 +365,19 @@ function fillReport(data,dateStr,shichen,gender,isZh){
         var dsc2=rateDY(dp.stem,dp.branch);
         var dst='';for(var s=0;s<5;s++)dst+=s<dsc2?'\u2605':'\u2606';
         var stColor=dsc2>=4?'--mu':dsc2>=3?'--tu':'--huo';
-        var desc=(isZh?'\u5929\u5E72':'Stem ')+dp.stem+'\uff08'+dsg+'\uff09\uff1a'+(isZh?(LN_DESC[dsg]||''):(dsg+' energy'))+'\n';
-        desc+=(isZh?'\u5730\u652F':'Branch ')+dp.branch+'\uff08'+dbg+'\uff09\uff1a'+(isZh?(LN_DESC[dbg]||''):(dbg+' energy'));
-        if(MKD[dp.branch]) desc+='\u3002'+dp.branch+(isZh?'\u4E3A'+MKD[dp.branch]+'\uff0c\u5173\u6CE8\u58A8\u5E93\u5F00\u5408':' is a storage branch');
+        var dSE=STEM_ELEM[dp.stem],dBE=BRANCH_ELEM[dp.branch];
+        var dSU=ug.use.indexOf(dSE)>=0,dBU=ug.use.indexOf(dBE)>=0;
+        var desc='';
+        if(isZh){
+          desc='天干'+dp.stem+'（'+dsg+'·'+dSE+'）'+(dSU?'为喜用，有利发展':'为忌神，需应对压力')+'。\n';
+          desc+='地支'+dp.branch+'（'+dbg+'·'+dBE+'）'+(dBU?'为喜用，根基稳固':'为忌方向，内部调整')+'。';
+          if(dSU&&dBU) desc+='\n干支均喜用，十年整体向好。';
+          else if(!dSU&&!dBU) desc+='\n干支均忌，十年需谨慎经营。';
+          if(MKD[dp.branch]) desc+='\n'+dp.branch+'为'+MKD[dp.branch]+'，关注墓库开合。';
+        } else {
+          desc='Stem '+dp.stem+' ('+dsg+') '+(dSU?'favorable':'challenging')+'. ';
+          desc+='Branch '+dp.branch+' ('+dbg+') '+(dBU?'supportive':'restrictive')+'.';
+        }
         var sWxC=WX_CLASS[STEM_ELEM[dp.stem]],bWxC=WX_CLASS[BRANCH_ELEM[dp.branch]];
 
         var wrapStart='';var wrapEnd='';
@@ -501,22 +518,30 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
     var nt='';
     if(isZh){
       var bg=getTenGodBr(ds,gz.branch);
-      nt=gz.stem+gz.branch+'（'+sg+'）：'+(LN_DESC[sg]||'')+'。';
-      if(bg&&bg!==sg) nt+='地支'+gz.branch+'（'+bg+'）辅助。';
-      var MKY={'辰':'辰为水库，有收藏之象','戌':'戌为火库，有肃杀之气','丑':'丑为金库，有收敛之力','未':'未为木库，有滋养之功'};
-      if(MKY[gz.branch]) nt+=MKY[gz.branch]+'。';
-      // 刑冲克合
+      // 具体分析：天干忌喜 + 地支刑冲克合
+      var sUse=ug.use.indexOf(sE)>=0,bUse=ug.use.indexOf(bE)>=0;
+      var sAvd=ug.avoid.indexOf(sE)>=0,bAvd=ug.avoid.indexOf(bE)>=0;
+      if(sUse&&bUse) nt+='干支均为喜用，整体有利，可主动把握机会。';
+      else if(sAvd&&bAvd) nt+='干支均为忌神，压力较大，重心放在积累沉淀。';
+      else if(sUse) nt+='天干'+sE+'为喜用有利，地支'+bE+'为忌有阻，外顺内紧。';
+      else if(bUse) nt+='地支'+bE+'为喜用有根基，天干'+sE+'为忌有表面压力。';
+      else nt+='整体中性，按节奏推进即可。';
+      // 地支刑冲合
       var CHONG={'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'};
       var HE={'子':'丑','丑':'子','寅':'亥','亥':'寅','卯':'戌','戌':'卯','辰':'酉','酉':'辰','巳':'申','申':'巳','午':'未','未':'午'};
-      var posNames={'year':'年支','month':'月支','day':'日支','hour':'时支'};
+      var posN2={'year':'年支','month':'月支','day':'日支（婚姻宫）','hour':'时支'};
+      var pils=data.chart.pillars||{};
       ['year','month','day','hour'].forEach(function(pos){
-        var pBr=data.chart.pillars[pos]?data.chart.pillars[pos].branch:'';
-        if(CHONG[gz.branch]===pBr) nt+='流年'+gz.branch+'冲'+posNames[pos]+pBr+'，'+(pos==='day'?'婚姻宫受冲，感情有变。':'该宫位有动荡。');
-        if(HE[gz.branch]===pBr) nt+='流年'+gz.branch+'合'+posNames[pos]+pBr+'，'+(pos==='day'?'感情有合意之象。':'有牵绊。');
+        var pBr=pils[pos]?pils[pos].branch:'';
+        if(CHONG[gz.branch]===pBr) nt+=' '+gz.branch+'冲'+posN2[pos]+pBr+(pos==='day'?'，感情或居住有变动':'，注意该方面波动')+'。';
+        if(HE[gz.branch]===pBr) nt+=' '+gz.branch+'合'+posN2[pos]+pBr+(pos==='day'?'，感情有合意机遇':'')+'。';
       });
+      // 墓库
+      var MKY={'辰':'水库','戌':'火库','丑':'金库','未':'木库'};
+      if(MKY[gz.branch]) nt+=' '+gz.branch+'为'+MKY[gz.branch]+'。';
       if(sc>=4) nt+='宜积极把握机遇，适合拓展、投资、社交。';
       else if(sc<=2) nt+='注意控制风险，财务以稳健为主。';
-      else nt+='整体平稳，稳中求进。';
+      else nt+='中性运势，维持现有节奏。';
       if(sc<=2) nt='<b>'+nt+'</b>';
     } else { nt=sg+' year'; }
     rw+='<div class="r-tbl-row r-tbl-3'+(y===new Date().getFullYear()?' now':'')+'"><div class="r-a-year">'+y+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+gz.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+gz.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+st+'</div><div class="r-a-note">'+nt+'</div></div></div>';
@@ -543,11 +568,16 @@ function fillFlowMonths(a,ds,isZh){
     msc=Math.max(1,Math.min(5,Math.round(msc)));
     var mst='';for(var s=0;s<5;s++)mst+=s<msc?'\u2605':'\u2606';
     // 生成丰富的月度描述
-    var note=f.stem+f.branch+'（'+sg+'）：'+(LN_DESC[sg]||'')+'。';
-    if(bg&&bg!==sg) note+='地支'+f.branch+'（'+bg+'）辅助。';
-    if(MK[f.branch]) note+=MK[f.branch]+'。';
-    if(msc>=4) note+='本月宜积极行动，把握机遇。';
-    else if(msc<=2) note+='本月宜保守谨慎，避免重大决策。';
+    // 月度具体分析
+    var mSUse=ug.use.indexOf(sE)>=0,mBUse=ug.use.indexOf(bE)>=0;
+    var mSAvd=ug.avoid.indexOf(sE)>=0,mBAvd=ug.avoid.indexOf(bE)>=0;
+    var note='';
+    if(mSUse&&mBUse) note='干支均喜用，本月运势较佳，适合推进重要事项。';
+    else if(mSAvd&&mBAvd) note='干支均忌，本月低调行事，减少不必要的社交和支出。';
+    else if(mSUse) note='天干有利但地支有阻，表面顺利暗中注意细节。';
+    else if(mBUse) note='地支得力天干不利，有根基但推进需耐心。';
+    else note='本月中性，维持节奏。';
+    if(MK[f.branch]) note+=' '+f.branch+'为'+MK[f.branch].replace(/，.*$/,'')+'。';
     if(msc<=2) note='<b>'+note+'</b>';
     var mLabel=(idx+1)+'月';
     rw+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+mLabel+'</div><div class="r-a-gz"><span class="e-'+WX_CLASS[sE]+'">'+f.stem+'</span><span class="e-'+WX_CLASS[bE]+'">'+f.branch+'</span></div><div class="r-a-body"><div class="r-a-stars">'+mst+'</div><div class="r-a-note">'+note+'</div></div></div>';
@@ -582,9 +612,10 @@ function fillAnnualDetail(a,ds,dwx,ug,isZh){
   var lyB=sec.querySelector('.r-ly-body');
   if(lyB){
     var t='<p><b>总体评价：'+stars+'</b></p>';
-    t+='<p>'+curYear+'年'+gz.stem+gz.branch+'，天干'+gz.stem+'为'+sg+'，'+(LN_DESC[sg]||'')+'。';
-    t+='地支'+gz.branch+'为'+bg+'，'+(LN_DESC[bg]||'')+'。';
-    if(MK[gz.branch])t+=MK[gz.branch]+'，注意墓库开合对运势的影响。';
+    var dtSUse=ug.use.indexOf(sE)>=0,dtBUse=ug.use.indexOf(bE)>=0;
+    t+='<p>'+curYear+'年'+gz.stem+gz.branch+'。天干'+gz.stem+'（'+sE+'）'+(dtSUse?'为喜用方向，外部环境有利。':'为忌神方向，外部环境有压力。');
+    t+='地支'+gz.branch+'（'+bE+'）'+(dtBUse?'为喜用，根基稳固。':'为忌方向，内部需调整。');
+    var MK0={'辰':'水库','戌':'火库','丑':'金库','未':'木库'};if(MK0[gz.branch])t+=gz.branch+'为'+MK0[gz.branch]+'。';
     t+='</p>';
     t+='<p><b>事业方面：</b>';
     if(ug.avoid.indexOf(sE)>=0)t+=sg+'透干为忌，工作中可能遇到阻力或竞争。重心放在巩固现有成果和人脉维护上。';
@@ -593,7 +624,7 @@ function fillAnnualDetail(a,ds,dwx,ug,isZh){
     t+='<p><b>财务方面：</b>';
     if(sc<=2)t+='流年干支均不利财运，控制支出为主，延后大额投资计划。';
     else if(sc>=4)t+='财星得力，正财偏财均有进账机会，适合稳健理财和资产配置。';
-    else t+='财务整体平稳，维持现有收支节奏即可。';
+    else t+='财务收支平稳，按计划执行即可。';
     t+='</p>';
     t+='<p><b>感情方面：</b>关注日支婚姻宫与流年地支的互动，';
     t+=(sg==='七杀'||sg==='伤官')?'今年感情容易有波动和冲突，注意沟通方式。':'整体感情运势平稳。';
@@ -697,7 +728,7 @@ function fillRecommendations(data,ds,dwx,ug,gender,isZh){
 
   var cards=[
     {title:curYear+'年度策略',body:function(){
-      var t=curYear+'年'+gz.stem+gz.branch+'（'+sg+'）。'+(LN_DESC[sg]||'')+'。';
+      var t=curYear+'年'+gz.stem+gz.branch+'（'+sg+'）。';
       t+=ug.avoid.indexOf(STEM_ELEM[gz.stem])>=0?'今年天干为忌神方向，重心放在积累和沉淀上。减少不必要的开支和冒进。':'今年天干为喜用方向，可主动争取机会。';
       // 找最佳和最差年份
       var bestY='',worstY='',bestSc=0,worstSc=6;
