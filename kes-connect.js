@@ -52,11 +52,11 @@ function deriveUseGods(wx,str,sc,breakdown){
   if(/旺|强/.test(str))return{use:[g[wx],c[wx],cb[wx]],avoid:[gb[wx],wx]};
   // 身弱 → 生扶
   if(/弱/.test(str))return{use:[gb[wx],wx],avoid:[g[wx],c[wx],cb[wx]]};
-  // 中和 → 用三分法判断偏向
+  // 中和 → 用三分法+得众判断偏向
   var sf=(breakdown&&breakdown['三分法'])||{};
-  var deLing=sf['得令'], deDi=sf['得地'], deShi=sf['得势'];
-  // 有根有势只缺令 OR 得令 → 偏强，宜泄耗
-  if((deDi&&deShi)||deLing)return{use:[g[wx],c[wx]],avoid:[gb[wx],wx]};
+  var deLing=sf['得令'], deDi=sf['得地'], deShi=sf['得势'], deZhong=sf['得众'];
+  // 有根有势 OR 得令 OR 得众 → 偏强，宜泄耗
+  if((deDi&&deShi)||deLing||deZhong)return{use:[g[wx],c[wx]],avoid:[gb[wx],wx]};
   // 其他中和 → 偏弱，宜生扶
   return{use:[gb[wx],wx],avoid:[g[wx],c[wx]]};
 }
@@ -221,7 +221,8 @@ function fillReport(data,dateStr,shichen,gender,isZh){
     strGrid.innerHTML=
       '<div class="r-str-item"><div class="r-str-label">得　令</div><div class="r-str-val '+(sf['得令']?'yes':'no')+'">'+(sf['得令']?'已得':'未得')+'</div><div class="r-str-detail">'+dlDetail+'</div></div>'+
       '<div class="r-str-item"><div class="r-str-label">得　地</div><div class="r-str-val '+(sf['得地']?'yes':'no')+'">'+(sf['得地']?'已得':'未得')+'</div><div class="r-str-detail">'+ddDetail+'</div></div>'+
-      '<div class="r-str-item"><div class="r-str-label">得　势</div><div class="r-str-val '+(sf['得势']?'yes':'no')+'">'+(sf['得势']?'已得':'未得')+'</div><div class="r-str-detail">'+dsDetail+'</div></div>';
+      '<div class="r-str-item"><div class="r-str-label">得　势</div><div class="r-str-val '+(sf['得势']?'yes':'no')+'">'+(sf['得势']?'已得':'未得')+'</div><div class="r-str-detail">'+dsDetail+'</div></div>'+
+      '<div class="r-str-item"><div class="r-str-label">得　众</div><div class="r-str-val '+(sf['得众']?'yes':'no')+'">'+(sf['得众']?'已得':'未得')+'</div><div class="r-str-detail">'+(details.filter(function(d){return d.indexOf('得众')>=0||d.indexOf('不得众')>=0;})[0]||'五行总量参考')+'</div></div>';
   }
   var ex=document.querySelector('.r-str-explain');
   if(ex) ex.textContent=ds+dwx+'生于'+(pillars.month?pillars.month.branch:'')+'月，综合判定为'+str+'。';
