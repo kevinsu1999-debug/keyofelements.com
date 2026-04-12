@@ -180,17 +180,43 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   var ml=document.querySelector('.r-meter-labels');
   if(ml)ml.innerHTML=['身弱','偏弱','中和','偏强','身强'].map(function(l,i){return'<span'+(i===si?' class="on"':'')+'>'+l+'</span>';}).join('');
   var vd=document.querySelector('.r-str-verdict');if(vd)vd.textContent=str;
-  var ex=document.querySelector('.r-str-explain');
-  if(ex){
+  // 填充得令得地得势详细grid
+  var bd=chart.strength_breakdown||{};
+  var sf=bd['三分法']||{};
+  var details=bd.details||[];
+  var strGrid=document.querySelector('.r-str-grid');
+  if(strGrid){
     var mb=pillars.month?pillars.month.branch:'';
-    var bd=chart.strength_breakdown||{};
-    var sf=bd['三分法']||{};
-    var parts=[];
-    parts.push(sf['得令']?'得令（'+mb+'月令助日元）':'不得令（'+mb+'月令不助日元）');
-    parts.push(sf['得地']?'得地（地支有通根）':'不得地（地支无有力通根）');
-    parts.push(sf['得势']?'得势（天干有帮扶）':'不得势（天干缺少帮扶）');
-    ex.textContent=ds+dwx+'生于'+mb+'月：'+parts.join('，')+'。综合判定为'+str+'。';
+    var mbWx=ZHI_WX[mb]||'土';
+    var wxS=getWxStatus(mb);
+    var dayStatus=wxS[dwx]||'休';
+    // 得令
+    var dlDetail=sf['得令']?mb+'月主气助'+dwx+'，得令有力':mb+'月'+mbWx+'当令，'+dwx+'处'+dayStatus+'位，月令不助日元';
+    // 得地
+    var ddDetail='';
+    if(sf['得地']){
+      ddDetail='地支有'+dwx+'行通根';
+      details.forEach(function(d){if(d.indexOf('得地')>=0)ddDetail=d.replace(/得地：/,'');});
+    } else {
+      ddDetail='地支无'+dwx+'行有力通根';
+      var kl2=(chart.kong_wang&&chart.kong_wang.day_kong)||[];
+      if(kl2.length)ddDetail+='（'+kl2.join('、')+'空亡）';
+    }
+    // 得势
+    var dsDetail='';
+    if(sf['得势']){
+      dsDetail='天干有比劫或印星帮扶';
+      details.forEach(function(d){if(d.indexOf('得势')>=0)dsDetail=d.replace(/得势：/,'');});
+    } else {
+      dsDetail='天干缺少比劫印星帮扶';
+    }
+    strGrid.innerHTML=
+      '<div class="r-str-item"><div class="r-str-label">得　令</div><div class="r-str-val '+(sf['得令']?'yes':'no')+'">'+(sf['得令']?'已得':'未得')+'</div><div class="r-str-detail">'+dlDetail+'</div></div>'+
+      '<div class="r-str-item"><div class="r-str-label">得　地</div><div class="r-str-val '+(sf['得地']?'yes':'no')+'">'+(sf['得地']?'已得':'未得')+'</div><div class="r-str-detail">'+ddDetail+'</div></div>'+
+      '<div class="r-str-item"><div class="r-str-label">得　势</div><div class="r-str-val '+(sf['得势']?'yes':'no')+'">'+(sf['得势']?'已得':'未得')+'</div><div class="r-str-detail">'+dsDetail+'</div></div>';
   }
+  var ex=document.querySelector('.r-str-explain');
+  if(ex) ex.textContent=ds+dwx+'生于'+(pillars.month?pillars.month.branch:'')+'月，综合判定为'+str+'。';
 
   /* 04 喜用忌神 */
   var yg=document.querySelector('.r-yj-grid');
@@ -229,13 +255,31 @@ function fillReport(data,dateStr,shichen,gender,isZh){
   fillText('财运',analysis.wealth);fillText('Wealth',analysis.wealth);
   fillText('感情',analysis.relationship);fillText('Relationship',analysis.relationship);
   fillText('健康',analysis.health);fillText('Health',analysis.health);
+  // 健康详情grid
+  var hGrid=document.querySelector('.r-health-grid');
+  if(hGrid&&isZh){
+    var wxOrgan={'木':'肝胆','火':'心脑血管','土':'脾胃消化','金':'肺部呼吸','水':'肾脏泌尿'};
+    var hCards=[];
+    var wxArr=['木','火','土','金','水'];
+    wxArr.forEach(function(w){
+      var pct=Math.round((wx[w]||0)/(Object.values(wx).reduce(function(a,b){return a+b;},0)||1)*100);
+      if(pct>30) hCards.push({wx:w,label:w+'偏旺（'+pct+'%），'+wxOrgan[w],body:wxOrgan[w]+'系统承压，需定期检查。',color:'var(--'+WX_CLASS[w]+')'});
+      if(pct<10) hCards.push({wx:w,label:w+'偏弱（'+pct+'%），'+wxOrgan[w],body:wxOrgan[w]+'功能偏弱，日常注意养护。',color:'var(--'+WX_CLASS[w]+')'});
+    });
+    if(hCards.length){
+      hGrid.innerHTML=hCards.map(function(h){
+        return '<div class="r-hc"><div class="r-hc-title"><span class="r-hc-dot" style="background:'+h.color+'"></span>'+h.label+'</div><div class="r-hc-body">'+h.body+'</div></div>';
+      }).join('');
+    }
+  }
+
 
   /* 09 前的2024-2025流年（免费区） */
   var freeTable=document.querySelector('.report-wrap .r-tbl');
   if(freeTable && !freeTable.closest('#paywallGate')){
     var fHead='<div class="r-tbl-head r-tbl-3"><div>年份</div><div>干支</div><div>运势概要</div></div>';
     var fRows='';
-    for(var fy=2024;fy<=2025;fy++){
+    var curYr=new Date().getFullYear();for(var fy=curYr-2;fy<=curYr-1;fy++){
       var fgz=yearGZ(fy),fsg=getTenGod(ds,fgz.stem),fsE=STEM_ELEM[fgz.stem],fbE=BRANCH_ELEM[fgz.branch];
       var fsc=3;if(ug.use.indexOf(fsE)>=0)fsc+=0.8;if(ug.use.indexOf(fbE)>=0)fsc+=0.7;if(ug.avoid.indexOf(fsE)>=0)fsc-=0.8;if(ug.avoid.indexOf(fbE)>=0)fsc-=0.7;
       fsc=Math.max(1,Math.min(5,Math.round(fsc)));
@@ -382,7 +426,7 @@ function fillFlowYears(data,ds,dwx,use,avoid,isZh){
   var tbl=document.querySelectorAll('#paywallGate .r-tbl');if(!tbl.length)return;
   var hd='<div class="r-tbl-head r-tbl-3"><div>'+(isZh?'年份':'Year')+'</div><div>'+(isZh?'干支':'Stems')+'</div><div>'+(isZh?'运势概要':'Summary')+'</div></div>';
   var rw='';
-  for(var y=2026;y<=2033;y++){
+  var curYr2=new Date().getFullYear();for(var y=curYr2;y<=curYr2+7;y++){
     var gz=yearGZ(y),sg=getTenGod(ds,gz.stem),sE=STEM_ELEM[gz.stem],bE=BRANCH_ELEM[gz.branch];
     var sc=3;if(use.indexOf(sE)>=0)sc+=0.8;if(use.indexOf(bE)>=0)sc+=0.7;if(avoid.indexOf(sE)>=0)sc-=0.8;if(avoid.indexOf(bE)>=0)sc-=0.7;
     sc=Math.max(1,Math.min(5,Math.round(sc)));
