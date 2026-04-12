@@ -321,100 +321,70 @@ function fillReport(data, dateStr, shichen, gender){
     var wxNames = ['木','火','土','金','水'];
     var useElems = [], avoidElems = [];
 
-    // Debug
-    console.log('=== 用神提取 ===');
-    console.log('chart.use_god:', JSON.stringify(chart.use_god));
-    console.log('chart.day_master_strength:', chart.day_master_strength);
-    if(analysis) console.log('analysis.use_god_summary:', analysis.use_god_summary);
-    if(analysis && analysis.raw) console.log('analysis.raw.pattern:', JSON.stringify(analysis.raw ? analysis.raw.pattern : null));
+    // 五行关系表
+    var dayWxElem = dayWx; // 日主五行
+    var wxGen = {'木':'火','火':'土','土':'金','金':'水','水':'木'};     // X生什么（食伤）
+    var wxCtrl = {'木':'土','火':'金','土':'水','金':'木','水':'火'};    // X克什么（财星）
+    var wxGenBy = {'火':'木','土':'火','金':'土','水':'金','木':'水'};   // 什么生X（印星）
+    var wxCtrlBy = {'土':'木','金':'火','水':'土','木':'金','火':'水'}; // 什么克X（官杀）
 
-    /* 方法1: 从 raw.pattern.use_gods */
+    var dm = chart.day_master_strength || strength || '';
+    console.log('=== 用神推导 ===');
+    console.log('日主:', dayStem, dayWxElem, '身强弱:', dm);
+
+    // ★ 核心方法：根据身强弱推导（最可靠）
+    if(dm.indexOf('强') >= 0 || dm === '身强' || dm === '极旺' || dm === '偏强'){
+      // 身强：泄(食伤)+耗(财)+克(官杀)为喜
+      useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem], wxCtrlBy[dayWxElem]];
+      avoidElems = [wxGenBy[dayWxElem], dayWxElem];
+    } else if(dm.indexOf('弱') >= 0 || dm === '身弱' || dm === '极弱' || dm === '偏弱'){
+      // 身弱：生(印星)+扶(比劫)为喜
+      useElems = [wxGenBy[dayWxElem], dayWxElem];
+      avoidElems = [wxGen[dayWxElem], wxCtrl[dayWxElem], wxCtrlBy[dayWxElem]];
+    } else {
+      // 中和：默认食伤泄秀+财星
+      useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem]];
+      avoidElems = [wxCtrlBy[dayWxElem]];
+    }
+
+    // 尝试从API覆盖（仅当API数据结构清晰且合理时）
+    var apiUse = [], apiAvoid = [];
     if(analysis && analysis.raw && analysis.raw.pattern && analysis.raw.pattern.use_gods){
       var ug = analysis.raw.pattern.use_gods;
-      var ugStr = (ug['用神'] || ug['喜神'] || ug['use_god'] || ug['喜'] || '');
-      if(typeof ugStr === 'object') ugStr = JSON.stringify(ugStr);
-      var avStr = (ug['忌神'] || ug['avoid_god'] || ug['忌'] || '');
-      if(typeof avStr === 'object') avStr = JSON.stringify(avStr);
+      var ugStr = String(ug['用神'] || ug['喜神'] || ug['喜'] || '');
+      var avStr = String(ug['忌神'] || ug['忌'] || '');
       for(var w=0;w<wxNames.length;w++){
-        if(ugStr.indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
-        if(avStr.indexOf(wxNames[w]) >= 0) avoidElems.push(wxNames[w]);
+        if(ugStr.indexOf(wxNames[w]) >= 0) apiUse.push(wxNames[w]);
+        if(avStr.indexOf(wxNames[w]) >= 0) apiAvoid.push(wxNames[w]);
       }
-      console.log('方法1:', useElems, avoidElems);
+    }
+    if(apiUse.length === 0 && analysis && analysis.use_god_summary){
+      var sumText = String(analysis.use_god_summary);
+      var useMatch = sumText.match(/用神[：:]\s*([^忌\n]{1,20})/);
+      var avoidMatch = sumText.match(/忌神[：:]\s*([^\n]{1,20})/);
+      if(useMatch) for(var w=0;w<wxNames.length;w++){ if(useMatch[1].indexOf(wxNames[w])>=0) apiUse.push(wxNames[w]); }
+      if(avoidMatch) for(var w=0;w<wxNames.length;w++){ if(avoidMatch[1].indexOf(wxNames[w])>=0) apiAvoid.push(wxNames[w]); }
     }
 
-    /* 方法2: 从 use_god_summary */
-    if(useElems.length === 0 && analysis && analysis.use_god_summary){
-      var sumText = typeof analysis.use_god_summary === 'string' ? analysis.use_god_summary : JSON.stringify(analysis.use_god_summary);
-      for(var w=0;w<wxNames.length;w++){
-        if(sumText.indexOf('喜') >= 0 && sumText.indexOf(wxNames[w]) >= 0) useElems.push(wxNames[w]);
+    // 验证API结果是否合理：身弱喜印比，身强喜泄耗
+    if(apiUse.length > 0){
+      var apiValid = true;
+      if(dm.indexOf('弱') >= 0){
+        // 身弱应该喜印星(生我的)或比劫(同类)
+        var yinXing = wxGenBy[dayWxElem]; // 印星
+        if(apiUse.indexOf(yinXing) < 0 && apiUse.indexOf(dayWxElem) < 0) apiValid = false;
+      } else if(dm.indexOf('强') >= 0){
+        // 身强应该喜食伤(泄)或财星(耗)
+        var shiShang = wxGen[dayWxElem]; // 食伤
+        if(apiUse.indexOf(shiShang) < 0 && apiUse.indexOf(wxCtrl[dayWxElem]) < 0) apiValid = false;
       }
-      // 更宽松的提取
-      if(useElems.length === 0){
-        var useMatch = sumText.match(/[用喜][神]?[：:]*\s*([^\n忌]{1,30})/);
-        var avoidMatch = sumText.match(/忌[神]?[：:]*\s*([^\n]{1,30})/);
-        if(useMatch) for(var w=0;w<wxNames.length;w++){ if(useMatch[1].indexOf(wxNames[w])>=0) useElems.push(wxNames[w]); }
-        if(avoidMatch) for(var w=0;w<wxNames.length;w++){ if(avoidMatch[1].indexOf(wxNames[w])>=0) avoidElems.push(wxNames[w]); }
-      }
-      console.log('方法2:', useElems, avoidElems);
-    }
-
-    /* 方法3: 从 chart.use_god（扫描所有可能的key） */
-    if(useElems.length === 0 && chart.use_god){
-      var ugObj = chart.use_god;
-      var allText = JSON.stringify(ugObj);
-      console.log('方法3 raw:', allText);
-      // 直接从JSON字符串里提取五行字
-      for(var w=0;w<wxNames.length;w++){
-        // 在"喜"相关字段中找
-        if(allText.match(new RegExp('[喜用favorable].*?' + wxNames[w]))) useElems.push(wxNames[w]);
-        if(allText.match(new RegExp('[忌避unfavorable].*?' + wxNames[w]))) avoidElems.push(wxNames[w]);
-      }
-      // 如果还是空，尝试直接读数组/列表
-      if(useElems.length === 0){
-        var possibleKeys = Object.keys(ugObj);
-        possibleKeys.forEach(function(pk){
-          var v = ugObj[pk];
-          if(Array.isArray(v)){
-            v.forEach(function(item){
-              for(var w=0;w<wxNames.length;w++){
-                if(String(item).indexOf(wxNames[w]) >= 0){
-                  if(pk.indexOf('喜') >= 0 || pk.indexOf('用') >= 0) useElems.push(wxNames[w]);
-                  if(pk.indexOf('忌') >= 0) avoidElems.push(wxNames[w]);
-                }
-              }
-            });
-          }
-        });
-      }
-      console.log('方法3:', useElems, avoidElems);
-    }
-
-    /* 方法4: 根据身强弱自动推导（保底方案） */
-    if(useElems.length === 0){
-      var dm = chart.day_master_strength || '';
-      var dayWxElem = dayWx; // 日主五行
-      // 五行相生: 木→火→土→金→水→木
-      var wxGen = {'木':'火','火':'土','土':'金','金':'水','水':'木'}; // X生什么
-      var wxCtrl = {'木':'土','火':'金','土':'水','金':'木','水':'火'}; // X克什么
-      var wxGenBy = {'火':'木','土':'火','金':'土','水':'金','木':'水'}; // 什么生X (印星)
-      var wxCtrlBy = {'土':'木','金':'火','水':'土','木':'金','火':'水'}; // 什么克X (官杀)
-
-      console.log('方法4: dm=' + dm + ', dayWx=' + dayWxElem);
-
-      if(dm.indexOf('强') >= 0 || dm === '身强' || dm === '极旺'){
-        // 身强：泄(食伤)+耗(财)+克(官杀)为喜
-        useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem], wxCtrlBy[dayWxElem]];
-        avoidElems = [wxGenBy[dayWxElem], dayWxElem];
-      } else if(dm.indexOf('弱') >= 0 || dm === '身弱' || dm === '极弱'){
-        // 身弱：生(印星)+扶(比劫)为喜
-        useElems = [wxGenBy[dayWxElem], dayWxElem];
-        avoidElems = [wxGen[dayWxElem], wxCtrl[dayWxElem], wxCtrlBy[dayWxElem]];
+      if(apiValid){
+        useElems = apiUse;
+        if(apiAvoid.length > 0) avoidElems = apiAvoid;
+        console.log('使用API用神数据（已验证）');
       } else {
-        // 中和或其他：默认用泄秀+财星
-        useElems = [wxGen[dayWxElem], wxCtrl[dayWxElem]];
-        avoidElems = [wxCtrlBy[dayWxElem]];
+        console.log('API用神数据不合理，使用推导结果');
       }
-      console.log('方法4 结果:', useElems, avoidElems);
     }
 
     // 去重 + 过滤空值
@@ -563,21 +533,24 @@ function fillFlowYears(data, dateStr, gender){
   var dayStem = chart.pillars.day.stem;
   var dayWx = GAN_WX[dayStem];
 
-  // 提取喜用忌神
+  // 提取喜用忌神 — 用身强弱推导（与section 04一致）
+  var dayWxElem = dayWx;
+  var wxGenFY = {'木':'火','火':'土','土':'金','金':'水','水':'木'};
+  var wxCtrlFY = {'木':'土','火':'金','土':'水','金':'木','水':'火'};
+  var wxGenByFY = {'火':'木','土':'火','金':'土','水':'金','木':'水'};
+  var wxCtrlByFY = {'土':'木','金':'火','水':'土','木':'金','火':'水'};
+  var dm = chart.day_master_strength || '';
+
   var useElems = [], avoidElems = [];
-  if(analysis && analysis.raw && analysis.raw.pattern && analysis.raw.pattern.use_gods){
-    var ug = analysis.raw.pattern.use_gods;
-    var ugStr = ug['用神'] || ug['喜神'] || '';
-    var avStr = ug['忌神'] || '';
-    ['木','火','土','金','水'].forEach(function(w){
-      if(ugStr.indexOf(w)>=0) useElems.push(w);
-      if(avStr.indexOf(w)>=0) avoidElems.push(w);
-    });
-  }
-  if(useElems.length === 0 && chart.use_god){
-    var ugObj = chart.use_god;
-    (ugObj['喜'] || []).forEach(function(e){ if(e) useElems.push(e); });
-    (ugObj['忌'] || []).forEach(function(e){ if(e) avoidElems.push(e); });
+  if(dm.indexOf('强') >= 0 || dm === '偏强' || dm === '极旺'){
+    useElems = [wxGenFY[dayWxElem], wxCtrlFY[dayWxElem], wxCtrlByFY[dayWxElem]];
+    avoidElems = [wxGenByFY[dayWxElem], dayWxElem];
+  } else if(dm.indexOf('弱') >= 0 || dm === '偏弱' || dm === '极弱'){
+    useElems = [wxGenByFY[dayWxElem], dayWxElem];
+    avoidElems = [wxGenFY[dayWxElem], wxCtrlFY[dayWxElem], wxCtrlByFY[dayWxElem]];
+  } else {
+    useElems = [wxGenFY[dayWxElem], wxCtrlFY[dayWxElem]];
+    avoidElems = [wxCtrlByFY[dayWxElem]];
   }
 
   // 如果API返回了流年数据，优先使用
