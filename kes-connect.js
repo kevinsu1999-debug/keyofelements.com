@@ -708,22 +708,48 @@ function enrichFreeContent(data, useElems, avoidElems, gender){
   var isZh = document.documentElement.lang === 'zh';
   var wuxing = chart.wuxing_counts || {};
 
-  // ── 02 五行：Claude 叙事 ──
-  if(enriched.wuxing_narrative){
-    addContentToSection(isZh?'五行':'Element', function(){
-      return '<div style="line-height:1.9;font-size:13px;color:var(--t2);margin-top:10px;font-family:\'Noto Serif SC\',serif">'+formatParagraphs(enriched.wuxing_narrative)+'</div>';
-    });
-  } else {
-    // 回退：基础五行分析
-    addContentToSection(isZh?'五行':'Element', function(){
-      var wxTotal=0,wxOrder=['木','火','土','金','水'];
-      wxOrder.forEach(function(w){wxTotal+=(wuxing[w]||0);});
-      if(wxTotal===0) return '';
-      var strongest='',weakest='',sPct=0,wPct=100;
-      wxOrder.forEach(function(w){var pct=Math.round((wuxing[w]||0)/wxTotal*100);if(pct>sPct){sPct=pct;strongest=w;}if(pct<wPct){wPct=pct;weakest=w;}});
-      return '<p>'+strongest+'最旺（'+sPct+'%），'+weakest+'最弱（'+wPct+'%）。</p>';
-    });
-  }
+  // ── 02 五行：直接从实际数据生成文字 ──
+  addContentToSection(isZh?'五行':'Element', function(){
+    var wxTotal=0, wxOrder=['木','火','土','金','水'];
+    wxOrder.forEach(function(w){wxTotal+=(wuxing[w]||0);});
+    if(wxTotal===0) return '';
+
+    var wxPcts = wxOrder.map(function(w){ return {name:w, pct:Math.round((wuxing[w]||0)/wxTotal*100)}; });
+    wxPcts.sort(function(a,b){ return b.pct - a.pct; });
+
+    if(isZh){
+      var txt = '<p>' + wxPcts.map(function(w){return '<b class="e-'+WX_CLASS[w.name]+'">'+w.name+'</b>'+w.pct+'%';}).join('、') + '。</p>';
+
+      // 解释数量 vs 实际力量
+      var strength = chart.day_master_strength || '';
+      var dayWxLocal = GAN_WX[chart.pillars.day.stem];
+      var monthBr = chart.pillars.month.branch;
+      var dayWxPct = 0;
+      wxPcts.forEach(function(w){ if(w.name === dayWxLocal) dayWxPct = w.pct; });
+
+      // 空亡信息
+      var kongList = [];
+      if(chart.kong_wang && chart.kong_wang.day_kong) kongList = chart.kong_wang.day_kong;
+
+      if(strength.indexOf('弱') >= 0 && dayWxPct >= 20){
+        // 数量不少但判定偏弱 → 需要解释
+        txt += '<p style="font-size:12px;color:var(--t3);margin-top:6px">';
+        txt += '⚠️ 注意：' + dayWxLocal + '在数量上占' + dayWxPct + '%，但<b>八字强弱看的是月令季节</b>，不只是数量。';
+        txt += chart.pillars.day.stem + dayWxLocal + '生于' + monthBr + '月，月令不生助' + dayWxLocal + '。';
+        if(kongList.length > 0){
+          txt += '且' + kongList.join('、') + '为空亡，通根力量大打折扣。';
+        }
+        txt += '故判定为<b>' + strength + '</b>。';
+        txt += '</p>';
+      } else if(strength.indexOf('强') >= 0 || strength.indexOf('旺') >= 0){
+        txt += '<p style="font-size:12px;color:var(--t3);margin-top:6px">' + 
+          chart.pillars.day.stem + dayWxLocal + '生于' + monthBr + '月得令，加之通根有力、天干帮扶，判定为<b>' + strength + '</b>。</p>';
+      }
+      return txt;
+    } else {
+      return '<p>' + wxPcts.map(function(w){return WX_NAME_EN[w.name]+' '+w.pct+'%';}).join(', ') + '.</p>';
+    }
+  });
 
   // ── 03 身强弱：Claude 详解 ──
   if(enriched.strength_detail){
