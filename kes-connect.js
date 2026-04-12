@@ -481,9 +481,11 @@ function fillReport(data, dateStr, shichen, gender){
   fillAnalysisSection('Relationship', analysis ? analysis.relationship : '');
   fillAnalysisSection('Marriage', analysis ? analysis.relationship : '');
 
-  // Debug: log full analysis for future development
+  /* ── 扩充免费板块内容 ── */
+  enrichFreeContent(data, useElems, avoidElems, gender);
+
+  // Debug
   console.log('analysis keys:', analysis ? Object.keys(analysis) : 'none');
-  console.log('dayun:', dayun ? JSON.stringify(dayun).substring(0,500) : 'none');
 
   /* ── 09+ 付费墙内容：动态流年表 ── */
   fillFlowYears(data, dateStr, gender);
@@ -494,6 +496,167 @@ function fillReport(data, dateStr, shichen, gender){
   /* ── Auto-translate for English page ── */
   if(document.documentElement.lang === 'en' && analysis){
     translateReport(analysis, chart);
+  }
+}
+
+/* ══════════════════════════════════════════
+   扩充免费板块内容
+══════════════════════════════════════════ */
+
+var WX_NAME_ZH = {'木':'木','火':'火','土':'土','金':'金','水':'水'};
+var WX_NAME_EN = {'木':'Wood','火':'Fire','土':'Earth','金':'Metal','水':'Water'};
+var WX_COLOR_ZH = {'木':'绿色系（鼠尾草绿、森林绿、橄榄绿）','火':'红色系（砖红、珊瑚红、铁锈红）','土':'棕色系（驼色、卡其、焦糖棕）','金':'白金色系（香槟、象牙白、珍珠白）','水':'蓝黑色系（藏蓝、墨黑、深灰）'};
+var WX_COLOR_EN = {'木':'Greens (sage, forest, olive)','火':'Reds (brick, coral, rust)','土':'Browns (camel, khaki, caramel)','金':'Whites & Golds (champagne, ivory, pearl)','水':'Blues & Blacks (navy, ink black, slate)'};
+var WX_DIR_ZH = {'木':'东方','火':'南方','土':'中央','金':'西方','水':'北方'};
+var WX_DIR_EN = {'木':'East','火':'South','土':'Center','金':'West','水':'North'};
+var WX_SEASON_ZH = {'木':'春季','火':'夏季','土':'四季之交','金':'秋季','水':'冬季'};
+var WX_ORGAN_ZH = {'木':'肝胆','火':'心脏/小肠','土':'脾胃','金':'肺/大肠','水':'肾/膀胱'};
+var WX_TRAIT_ZH = {'木':'仁爱、成长、创造','火':'礼仪、热情、明亮','土':'诚信、稳重、包容','金':'义气、果断、精确','水':'智慧、灵活、深沉'};
+
+// 十神含义
+var SHISHEN_ZH = {
+  '比肩':'独立自主，意志坚定，有主见，重义气',
+  '劫财':'社交能力强，善于竞争，财来财去，需注意理财',
+  '食神':'乐观温和，享受生活，才华横溢，有口福',
+  '伤官':'聪明伶俐，创造力强，个性张扬，口才出众',
+  '偏财':'商业嗅觉敏锐，人缘好，擅长理财投资',
+  '正财':'踏实稳健，理财有方，重视物质安全感',
+  '七杀':'魄力十足，抗压能力强，敢于挑战权威',
+  '正官':'责任心强，遵守规则，有领导才能，稳重可靠',
+  '偏印':'思维独特，直觉敏锐，学习能力强，兴趣广泛',
+  '正印':'善良仁慈，有文化修养，贵人缘好，适合学术'
+};
+
+function enrichFreeContent(data, useElems, avoidElems, gender){
+  var chart = data.chart;
+  var isZh = document.documentElement.lang === 'zh';
+  var pillars = chart.pillars;
+  var dayStem = pillars.day.stem;
+  var dayWx = GAN_WX[dayStem];
+  var wuxing = chart.wuxing_counts || {};
+  var tenGods = chart.ten_gods || {};
+  var strength = chart.day_master_strength || '';
+
+  // ── 04 喜用忌神：引导付费 ──
+  addContentToSection(isZh?'喜用忌神':'Favorable', function(){
+    if(!useElems || useElems.length === 0) return '';
+    if(isZh){
+      return '<div style="margin-top:14px;padding:14px 18px;background:var(--bg2);border-radius:8px;font-size:12px;line-height:1.8;color:var(--t3)">'+
+        '喜用神是命理调和的核心——它决定了最适合你的颜色、方位、行业、养生方向和择偶标准。'+
+        '<b style="color:var(--t2)">解锁完整报告</b>，获取个性化的幸运颜色、有利方位、事业方向和生活指南。</div>';
+    } else {
+      return '<div style="margin-top:14px;padding:14px 18px;background:var(--bg2);border-radius:8px;font-size:12px;line-height:1.8;color:var(--t3)">'+
+        'Your favorable elements determine your ideal colors, directions, career paths, and wellness strategies. '+
+        '<b style="color:var(--t2)">Unlock the full report</b> for personalized guidance.</div>';
+    }
+  });
+
+  // ── 五行分布简述 ──
+  addContentToSection(isZh?'五行':'Element', function(){
+    var wxTotal = 0;
+    var wxOrder = ['木','火','土','金','水'];
+    wxOrder.forEach(function(w){ wxTotal += (wuxing[w]||0); });
+    if(wxTotal === 0) return '';
+    var strongest='',weakest='',sPct=0,wPct=100;
+    wxOrder.forEach(function(w){
+      var pct=Math.round((wuxing[w]||0)/wxTotal*100);
+      if(pct>sPct){sPct=pct;strongest=w;}
+      if(pct<wPct){wPct=pct;weakest=w;}
+    });
+    if(isZh){
+      return '<p>命局中<b class="e-'+WX_CLASS[strongest]+'">'+strongest+'</b>最旺（'+sPct+'%），<b class="e-'+WX_CLASS[weakest]+'">'+weakest+'</b>最弱（'+wPct+'%）。'+(sPct>40?'五行分布偏枯，需要后天调和。':'')+'</p>';
+    } else {
+      return '<p><b class="e-'+WX_CLASS[strongest]+'">'+WX_NAME_EN[strongest]+'</b> dominates ('+sPct+'%), <b class="e-'+WX_CLASS[weakest]+'">'+WX_NAME_EN[weakest]+'</b> is weakest ('+wPct+'%).</p>';
+    }
+  });
+
+  // ── 调用 Claude API 生成深度分析 ──
+  var wxSummary = '';
+  ['木','火','土','金','水'].forEach(function(w){
+    var wxTotal = 0;
+    ['木','火','土','金','水'].forEach(function(x){ wxTotal += (wuxing[x]||0); });
+    wxSummary += w + Math.round((wuxing[w]||0)/(wxTotal||1)*100) + '% ';
+  });
+
+  var chartSummary = {
+    day_master: dayStem,
+    day_master_element: dayWx,
+    strength: strength,
+    year_pillar: pillars.year.stem + pillars.year.branch,
+    month_pillar: pillars.month.stem + pillars.month.branch,
+    day_pillar: pillars.day.stem + pillars.day.branch,
+    hour_pillar: pillars.hour.stem + pillars.hour.branch,
+    year_god: tenGods.year_stem || '',
+    month_god: tenGods.month_stem || '',
+    hour_god: tenGods.hour_stem || '',
+    wuxing_summary: wxSummary.trim(),
+    kong_wang: chart.kong_wang ? JSON.stringify(chart.kong_wang) : ''
+  };
+
+  // 显示加载动画
+  var loadingIds = ['enrich-loading-personality','enrich-loading-pillars','enrich-loading-wuxing','enrich-loading-strength'];
+  var sectionKeywords = isZh ? ['性格','四柱','五行','身强'] : ['Traits','Four','Element','strength'];
+  sectionKeywords.forEach(function(kw, idx){
+    addContentToSection(kw, function(){
+      return '<div id="'+loadingIds[idx]+'" style="padding:12px 0;display:flex;align-items:center;gap:8px"><div style="width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--t3);border-radius:50%;animation:spin .8s linear infinite"></div><span style="font-size:11px;color:var(--t4)">'+
+        (isZh?'正在生成深度分析…':'Generating deep analysis…')+'</span></div>';
+    });
+  });
+
+  // 添加 spin 动画
+  if(!document.getElementById('spinStyle')){
+    var style = document.createElement('style');
+    style.id = 'spinStyle';
+    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+
+  // 调用 API
+  fetch('/api/enrich', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ chart: chartSummary, lang: isZh ? 'zh' : 'en' })
+  })
+  .then(function(res){ return res.ok ? res.json() : Promise.reject('API error'); })
+  .then(function(data){
+    var e = data.enriched;
+    if(e.personality) replaceLoading('enrich-loading-personality', '<div style="line-height:1.9;font-size:13px;color:var(--t2)">'+formatParagraphs(e.personality)+'</div>');
+    if(e.pillars_insight) replaceLoading('enrich-loading-pillars', '<div style="line-height:1.9;font-size:13px;color:var(--t2);margin-top:10px;padding:14px 18px;background:var(--bg2);border-radius:8px">'+formatParagraphs(e.pillars_insight)+'</div>');
+    if(e.wuxing_narrative) replaceLoading('enrich-loading-wuxing', '<div style="line-height:1.9;font-size:13px;color:var(--t2);font-family:\'Noto Serif SC\',serif;font-style:italic">'+formatParagraphs(e.wuxing_narrative)+'</div>');
+    if(e.strength_explanation) replaceLoading('enrich-loading-strength', '<div style="line-height:1.9;font-size:13px;color:var(--t2)">'+formatParagraphs(e.strength_explanation)+'</div>');
+  })
+  .catch(function(err){
+    console.warn('Enrichment failed:', err);
+    loadingIds.forEach(function(id){ replaceLoading(id, ''); });
+  });
+}
+
+function replaceLoading(id, html){
+  var el = document.getElementById(id);
+  if(el) el.outerHTML = html;
+}
+
+function formatParagraphs(text){
+  if(!text) return '';
+  return text.split(/\n+/).filter(function(p){return p.trim()}).map(function(p){
+    return '<p style="margin-bottom:8px">'+p.trim()+'</p>';
+  }).join('');
+}
+
+/* 向指定板块追加内容 */
+function addContentToSection(keyword, contentFn){
+  var allSecs = document.querySelectorAll('#p-report .r-sec');
+  for(var i=0;i<allSecs.length;i++){
+    var h = allSecs[i].querySelector('.r-h');
+    if(h && h.textContent.includes(keyword)){
+      var content = contentFn();
+      if(content){
+        var hr = allSecs[i].querySelector('.r-hr');
+        if(hr) hr.insertAdjacentHTML('beforebegin', content);
+        else allSecs[i].insertAdjacentHTML('beforeend', content);
+      }
+      break;
+    }
   }
 }
 
