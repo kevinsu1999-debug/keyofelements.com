@@ -401,17 +401,37 @@ function fillReport(data, dateStr, shichen, gender){
   for(var w=0;w<wxOrder.length;w++) wxTotal += (wuxing[wxOrder[w]] || 0);
   if(wxTotal === 0) wxTotal = 1;
 
+  // 旺相休囚死计算
+  var monthBranch = chart.pillars.month.branch;
+  var BRANCH_SEASON = {'寅':'木','卯':'木','巳':'火','午':'火','申':'金','酉':'金','亥':'水','子':'水','辰':'土','未':'土','戌':'土','丑':'土'};
+  var wxGen_map = {'木':'火','火':'土','土':'金','金':'水','水':'木'};
+  var wxCtrl_map = {'木':'土','火':'金','土':'水','金':'木','水':'火'};
+  var wxGenBy_map = {'火':'木','土':'火','金':'土','水':'金','木':'水'};
+  var wxCtrlBy_map = {'土':'木','金':'火','水':'土','木':'金','火':'水'};
+
+  var seasonWx = BRANCH_SEASON[monthBranch] || '土';
+  var wxStatus = {};
+  wxStatus[seasonWx] = '旺';
+  wxStatus[wxGen_map[seasonWx]] = '相';
+  wxStatus[wxGenBy_map[seasonWx]] = '休';
+  wxStatus[wxCtrlBy_map[seasonWx]] = '囚';
+  wxStatus[wxCtrl_map[seasonWx]] = '死';
+
+  var STATUS_CLASS = {'旺':'wx-wang','相':'wx-xiang','休':'wx-xiu','囚':'wx-qiu','死':'wx-si'};
+
   var wxGrid = document.querySelector('.r-wx-grid');
   if(wxGrid){
     var wxHtml = '';
+    var maxPct = Math.max.apply(null, wxOrder.map(function(e){return Math.round((wuxing[e]||0)/wxTotal*100)}));
     for(var w=0;w<wxOrder.length;w++){
       var wx = wxOrder[w];
       var val = wuxing[wx] || 0;
       var pct = Math.round(val/wxTotal*100);
-      var barW = Math.max(2, Math.round(pct/Math.max.apply(null,wxOrder.map(function(e){return Math.round((wuxing[e]||0)/wxTotal*100)}))*100));
+      var barW = Math.max(2, Math.round(pct/maxPct*100));
+      var status = wxStatus[wx] || '';
       wxHtml += '<div class="r-wx"><div class="r-wx-char e-'+WX_CLASS[wx]+'">'+wx+'</div>'+
         '<div class="r-wx-bar-wrap"><div class="r-wx-bar" style="width:'+barW+'%;background:var(--'+WX_CLASS[wx]+')"></div></div>'+
-        '<div class="r-wx-pct e-'+WX_CLASS[wx]+'">'+pct+'%</div><div class="r-wx-status"></div></div>';
+        '<div class="r-wx-status" style="font-size:11px;color:var(--t3)">'+status+'</div></div>';
     }
     wxGrid.innerHTML = wxHtml;
   }
@@ -708,47 +728,35 @@ function enrichFreeContent(data, useElems, avoidElems, gender){
   var isZh = document.documentElement.lang === 'zh';
   var wuxing = chart.wuxing_counts || {};
 
-  // ── 02 五行：直接从实际数据生成文字 ──
+  // ── 02 五行：旺相休囚死说明 ──
   addContentToSection(isZh?'五行':'Element', function(){
-    var wxTotal=0, wxOrder=['木','火','土','金','水'];
-    wxOrder.forEach(function(w){wxTotal+=(wuxing[w]||0);});
-    if(wxTotal===0) return '';
+    if(!isZh) return '';
+    var monthBr = chart.pillars.month.branch;
+    var BRANCH_SEASON = {'寅':'木','卯':'木','巳':'火','午':'火','申':'金','酉':'金','亥':'水','子':'水','辰':'土','未':'土','戌':'土','丑':'土'};
+    var seasonWx = BRANCH_SEASON[monthBr] || '土';
+    var strength = chart.day_master_strength || '';
+    var dayWxLocal = GAN_WX[chart.pillars.day.stem];
 
-    var wxPcts = wxOrder.map(function(w){ return {name:w, pct:Math.round((wuxing[w]||0)/wxTotal*100)}; });
-    wxPcts.sort(function(a,b){ return b.pct - a.pct; });
-
-    if(isZh){
-      var txt = '<p>' + wxPcts.map(function(w){return '<b class="e-'+WX_CLASS[w.name]+'">'+w.name+'</b>'+w.pct+'%';}).join('、') + '。</p>';
-
-      // 解释数量 vs 实际力量
-      var strength = chart.day_master_strength || '';
-      var dayWxLocal = GAN_WX[chart.pillars.day.stem];
-      var monthBr = chart.pillars.month.branch;
-      var dayWxPct = 0;
-      wxPcts.forEach(function(w){ if(w.name === dayWxLocal) dayWxPct = w.pct; });
-
-      // 空亡信息
-      var kongList = [];
-      if(chart.kong_wang && chart.kong_wang.day_kong) kongList = chart.kong_wang.day_kong;
-
-      if(strength.indexOf('弱') >= 0 && dayWxPct >= 20){
-        // 数量不少但判定偏弱 → 需要解释
-        txt += '<p style="font-size:12px;color:var(--t3);margin-top:6px">';
-        txt += '⚠️ 注意：' + dayWxLocal + '在数量上占' + dayWxPct + '%，但<b>八字强弱看的是月令季节</b>，不只是数量。';
-        txt += chart.pillars.day.stem + dayWxLocal + '生于' + monthBr + '月，月令不生助' + dayWxLocal + '。';
-        if(kongList.length > 0){
-          txt += '且' + kongList.join('、') + '为空亡，通根力量大打折扣。';
-        }
-        txt += '故判定为<b>' + strength + '</b>。';
-        txt += '</p>';
-      } else if(strength.indexOf('强') >= 0 || strength.indexOf('旺') >= 0){
-        txt += '<p style="font-size:12px;color:var(--t3);margin-top:6px">' + 
-          chart.pillars.day.stem + dayWxLocal + '生于' + monthBr + '月得令，加之通根有力、天干帮扶，判定为<b>' + strength + '</b>。</p>';
-      }
-      return txt;
-    } else {
-      return '<p>' + wxPcts.map(function(w){return WX_NAME_EN[w.name]+' '+w.pct+'%';}).join(', ') + '.</p>';
-    }
+    var txt = '<p style="font-size:12px;color:var(--t3);line-height:1.8">';
+    txt += monthBr + '月' + seasonWx + '当令，';
+    txt += '命局以<b class="e-' + WX_CLASS[seasonWx] + '">' + seasonWx + '</b>为旺。';
+    txt += dayWxLocal + '在' + monthBr + '月处于';
+    // 找日主五行的状态
+    var wxGen2 = {'木':'火','火':'土','土':'金','金':'水','水':'木'};
+    var wxGenBy2 = {'火':'木','土':'火','金':'土','水':'金','木':'水'};
+    var wxCtrl2 = {'木':'土','火':'金','土':'水','金':'木','水':'火'};
+    var wxCtrlBy2 = {'土':'木','金':'火','水':'土','木':'金','火':'水'};
+    var dayStatus = '休';
+    if(dayWxLocal === seasonWx) dayStatus = '旺';
+    else if(dayWxLocal === wxGen2[seasonWx]) dayStatus = '相';
+    else if(dayWxLocal === wxGenBy2[seasonWx]) dayStatus = '休';
+    else if(dayWxLocal === wxCtrlBy2[seasonWx]) dayStatus = '囚';
+    else if(dayWxLocal === wxCtrl2[seasonWx]) dayStatus = '死';
+    txt += '<b>' + dayStatus + '</b>位';
+    if(dayStatus === '囚' || dayStatus === '死') txt += '，月令不助日元，先天能量不足';
+    else if(dayStatus === '旺' || dayStatus === '相') txt += '，月令助力，先天能量充沛';
+    txt += '。</p>';
+    return txt;
   });
 
   // ── 03 身强弱：Claude 详解 ──
