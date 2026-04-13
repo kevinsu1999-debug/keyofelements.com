@@ -1302,20 +1302,21 @@ body{font-size:15px;line-height:1.75}
         <div class="f-field">
           <label class="f-label">出生日期</label>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-            <select class="f-select" id="birthYear"></select>
+            <select class="f-select" id="birthYear"><option value="">年</option></select>
             <select class="f-select" id="birthMonth">
+              <option value="">月</option>
               <option value="1">一月</option><option value="2">二月</option><option value="3">三月</option>
               <option value="4">四月</option><option value="5">五月</option><option value="6">六月</option>
               <option value="7">七月</option><option value="8">八月</option><option value="9">九月</option>
               <option value="10">十月</option><option value="11">十一月</option><option value="12">十二月</option>
             </select>
-            <select class="f-select" id="birthDay"></select>
+            <select class="f-select" id="birthDay"><option value="">日</option></select>
           </div>
         </div>
         <div class="f-field">
           <label class="f-label">出生时辰</label>
-          <select class="f-select">
-            <option value="亥">亥 · 21:00–23:00</option>
+          <select class="f-select" id="birthHour">
+            <option value="">选择时辰</option>
             <option value="子">子 · 23:00–01:00</option>
             <option value="丑">丑 · 01:00–03:00</option>
             <option value="寅">寅 · 03:00–05:00</option>
@@ -1327,25 +1328,32 @@ body{font-size:15px;line-height:1.75}
             <option value="申">申 · 15:00–17:00</option>
             <option value="酉">酉 · 17:00–19:00</option>
             <option value="戌">戌 · 19:00–21:00</option>
+            <option value="亥">亥 · 21:00–23:00</option>
           </select>
         </div>
       </div>
-      <div class="f-field" style="position:relative">
-        <label class="f-label" style="display:flex;justify-content:space-between">
-          <span>出生城市</span>
-          <span style="font-size:9px;color:var(--t4);letter-spacing:0;font-weight:300">用于校准真太阳时</span>
-        </label>
-        <input class="f-input" type="text" id="cityInput" placeholder="如：上海、北京、香港…" autocomplete="off" oninput="suggest城市(this.value)">
-        <div class="city-dropdown" id="cityDrop"></div>
+      <div class="f-row">
+        <div class="f-field" style="position:relative">
+          <label class="f-label" style="display:flex;justify-content:space-between">
+            <span>出生城市</span>
+            <span style="font-size:9px;color:var(--t4);letter-spacing:0;font-weight:300">用于校准真太阳时</span>
+          </label>
+          <input class="f-input" type="text" id="cityInput" placeholder="如：上海、北京、香港…" autocomplete="off" oninput="suggest城市(this.value)">
+          <div class="city-dropdown" id="cityDrop"></div>
+        </div>
+        <div class="f-field">
+          <label class="f-label">现居城市</label>
+          <input class="f-input" type="text" id="residenceCity" placeholder="如：上海、纽约…" autocomplete="off">
+        </div>
       </div>
       <div class="f-field" style="margin-bottom:0">
         <label class="f-label">性别</label>
         <div class="gender-row" style="margin-top:5px">
-          <button class="gb on" id="gF" onclick="setG('F')">女</button>
-          <button class="gb" id="gM" onclick="setG('M')">男</button>
+          <button class="gb on" id="gM" onclick="setG('M')">男</button>
+          <button class="gb" id="gF" onclick="setG('F')">女</button>
         </div>
       </div>
-      <button class="f-btn" onclick="goPage('report')">立即解读命格 →</button>
+      <button class="f-btn" onclick="submitReading()">立即解读命格</button>
     </div>
 
     <div class="rb-elems reveal" style="transition-delay:.3s">
@@ -1539,256 +1547,205 @@ body{font-size:15px;line-height:1.75}
   <div class="rpt-hdr">
     <div class="rpt-hdr-ey">ELEMENT READING</div>
     <div class="rpt-hdr-t">命理分析报告</div>
-    <div class="rpt-info-card">
-      <div class="rpt-f"><div class="rpt-f-l">姓　名</div><div class="rpt-f-v">某女士</div></div>
-      <div class="rpt-f"><div class="rpt-f-l">性　别</div><div class="rpt-f-v"><b>女命</b></div></div>
-      <div class="rpt-f"><div class="rpt-f-l">出生日期</div><div class="rpt-f-v">1993年6月30日 亥时<span class="rpt-f-note">真太阳时校正</span></div></div>
-      <div class="rpt-f"><div class="rpt-f-l">日　主</div><div class="rpt-f-v"><b class="e-shui">壬水</b></div></div>
+    <div class="rpt-info-card" style="grid-template-columns:repeat(3,1fr)">
+      <div class="rpt-f"><div class="rpt-f-l">命　造</div><div class="rpt-f-v" id="rpt-gender"><b>乾造</b></div></div>
+      <div class="rpt-f"><div class="rpt-f-l">出生日期</div><div class="rpt-f-v" id="rpt-birth">—</div></div>
+      <div class="rpt-f"><div class="rpt-f-l">日　主</div><div class="rpt-f-v" id="rpt-daymaster">—</div></div>
+    </div>
+    <div class="rpt-info-card" style="grid-template-columns:repeat(3,1fr);margin-top:8px">
+      <div class="rpt-f"><div class="rpt-f-l">出生地</div><div class="rpt-f-v" id="rpt-birthplace">—</div></div>
+      <div class="rpt-f"><div class="rpt-f-l">现居地</div><div class="rpt-f-v" id="rpt-residence">—</div></div>
+      <div class="rpt-f"><div class="rpt-f-l">真太阳时</div><div class="rpt-f-v" id="rpt-solar">—</div></div>
     </div>
   </div>
 
+  <!-- ═══ 一、八字排盘 ═══ -->
+
   <!-- 01 四柱 -->
-  <div class="r-sec"><div class="r-num">01</div><div class="r-h">四柱八字</div><div class="r-sub">以真太阳时校正后排盘，空亡：子、丑</div>
-    <div class="r-pillar-grid">
-      <div class="r-pillar"><div class="r-pillar-pos">年　柱</div><div class="r-pillar-ss r-ss-jiecai">劫财</div><div class="r-pillar-gz"><span class="e-shui">癸</span><span class="e-jin">酉</span></div><div class="r-pillar-hidden"><span class="r-pillar-h e-jin">辛</span></div></div>
-      <div class="r-pillar"><div class="r-pillar-pos">月　柱</div><div class="r-pillar-ss r-ss-qisha">七杀</div><div class="r-pillar-gz"><span class="e-tu">戊</span><span class="e-huo">午</span></div><div class="r-pillar-hidden"><span class="r-pillar-h e-huo">丁</span><span class="r-pillar-h e-tu">己</span></div></div>
-      <div class="r-pillar r-day-shui"><div class="r-pillar-pos">日　柱</div><div class="r-pillar-ss r-ss-rizhu">日主</div><div class="r-pillar-gz"><span class="e-shui">壬</span><span class="e-huo">午</span></div><div class="r-pillar-hidden"><span class="r-pillar-h e-huo">丁</span><span class="r-pillar-h e-tu">己</span></div></div>
-      <div class="r-pillar"><div class="r-pillar-pos">时　柱</div><div class="r-pillar-ss r-ss-zhengyin">正印</div><div class="r-pillar-gz"><span class="e-jin">辛</span><span class="e-shui">亥</span></div><div class="r-pillar-hidden"><span class="r-pillar-h e-shui">壬</span><span class="r-pillar-h e-mu">甲</span></div><span class="r-kong">空亡</span></div>
+  <div class="r-sec"><div class="r-num">01</div><div class="r-h">四柱八字</div><div class="r-sub">以真太阳时校正后排盘</div>
+    <div class="r-pillar-grid" id="rpt-pillars">
+      <!-- 动态生成四柱 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 02 五行 -->
-  <div class="r-sec"><div class="r-num">02</div><div class="r-h">五行能量分布</div><div class="r-sub">结合十二长生月令权重的五行实际力量</div>
-    <div class="r-wx-grid">
-      <div class="r-wx"><div class="r-wx-char e-mu">木</div><div class="r-wx-bar-wrap"><div class="r-wx-bar" style="width:3%;background:var(--mu)"></div></div><div class="r-wx-pct e-mu">3%</div><div class="r-wx-status">死</div></div>
-      <div class="r-wx"><div class="r-wx-char e-huo">火</div><div class="r-wx-bar-wrap"><div class="r-wx-bar" style="width:100%;background:var(--huo)"></div></div><div class="r-wx-pct e-huo">54%</div><div class="r-wx-status">旺</div></div>
-      <div class="r-wx"><div class="r-wx-char e-tu">土</div><div class="r-wx-bar-wrap"><div class="r-wx-bar" style="width:68%;background:var(--tu)"></div></div><div class="r-wx-pct e-tu">37%</div><div class="r-wx-status">相</div></div>
-      <div class="r-wx"><div class="r-wx-char e-jin">金</div><div class="r-wx-bar-wrap"><div class="r-wx-bar" style="width:5%;background:var(--jin)"></div></div><div class="r-wx-pct e-jin">3%</div><div class="r-wx-status">囚</div></div>
-      <div class="r-wx"><div class="r-wx-char e-shui">水</div><div class="r-wx-bar-wrap"><div class="r-wx-bar" style="width:9%;background:var(--shui)"></div></div><div class="r-wx-pct e-shui">5%</div><div class="r-wx-status">死</div></div>
+  <!-- 02 干支关系 -->
+  <div class="r-sec"><div class="r-num">02</div><div class="r-h">干支关系</div><div class="r-sub">柱内组合与柱间作用关系</div>
+    <div style="font-size:var(--fs-label);letter-spacing:.1em;color:var(--t4);margin-bottom:8px">柱内关系</div>
+    <div class="r-tbl" style="margin-bottom:16px">
+      <div class="r-tbl-head" style="grid-template-columns:48px 48px 1fr 1fr"><div>柱</div><div>组合</div><div>类型</div><div>含义</div></div>
+      <div id="rpt-gz-inner"><!-- 动态：覆/载/同体/盖头/截脚 --></div>
+    </div>
+    <div style="font-size:var(--fs-label);letter-spacing:.1em;color:var(--t4);margin-bottom:8px">柱间关系</div>
+    <div class="r-tbl">
+      <div class="r-tbl-head" style="grid-template-columns:1fr 1fr 1fr"><div>涉及</div><div>类型</div><div>含义</div></div>
+      <div id="rpt-gz-inter"><!-- 动态：天干合冲、地支合冲刑害 --></div>
+    </div>
+    <div id="rpt-gz-note" style="font-size:var(--fs-sm);color:var(--t3);margin-top:10px;line-height:1.7"></div>
+  <div class="r-hr"></div></div>
+
+  <!-- 03 五行能量 -->
+  <div class="r-sec"><div class="r-num">03</div><div class="r-h">五行能量分布</div><div class="r-sub">结合月令权重的五行实际力量</div>
+    <div class="r-wx-grid" id="rpt-wuxing">
+      <!-- 动态生成五行能量条 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 03 强弱 -->
-  <div class="r-sec"><div class="r-num">03</div><div class="r-h">日主强弱</div><div class="r-sub">以得令、得地、得势三维判据综合评定</div>
-    <div class="r-str-meter"><div class="r-meter-track"><div class="r-meter-seg filled"></div><div class="r-meter-seg filled active"></div><div class="r-meter-seg"></div><div class="r-meter-seg"></div><div class="r-meter-seg"></div></div><div class="r-meter-labels"><span>极弱</span><span class="on">偏弱</span><span>中和</span><span>偏强</span><span>身强</span></div></div>
+  <!-- 04 空亡 -->
+  <div class="r-sec"><div class="r-num">04</div><div class="r-h">空亡</div><div class="r-sub">日柱与年柱所在旬的空缺之支</div>
+    <div id="rpt-kongwang" style="display:flex;flex-direction:column;gap:10px">
+      <!-- 动态生成空亡卡片 -->
+    </div>
+  <div class="r-hr"></div></div>
+
+  <!-- 05 神煞 -->
+  <div class="r-sec" id="rpt-shensha-sec"><div class="r-num">05</div><div class="r-h">神煞</div><div class="r-sub">命局中存在的特殊星曜</div>
+    <div id="rpt-shensha" style="display:flex;flex-direction:column;gap:8px">
+      <!-- 动态生成：仅列存在的 -->
+    </div>
+  <div class="r-hr"></div></div>
+
+  <!-- 06 身强身弱 -->
+  <div class="r-sec"><div class="r-num">06</div><div class="r-h">日主强弱与格局</div><div class="r-sub">以得令、得地、得势三维判据综合评定</div>
+    <div class="r-str-meter" id="rpt-meter">
+      <div class="r-meter-track"><div class="r-meter-seg"></div><div class="r-meter-seg"></div><div class="r-meter-seg"></div><div class="r-meter-seg"></div><div class="r-meter-seg"></div></div>
+      <div class="r-meter-labels"><span>极弱</span><span>偏弱</span><span>中和</span><span>偏强</span><span>身强</span></div>
+    </div>
     <div class="r-str-box">
-      <div class="r-str-grid">
-        <div class="r-str-item"><div class="r-str-label">得　令</div><div class="r-str-val no">未得</div><div class="r-str-detail">午月火旺，水处死地</div></div>
-        <div class="r-str-item"><div class="r-str-label">得　地</div><div class="r-str-val no">未得</div><div class="r-str-detail">时支亥空亡，不计通根</div></div>
-        <div class="r-str-item"><div class="r-str-label">得　势</div><div class="r-str-val yes">已得</div><div class="r-str-detail">年干癸劫财透干有势</div></div>
+      <div class="r-str-grid" id="rpt-strength">
+        <!-- 动态：得令/得地/得势 -->
       </div>
-      <div class="r-str-result"><div class="r-str-verdict">偏弱</div><div class="r-str-explain">根据三分法（得令×得地×得势）综合评估日主强弱。</div></div>
+      <div class="r-str-result"><div class="r-str-verdict" id="rpt-verdict">—</div><div class="r-str-explain" id="rpt-verdict-explain"></div></div>
     </div>
+    <div id="rpt-pattern" style="margin-top:16px;padding:14px 16px;background:var(--bg2);border-radius:8px;font-size:var(--fs-sm);color:var(--t2);line-height:1.8"></div>
     <div class="r-str-note"><b>关于身强身弱：</b>这是对日主能量的客观描述，<b>不代表运势好坏</b>。身强者自主性强，身弱者善于借力。关键在于大运流年是否配合喜用。</div>
   <div class="r-hr"></div></div>
 
-  <!-- 04 喜用忌神 -->
-  <div class="r-sec"><div class="r-num">04</div><div class="r-h">喜用忌神</div><div class="r-sub">根据日主强弱推导，用于判断大运流年吉凶</div>
-    <div class="r-yj-grid">
-      <div class="r-yj-card"><div class="r-yj-label">用　神</div><div class="r-yj-chars"><span class="r-yj-char jin">金</span><span class="r-yj-char shui">水</span></div></div>
-      <div class="r-yj-card"><div class="r-yj-label">忌　神</div><div class="r-yj-chars"><span class="r-yj-char huo">火</span><span class="r-yj-char tu">土</span><span class="r-yj-char mu">木</span></div></div>
-      <div class="r-yj-card"><div class="r-yj-label">调候用神</div><div class="r-yj-chars"><span class="r-yj-char shui">壬</span><span class="r-yj-char jin">庚</span></div></div>
+  <!-- 07 喜忌用神 -->
+  <div class="r-sec"><div class="r-num">07</div><div class="r-h">喜忌用神</div><div class="r-sub">根据日主强弱推导，用于判断大运流年吉凶</div>
+    <div class="r-yj-grid" id="rpt-yongshen">
+      <!-- 动态：用神/忌神/调候 -->
+    </div>
+    <div id="rpt-tiaohuo" style="margin-top:16px;padding:14px 16px;background:var(--bg2);border-radius:8px;font-size:var(--fs-sm);color:var(--t3);line-height:1.8">
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 05 性格 -->
-  <div class="r-sec"><div class="r-num">05</div><div class="r-h">性格特质</div><div class="r-sub">基于日主、十神、宫位综合分析</div>
-    <div class="r-elem-id"><div class="r-elem-icon">—</div><div><div class="r-elem-id-name">日主</div><div class="r-elem-id-desc">等待分析</div></div></div>
-    <div class="r-pq"><div class="r-pq-text">——</div><div class="r-pq-src">《滴天髓》</div></div>
-    <div class="r-prose">
-      <p>性格分析将根据您的八字命盘自动生成。</p>
-      <p><b>七杀戊土透月干：</b>带来来自外界的压力与束缚感，磨练出沉稳内敛的气质。善于在压力下激发潜能，但也容易过度思虑。</p>
-      <p><b>正印辛金在时柱：</b>晚年有贵人缘，学习能力持续到老。审美品味高，对品质有追求。</p>
+  <!-- ═══ 二、命主综述 ═══ -->
+
+  <!-- 08 性格 -->
+  <div class="r-sec"><div class="r-num">08</div><div class="r-h">本性与性格</div><div class="r-sub">基于日主五行、十神结构综合分析</div>
+    <div class="r-elem-id" id="rpt-elemid">
+      <div class="r-elem-icon">—</div>
+      <div><div class="r-elem-id-name"></div><div class="r-elem-id-desc"></div></div>
+    </div>
+    <div class="r-pq" id="rpt-quote"><div class="r-pq-text"></div><div class="r-pq-src">《滴天髓》</div></div>
+    <div class="r-prose" id="rpt-personality">
+      <!-- 动态：性格分析正文 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 06 事业 -->
-  <div class="r-sec"><div class="r-num">06</div><div class="r-h">事业与财运</div><div class="r-sub">格局、行业方向、财运特点</div>
-    <div class="r-prose">
-      <p>事业分析将根据您的八字命盘自动生成。</p>
-      <p><b>财运特点：</b>命局财星属火为忌仇之神，需要通过自身努力经营。食伤（金）为喜用，才华和专业技能是主要财源。</p>
+  <!-- 09 核心八字作用 -->
+  <div class="r-sec"><div class="r-num">09</div><div class="r-h">核心八字作用</div><div class="r-sub">命局中最关键的干支互动关系</div>
+    <div class="r-prose" id="rpt-interactions">
+      <!-- 动态：甲己合、双申夹攻等 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 07 感情 -->
-  <div class="r-sec"><div class="r-num">07</div><div class="r-h">感情与婚姻</div><div class="r-sub">夫星、婚姻宫、桃花综合分析</div>
-    <div class="r-prose">
-      <p>感情分析将根据您的八字命盘自动生成。</p>
-      <p><b>婚姻宫分析：</b>日支午火为正财，婚姻宫坐忌神，关系中容易有摩擦。午火与月支午伏吟，需注意沟通方式。</p>
+  <!-- 10 感情 -->
+  <div class="r-sec"><div class="r-num">10</div><div class="r-h">感情与婚姻</div><div class="r-sub">配偶星、婚姻宫、桃花综合分析</div>
+    <div class="r-prose" id="rpt-love">
+      <!-- 动态 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 08 健康 -->
-  <div class="r-sec"><div class="r-num">08</div><div class="r-h">健康提醒</div><div class="r-sub">根据五行偏枯和十神分析</div>
-    <div class="r-health-grid">
-      <div class="r-hc"><div class="r-hc-title"><span class="r-hc-dot" style="background:var(--huo)"></span>火极旺，心脑血管</div><div class="r-hc-body">保持情绪稳定，注意血压与心率。</div></div>
-      <div class="r-hc"><div class="r-hc-title"><span class="r-hc-dot" style="background:var(--shui)"></span>水极弱，肾脏腰部</div><div class="r-hc-body">保暖避寒，保持充足睡眠。</div></div>
-      <div class="r-hc"><div class="r-hc-title"><span class="r-hc-dot" style="background:var(--tu)"></span>土偏重，脾胃消化</div><div class="r-hc-body">饮食宜清淡规律，注意湿气。</div></div>
-      <div class="r-hc"><div class="r-hc-title"><span class="r-hc-dot" style="background:var(--t3)"></span>官杀重，精神压力</div><div class="r-hc-body">定期减压，培养运动习惯。</div></div>
+  <!-- 11 子女 -->
+  <div class="r-sec"><div class="r-num">11</div><div class="r-h">子女</div><div class="r-sub">基于时柱与食伤星分析</div>
+    <div class="r-prose" id="rpt-children">
+      <!-- 动态 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 09 大运 + 流年 -->
-  <div class="r-sec"><div class="r-num">09</div><div class="r-h">大运人生阶段</div><div class="r-sub">每步大运十年，展示当前运势走向</div>
-    <div class="r-dy-scroll">
-      <div class="r-dy-item"><div class="r-dy-gz"><span class="e-shui">壬</span><span class="e-tu">戌</span></div><div class="r-dy-age">23至33岁</div></div>
-      <div class="r-dy-item cur"><div class="r-dy-label">当前</div><div class="r-dy-gz"><span class="e-shui">癸</span><span class="e-shui">亥</span></div><div class="r-dy-age">33至43岁</div></div>
-      <div class="r-dy-item"><div class="r-dy-gz"><span class="e-mu">甲</span><span class="e-shui">子</span></div><div class="r-dy-age">43至53岁</div></div>
-      <div class="r-dy-item"><div class="r-dy-gz"><span class="e-mu">乙</span><span class="e-tu">丑</span></div><div class="r-dy-age">53至63岁</div></div>
-      <div class="r-dy-item"><div class="r-dy-gz"><span class="e-huo">丙</span><span class="e-mu">寅</span></div><div class="r-dy-age">63至73岁</div></div>
+  <!-- 12 事业与财运 -->
+  <div class="r-sec"><div class="r-num">12</div><div class="r-h">事业与财运</div><div class="r-sub">格局、行业方向、财运阶段</div>
+    <div class="r-prose" id="rpt-career">
+      <!-- 动态 -->
     </div>
-    <div class="r-dy-summary">
-      <div class="r-dy-summary-h">当前大运：癸亥（33至43岁）</div>
-      <div class="r-dy-summary-sub">当前大运分析</div>
-      <div class="r-dy-summary-grid">
-        <div class="r-dy-s-item"><div class="r-dy-s-label">喜用情况</div><div class="r-dy-s-body">根据当前大运干支的十神关系自动分析。</div></div>
-        <div class="r-dy-s-item"><div class="r-dy-s-label">事　业</div><div class="r-dy-s-body">事业运势将根据当前大运自动分析。</div></div>
-        <div class="r-dy-s-item"><div class="r-dy-s-label">感　情</div><div class="r-dy-s-body">感情运势将根据当前大运自动分析。</div></div>
-        <div class="r-dy-s-item"><div class="r-dy-s-label">健　康</div><div class="r-dy-s-body">健康提示将根据五行分布自动分析。</div></div>
-      </div>
-    </div>
-    <div class="r-tbl" style="margin-top:20px">
-      <div class="r-tbl-head r-tbl-3"><div>年份</div><div>干支</div><div>运势概要</div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2024</div><div class="r-a-gz"><span class="e-mu">甲</span><span class="e-tu">辰</span></div><div class="r-a-body"><div class="r-a-stars">★★☆☆☆</div><div class="r-a-note">等待数据加载</div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2025</div><div class="r-a-gz"><span class="e-mu">乙</span><span class="e-huo">巳</span></div><div class="r-a-body"><div class="r-a-stars">★★☆☆☆</div><div class="r-a-note">伤官年，巳火忌神，宜守不宜攻</div></div></div>
+    <div class="r-tbl" style="margin-top:16px" id="rpt-fortune-tbl">
+      <div class="r-tbl-head" style="grid-template-columns:80px 80px 1fr"><div>阶段</div><div>大运</div><div>财运</div></div>
+      <!-- 动态：财运阶段表 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- Paywall CTA (at top, before locked content) -->
-  <div class="paywall-cta" id="paywallCta" style="border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:40px 32px;margin:0 auto;max-width:100%;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)">
-    <div style="max-width:480px;margin:0 auto;text-align:center">
-      <div style="font-size:10px;letter-spacing:.3em;color:var(--t4);margin-bottom:14px">完 整 报 告</div>
-      <div style="font-family:'Noto Serif SC',serif;font-size:clamp(18px,2.5vw,22px);font-weight:700;color:var(--t1);margin-bottom:8px;line-height:1.5">解锁你的完整命运蓝图</div>
-      <div style="font-size:12px;color:var(--t3);line-height:1.8;margin-bottom:24px">包含流年走势 · 逐月运势 · 重点预警 · 核心建议</div>
-
-      <!-- Stripe 支付 -->
-      <div style="margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--card)">
-        <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-        <stripe-pricing-table pricing-table-id="prctbl_1TL0nU5tISGwngzcss0E2RA1"
-          publishable-key="pk_live_51TL0bI5tISGwngzcgh9EWYF7cFlJdUatfbAvCDQ4HnuLVBJgaSKYdERtxFLuve0fjLcewdgBlQdO3CM7YKcEL3ME00qsZ1iDd3">
-        </stripe-pricing-table>
-      </div>
-
-      <div style="padding-top:16px;border-top:1px solid var(--line)">
-        <div style="font-size:10px;color:var(--t4);margin-bottom:8px">持有邀请码？</div>
-        <div style="display:flex;gap:6px;max-width:260px;margin:0 auto">
-          <input type="text" id="bypassCode" placeholder="输入邀请码" style="flex:1;padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:inherit;background:var(--card);color:var(--t1);text-align:center;letter-spacing:.08em">
-          <button onclick="checkBypassCode()" style="padding:8px 16px;border:none;border-radius:6px;background:var(--t1);color:#fff;font-size:11px;cursor:pointer;font-family:inherit">验证</button>
-        </div>
-        <div id="codeError" style="font-size:11px;color:var(--huo);margin-top:6px;display:none">邀请码无效</div>
-      </div>
+  <!-- 13 健康 -->
+  <div class="r-sec"><div class="r-num">13</div><div class="r-h">健康提醒</div><div class="r-sub">根据五行偏枯和十神分析</div>
+    <div class="r-health-grid" id="rpt-health">
+      <!-- 动态：健康卡片 -->
     </div>
-  </div>
+    <div style="font-size:var(--fs-sm);color:var(--t3);margin-top:12px;line-height:1.7" id="rpt-health-note"></div>
+  <div class="r-hr"></div></div>
 
-  <!-- ═══ PAYWALL GATE: 2026+ Premium content ═══ -->
-  <div class="paywall-gate locked" id="paywallGate">
+  <!-- ═══ 三、大运总览 ═══ -->
 
-  <!-- 09 continued: 2026+ 流年 -->
-  <div class="r-sec"><div class="r-num">09</div><div class="r-h">流年运势（2026–2033）</div><div class="r-sub">解锁完整版查看未来流年走势</div>
-    <div class="r-tbl">
-      <div class="r-tbl-head r-tbl-3"><div>年份</div><div>干支</div><div>运势概要</div></div>
-      <div class="r-tbl-row r-tbl-3 now"><div class="r-a-year">2026</div><div class="r-a-gz"><span class="e-huo">丙</span><span class="e-huo">午</span></div><div class="r-a-body"><div class="r-a-stars">★☆☆☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2027</div><div class="r-a-gz"><span class="e-huo">丁</span><span class="e-tu">未</span></div><div class="r-a-body"><div class="r-a-stars">★★☆☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2028</div><div class="r-a-gz"><span class="e-tu">戊</span><span class="e-jin">申</span></div><div class="r-a-body"><div class="r-a-stars">★★★☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2029</div><div class="r-a-gz"><span class="e-tu">己</span><span class="e-jin">酉</span></div><div class="r-a-body"><div class="r-a-stars">★★★★☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2030</div><div class="r-a-gz"><span class="e-jin">庚</span><span class="e-tu">戌</span></div><div class="r-a-body"><div class="r-a-stars">★★★★☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2031</div><div class="r-a-gz"><span class="e-jin">辛</span><span class="e-shui">亥</span></div><div class="r-a-body"><div class="r-a-stars">★★★★★</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2032</div><div class="r-a-gz"><span class="e-shui">壬</span><span class="e-shui">子</span></div><div class="r-a-body"><div class="r-a-stars">★★★★★</div><div class="r-a-note"><b>全面开花，</b>壬子水旺，日主能量最强年</div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2033</div><div class="r-a-gz"><span class="e-shui">癸</span><span class="e-tu">丑</span></div><div class="r-a-body"><div class="r-a-stars">★★★★☆</div><div class="r-a-note"></div></div></div>
+  <!-- 14 大运 -->
+  <div class="r-sec"><div class="r-num">14</div><div class="r-h">大运总览</div><div class="r-sub" id="rpt-dayun-sub">阳年男命顺行</div>
+    <div class="r-dy-scroll" id="rpt-dayun-scroll">
+      <!-- 动态：8步大运横向滚动 -->
+    </div>
+    <div class="r-dy-summary" id="rpt-dayun-summary">
+      <!-- 动态：当前大运详述 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 10 2026流年 + 流月 -->
-  <div class="r-sec"><div class="r-num">10</div><div class="r-h">2026年运势详解</div><div class="r-sub">根据流年干支与命局关系自动分析</div>
-    <div class="r-ly-detail">
-      <div class="r-ly-h">2026年综述</div>
-      <div class="r-ly-sub">根据命盘自动分析</div>
-      <div class="r-ly-body">
-        <p><b>总体评价：★☆☆☆☆。</b>流年干支均为火，是命局最不利的忌神组合。流年午火与日月支午伏吟，忌神力量被三倍放大。</p>
-        <p><b>事业方面：</b>工作压力增大，全年主基调是守住现有成果，不做重大职业变动。</p>
-        <p><b>财务方面：</b>近十年财务风险最高的一年。切忌大额投资、借贷、担保。</p>
-        <p><b>感情方面：</b>午火自刑加伏吟，婚姻宫受冲。注意沟通方式，避免冷战。</p>
-        <p><b>破解建议：</b>多接触水属性环境，穿着金白色系或深蓝黑色系。下半年8月后缓解。</p>
-      </div>
+  <!-- ═══ 四、流年流月 ═══ -->
+
+  <!-- 15 流年总论 -->
+  <div class="r-sec"><div class="r-num">15</div><div class="r-h" id="rpt-liunian-title">流年分析</div><div class="r-sub" id="rpt-liunian-sub">当前大运第N年</div>
+    <div class="r-ly-detail" id="rpt-liunian-detail">
+      <!-- 动态：3段流年综述 -->
     </div>
-    <div class="r-tbl">
+    <div class="r-tbl" id="rpt-liuyue-tbl">
       <div class="r-tbl-head r-tbl-3"><div>月份</div><div>干支</div><div>运势概要</div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">1月</div><div class="r-a-gz"><span class="e-tu">己</span><span class="e-tu">丑</span></div><div class="r-a-body"><div class="r-a-stars">★★☆☆☆</div><div class="r-a-note">丑中辛癸暗藏，但己土压力，整体沉闷</div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">2月</div><div class="r-a-gz"><span class="e-jin">庚</span><span class="e-mu">寅</span></div><div class="r-a-body"><div class="r-a-stars">★★★☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">3月</div><div class="r-a-gz"><span class="e-jin">辛</span><span class="e-mu">卯</span></div><div class="r-a-body"><div class="r-a-stars">★★★☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">4月</div><div class="r-a-gz"><span class="e-shui">壬</span><span class="e-tu">辰</span></div><div class="r-a-body"><div class="r-a-stars">★★★☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">5月</div><div class="r-a-gz"><span class="e-shui">癸</span><span class="e-huo">巳</span></div><div class="r-a-body"><div class="r-a-stars">★★☆☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">6月</div><div class="r-a-gz"><span class="e-huo">甲</span><span class="e-huo">午</span></div><div class="r-a-body"><div class="r-a-stars">★☆☆☆☆</div><div class="r-a-note"><b>全年最凶月，</b>午午伏吟三重叠加</div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">7月</div><div class="r-a-gz"><span class="e-mu">乙</span><span class="e-tu">未</span></div><div class="r-a-body"><div class="r-a-stars">★★☆☆☆</div><div class="r-a-note">未土官杀加木泄水，需要耐心</div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">8月</div><div class="r-a-gz"><span class="e-huo">丙</span><span class="e-jin">申</span></div><div class="r-a-body"><div class="r-a-stars">★★★☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">9月</div><div class="r-a-gz"><span class="e-huo">丁</span><span class="e-jin">酉</span></div><div class="r-a-body"><div class="r-a-stars">★★★☆☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">10月</div><div class="r-a-gz"><span class="e-tu">戊</span><span class="e-tu">戌</span></div><div class="r-a-body"><div class="r-a-stars">★★☆☆☆</div><div class="r-a-note">戊土七杀透干，压力中有小助力</div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">11月</div><div class="r-a-gz"><span class="e-tu">己</span><span class="e-shui">亥</span></div><div class="r-a-body"><div class="r-a-stars">★★★★☆</div><div class="r-a-note"></div></div></div>
-      <div class="r-tbl-row r-tbl-3"><div class="r-a-year">12月</div><div class="r-a-gz"><span class="e-jin">庚</span><span class="e-shui">子</span></div><div class="r-a-body"><div class="r-a-stars">★★★★☆</div><div class="r-a-note"></div></div></div>
+      <!-- 动态：12个月 -->
     </div>
   <div class="r-hr"></div></div>
 
-  <!-- 11 预警 -->
-  <div class="r-sec"><div class="r-num">11</div><div class="r-h">重点预警</div><div class="r-sub">需要特别关注的命理信号</div>
-    <div class="r-warn w-red"><div class="r-warn-title">五行分布提醒</div><div class="r-warn-body">请关注五行偏枯状况，<b>保持稳健心态，在忌神流年需格外谨慎。</b></div></div>
-    <div class="r-warn w-red"><div class="r-warn-title">流年预警</div><div class="r-warn-body">预警信息将根据命盘自动生成。</div></div>
-    <div class="r-warn w-gold"><div class="r-warn-title">婚姻宫提示</div><div class="r-warn-body">感情运势将根据命盘自动分析。</div></div>
-    <div class="r-warn w-blue"><div class="r-warn-title">空亡影响提示</div><div class="r-warn-body">空亡分析将根据命盘自动生成。</div></div>
-    <div style="font-size:var(--fs-sm);color:var(--t3);margin-top:12px;line-height:1.7">以上预警仅供参考，勿过度焦虑。</div>
+  <!-- ═══ 五、综合建议 ═══ -->
+
+  <!-- 16 重要提醒 -->
+  <div class="r-sec"><div class="r-num">16</div><div class="r-h">重要提醒</div><div class="r-sub">需要特别关注的命理信号</div>
+    <div id="rpt-warnings" style="display:flex;flex-direction:column;gap:10px">
+      <!-- 动态：预警卡片 -->
+    </div>
+    <div style="font-size:var(--fs-sm);color:var(--t3);margin-top:12px;line-height:1.7">以上提醒仅供参考，勿过度焦虑。</div>
   <div class="r-hr"></div></div>
 
-  <!-- 12 建议 -->
-  <div class="r-sec"><div class="r-num">12</div><div class="r-h">核心建议</div><div class="r-sub">综合命局给出的实操方向</div>
-    <div class="r-rec-grid">
-      <div class="r-rec-card full"><div class="r-rec-num">01</div><div class="r-rec-title">年度策略</div><div class="r-rec-body">根据流年分析自动生成策略建议。</div></div>
-      <div class="r-rec-card full"><div class="r-rec-num">02</div><div class="r-rec-title">核心发展期</div><div class="r-rec-body">根据流年走势自动识别最有利的发展窗口期。</div></div>
-      <div class="r-rec-card"><div class="r-rec-num">03</div><div class="r-rec-title">当前最适合做的事</div><ul class="r-rec-list"><li>深度学习和技能提升</li><li>维护现有人脉关系</li><li>身体调养和健康管理</li><li>为2028年后储备资源</li></ul></div>
-      <div class="r-rec-card"><div class="r-rec-num">04</div><div class="r-rec-title">行业与事业方向</div><ul class="r-rec-list"><li>金融、投资、财务管理</li><li>医疗健康、心理咨询</li><li>教育、培训、学术研究</li><li>信息技术、数据分析</li></ul></div>
-      <div class="r-rec-card"><div class="r-rec-num">05</div><div class="r-rec-title">幸运颜色与穿搭</div><div class="r-rec-body">日常多用金、水属性颜色。</div><div class="r-rec-swatches"><div class="r-rec-swatch" style="background:var(--jin-bg)"><div class="r-rec-sw-label" style="color:var(--jin)">金，用神</div><div class="r-rec-sw-dots"><div class="r-rec-sw-dot" style="background:#f5f0d8"></div><div class="r-rec-sw-dot" style="background:#e8d898"></div><div class="r-rec-sw-dot" style="background:#c8a830"></div></div><div class="r-rec-sw-names">米白、香槟、金色</div></div><div class="r-rec-swatch" style="background:var(--shui-bg)"><div class="r-rec-sw-label" style="color:var(--shui)">水，用神</div><div class="r-rec-sw-dots"><div class="r-rec-sw-dot" style="background:#c8d8e8"></div><div class="r-rec-sw-dot" style="background:#2a4a7a"></div><div class="r-rec-sw-dot" style="background:#1a2a3a"></div></div><div class="r-rec-sw-names">藏蓝、深蓝、墨黑</div></div></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">06</div><div class="r-rec-title">方位与地理</div><div class="r-rec-body"><b>最利方位：北方（水）、西方（金）。</b>居住宜靠近水系。</div><div class="r-rec-tag">利方位 → <b>北方</b>、<b>西方</b></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">07</div><div class="r-rec-title">感情择偶策略</div><div class="r-rec-body">根据命盘夫妻宫和配偶星自动分析择偶方向。</div></div>
-      <div class="r-rec-card"><div class="r-rec-num">08</div><div class="r-rec-title">健康管理</div><ul class="r-rec-list"><li>每年体检，关注血压心脏</li><li>适度运动，游泳最佳</li><li>情绪管理，避免内耗</li><li>忌仇年尤其注意身心</li></ul></div>
-      <div class="r-rec-card"><div class="r-rec-num">09</div><div class="r-rec-title">生活环境与调养</div><div class="r-rec-body">家居增加水元素，<b>鱼缸、流水摆件、深蓝色系家饰。</b>饮食多食滋阴润燥食材。培养与水相关的爱好。</div></div>
-      <div class="r-rec-card"><div class="r-rec-num">10</div><div class="r-rec-title">贵人与社交</div><div class="r-rec-body">根据命盘十神格局分析社交与贵人方向。</div></div>
+  <!-- 17 大运逐年 -->
+  <div class="r-sec"><div class="r-num">17</div><div class="r-h" id="rpt-10yr-title">大运逐年提示</div><div class="r-sub">当前大运十年逐年运势</div>
+    <div class="r-tbl" id="rpt-10yr-tbl">
+      <div class="r-tbl-head" style="grid-template-columns:52px 52px 60px 1fr"><div>年份</div><div>干支</div><div>十神</div><div>要点</div></div>
+      <!-- 动态：10年 -->
+    </div>
+  <div class="r-hr"></div></div>
+
+  <!-- 18 综合建议 -->
+  <div class="r-sec"><div class="r-num">18</div><div class="r-h">综合建议</div><div class="r-sub">基于命局与现居地的实操方向</div>
+    <div class="r-rec-grid" id="rpt-recommendations">
+      <div class="r-rec-card full"><div class="r-rec-num">01</div><div class="r-rec-title">生财方式</div><div class="r-rec-body" id="rpt-rec-wealth"></div></div>
+      <div class="r-rec-card full"><div class="r-rec-num">02</div><div class="r-rec-title">感情建议</div><div class="r-rec-body" id="rpt-rec-love"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">03</div><div class="r-rec-title">行业方向</div><div id="rpt-rec-industry"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">04</div><div class="r-rec-title">方位与城市</div><div id="rpt-rec-location"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">05</div><div class="r-rec-title">幸运颜色</div><div id="rpt-rec-color">
+        <div class="r-rec-swatches"><!-- 动态 --></div>
+      </div></div>
+      <div class="r-rec-card"><div class="r-rec-num">06</div><div class="r-rec-title">健康管理</div><div class="r-rec-body" id="rpt-rec-health"></div></div>
     </div>
   </div>
-
-  <!-- 13 紫微 -->
-  <div class="r-sec"><div class="r-num">13</div><div class="r-h">紫微斗数交叉验证</div><div class="r-sub">以紫微斗数辅助验证八字结论</div>
-    <div class="r-zw-card">
-      <div class="r-zw-meta">
-        <div class="r-zw-meta-item"><span class="r-zw-meta-label">农历</span>1993年五月十一日</div>
-        <div class="r-zw-meta-item"><span class="r-zw-meta-label">命宫</span><b>未</b>（天梁）</div>
-        <div class="r-zw-meta-item"><span class="r-zw-meta-label">身宫</span>丑</div>
-        <div class="r-zw-meta-item"><span class="r-zw-meta-label">纳音</span>剑锋金，金四局</div>
-      </div>
-      <div class="r-zw-sihua">
-        <div class="r-zw-sh r-zw-lu">禄，破军<span>午宫</span></div>
-        <div class="r-zw-sh r-zw-quan">权，巨门<span>酉宫</span></div>
-        <div class="r-zw-sh r-zw-ke">科，太阴<span>亥宫</span></div>
-        <div class="r-zw-sh r-zw-ji">忌，贪狼<span>戌宫</span></div>
-      </div>
-      <div class="r-zw-verify">
-        <div class="r-zw-verify-h">交叉验证结论</div>
-        <div class="r-zw-verify-list">
-          <div class="r-zw-v-item ok">命宫天梁：有庇护担当，与八字正印得势吻合</div>
-          <div class="r-zw-v-item ok">紫微斗数交叉验证将自动生成</div>
-          <div class="r-zw-v-item ok">紫微交叉验证将自动生成</div>
-          <div class="r-zw-v-item ok">子女宫贪狼化忌：子女缘有波折，与时支亥空亡呼应</div>
-        </div>
-        <div class="r-zw-confidence">紫微交叉验证与八字判断方向高度一致，分析置信度高</div>
-      </div>
-    </div>
-  </div>
-
-  </div><!-- end paywall-gate -->
 
   <div class="r-disclaimer">
     <b>⚠ 免责声明 / Disclaimer</b><br>
     本报告所有内容仅供娱乐与个人参考之用，<b>不构成且不应被视为投资、理财、医疗健康、心理咨询、法律、感情关系或任何其他类别的专业建议。</b>
     任何依据本报告内容所做出的决策均由用户自行承担全部责任。如需专业意见，请咨询持牌专业人士。<br>
     <span style="color:var(--t4);font-size:10px;margin-top:4px;display:inline-block">
-    All content in this report is for entertainment and personal reference purposes only and <b>does not constitute professional advice</b> of any kind, including but not limited to investment, financial, medical, psychological, legal, or relationship advice. 
+    All content in this report is for entertainment and personal reference purposes only and <b>does not constitute professional advice</b> of any kind.
     Any decisions made based on this content are solely at the user's own risk. Please consult licensed professionals for expert guidance.
     </span>
   </div>
@@ -1797,6 +1754,7 @@ body{font-size:15px;line-height:1.75}
 
 </div>
 </div>
+
 <div class="page" id="p-shop">
 
   <div class="shop-hero" style="display:block;padding:clamp(48px,6vh,80px) clamp(32px,5vw,72px) clamp(36px,5vh,56px);border-bottom:1px solid var(--line);position:relative;overflow:hidden">
@@ -2126,6 +2084,27 @@ function setG(g){
   document.getElementById('gF').className='gb'+(g==='F'?' on':'');
   document.getElementById('gM').className='gb'+(g==='M'?' on':'');
 }
+
+// populate year dropdown (1920–2026)
+(function(){
+  var ys=document.getElementById('birthYear');
+  if(ys){for(var y=2026;y>=1920;y--){var o=document.createElement('option');o.value=y;o.textContent=y+'年';ys.appendChild(o)}}
+  // populate day dropdown (1–31)
+  var ds=document.getElementById('birthDay');
+  if(ds){for(var d=1;d<=31;d++){var o=document.createElement('option');o.value=d;o.textContent=d+'日';ds.appendChild(o)}}
+  // update days based on month/year selection
+  function updateDays(){
+    var y=parseInt(document.getElementById('birthYear').value)||2000;
+    var m=parseInt(document.getElementById('birthMonth').value)||1;
+    var maxD=new Date(y,m,0).getDate();
+    var ds=document.getElementById('birthDay');
+    var cur=parseInt(ds.value)||1;
+    ds.innerHTML='<option value="">日</option>';
+    for(var d=1;d<=maxD;d++){var o=document.createElement('option');o.value=d;o.textContent=d+'日';if(d===cur)o.selected=true;ds.appendChild(o)}
+  }
+  if(document.getElementById('birthYear'))document.getElementById('birthYear').addEventListener('change',updateDays);
+  if(document.getElementById('birthMonth'))document.getElementById('birthMonth').addEventListener('change',updateDays);
+})();
 
 // scroll reveal — robust version
 function revealAll(){
@@ -2772,6 +2751,7 @@ function pickSize(el){
 <script src="kes-connect.js"></script>
 <script src="kes-city.js"></script>
 <script src="kes-shop.js"></script>
+<script src="kes-report.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="kes-config.js"></script>
