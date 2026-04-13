@@ -1,41 +1,83 @@
-/*  kes-city.js  —  全球城市智能搜索
- *  直接调用 OpenStreetMap Nominatim（免费，无需API key）
- *  支持中文、英文、拼音模糊搜索
- *  覆盖全球所有城市
+/*  kes-city.js  —  Global City Autocomplete (v2)
+ *  Uses OpenStreetMap Nominatim (free, no API key)
+ *  Supports: cityInput (birth) + residenceCity (current)
+ *  Detects country from residence city → passed to API
  */
 
 var _cityTimer = null;
+var _resTimer = null;
+var _resCountry = 'CN';  // default country, updated when residence city selected
 
 document.addEventListener('DOMContentLoaded', function(){
-  var input = document.getElementById('cityInput');
-  var drop = document.getElementById('cityDrop');
+  var isEn = document.documentElement.lang === 'en';
+  
+  // ── Birth city autocomplete ──
+  _setupCityInput('cityInput', 'cityDrop', function(r){
+    var input = document.getElementById('cityInput');
+    input.value = r.shortName;
+    input.dataset.lon = r.lon;
+    input.dataset.lat = r.lat;
+    document.getElementById('cityDrop').classList.remove('show');
+  });
+
+  // ── Residence city autocomplete ──
+  var resInput = document.getElementById('residenceCity');
+  if(resInput){
+    // Create dropdown if it doesn't exist
+    var resDrop = document.getElementById('resDrop');
+    if(!resDrop){
+      resDrop = document.createElement('div');
+      resDrop.className = 'city-dropdown';
+      resDrop.id = 'resDrop';
+      resInput.parentNode.style.position = 'relative';
+      resInput.parentNode.appendChild(resDrop);
+    }
+    
+    _setupCityInput('residenceCity', 'resDrop', function(r){
+      var input = document.getElementById('residenceCity');
+      input.value = r.shortName;
+      input.dataset.country = r.country || 'CN';
+      _resCountry = r.country || 'CN';
+      document.getElementById('resDrop').classList.remove('show');
+    });
+  }
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.f-field')){
+      var d1 = document.getElementById('cityDrop');
+      var d2 = document.getElementById('resDrop');
+      if(d1) d1.classList.remove('show');
+      if(d2) d2.classList.remove('show');
+    }
+  });
+});
+
+function _setupCityInput(inputId, dropId, onPick){
+  var input = document.getElementById(inputId);
+  var drop = document.getElementById(dropId);
   if(!input || !drop) return;
 
-  // 覆盖旧的 oninput
   input.removeAttribute('oninput');
   input.setAttribute('autocomplete', 'off');
 
+  var timer = null;
   input.addEventListener('input', function(){
     var val = this.value.trim();
     if(val.length < 2){ drop.classList.remove('show'); return; }
-    clearTimeout(_cityTimer);
-    _cityTimer = setTimeout(function(){ searchCities(val, drop); }, 350);
+    clearTimeout(timer);
+    timer = setTimeout(function(){ _searchCities(val, drop, onPick); }, 350);
   });
 
   input.addEventListener('focus', function(){
     var val = this.value.trim();
-    if(val.length >= 2) searchCities(val, drop);
+    if(val.length >= 2) _searchCities(val, drop, onPick);
   });
+}
 
-  document.addEventListener('click', function(e){
-    if(!e.target.closest('.f-field')) drop.classList.remove('show');
-  });
-});
-
-async function searchCities(query, drop){
-  // 同时搜索中文和英文结果
-  var isZh = document.documentElement.lang === 'zh';
-  var lang = isZh ? 'zh' : 'en';
+async function _searchCities(query, drop, onPick){
+  var isEn = document.documentElement.lang === 'en';
+  var lang = isEn ? 'en' : 'zh';
 
   try {
     var url = 'https://nominatim.openstreetmap.org/search?' +
@@ -50,7 +92,6 @@ async function searchCities(query, drop){
     var data = await res.json();
 
     if(!data || !data.length){
-      // 尝试不限制 featuretype
       var url2 = 'https://nominatim.openstreetmap.org/search?' +
         'q=' + encodeURIComponent(query) +
         '&format=json&limit=8' +
@@ -65,23 +106,20 @@ async function searchCities(query, drop){
       return;
     }
 
-    // 过滤并格式化结果
     var seen = {};
     var results = [];
     data.forEach(function(item){
       var addr = item.address || {};
       var city = addr.city || addr.town || addr.village || addr.county || addr.state || item.name || '';
       var country = addr.country || '';
+      var countryCode = (addr.country_code || '').toUpperCase();
       var state = addr.state || '';
 
       if(!city) return;
-
-      // 去重
       var key = city.toLowerCase();
       if(seen[key]) return;
       seen[key] = true;
 
-      // 组合显示名称
       var display = city;
       if(state && state !== city) display += ', ' + state;
       if(country) display += ' · ' + country;
@@ -90,7 +128,8 @@ async function searchCities(query, drop){
         name: display,
         shortName: city,
         lat: parseFloat(item.lat),
-        lon: parseFloat(item.lon)
+        lon: parseFloat(item.lon),
+        country: countryCode === 'US' ? 'US' : countryCode === 'CN' ? 'CN' : countryCode || 'CN'
       });
     });
 
@@ -99,57 +138,28 @@ async function searchCities(query, drop){
       return;
     }
 
-    // 渲染下拉
-    drop.innerHTML = results.map(function(r){
-      return '<div class="city-option" onclick="pickCity(\'' +
-        r.name.replace(/'/g, "\\'") + '\',\'' +
-        r.shortName.replace(/'/g, "\\'") + '\',' +
-        r.lon + ',' + r.lat + ')">' +
-        '<span style="font-weight:500;color:#1a1814">' + r.shortName + '</span>' +
-        '<span style="color:#98958f;font-size:11px;margin-left:6px">' +
+    drop.innerHTML = results.map(function(r, i){
+      return '<div class="city-option" data-idx="' + i + '">' +
+        '<span style="font-weight:500">' + r.shortName + '</span>' +
+        '<span style="color:var(--t4,#98958f);font-size:11px;margin-left:6px">' +
         r.name.replace(r.shortName + ', ', '').replace(r.shortName + ' · ', '') +
         '</span></div>';
     }).join('');
+
+    // Bind click handlers
+    drop.querySelectorAll('.city-option').forEach(function(el){
+      el.addEventListener('click', function(){
+        var idx = parseInt(this.dataset.idx);
+        onPick(results[idx]);
+      });
+    });
+
     drop.classList.add('show');
 
   } catch(e){
     console.warn('City search error:', e);
-    // 回退到本地搜索
-    fallbackSearch(query, drop);
   }
 }
 
-/* 本地回退搜索 */
-function fallbackSearch(query, drop){
-  if(typeof CITY_COORDS === 'undefined') return;
-  var ql = query.toLowerCase();
-  var results = [];
-  for(var key in CITY_COORDS){
-    if(key.toLowerCase().indexOf(ql) >= 0){
-      results.push(key);
-    }
-  }
-  if(!results.length){ drop.classList.remove('show'); return; }
-
-  drop.innerHTML = results.slice(0, 6).map(function(name){
-    var c = CITY_COORDS[name];
-    return '<div class="city-option" onclick="pickCity(\'' +
-      name.replace(/'/g, "\\'") + '\',\'' +
-      name.replace(/'/g, "\\'") + '\',' +
-      c[0] + ',' + c[1] + ')">' + name + '</div>';
-  }).join('');
-  drop.classList.add('show');
-}
-
-/* 选择城市 */
-function pickCity(displayName, shortName, lon, lat){
-  var input = document.getElementById('cityInput');
-  input.value = shortName;
-  input.dataset.lon = lon;
-  input.dataset.lat = lat;
-  document.getElementById('cityDrop').classList.remove('show');
-
-  // 保存坐标供 kesSubmit 使用
-  if(typeof CITY_COORDS !== 'undefined') CITY_COORDS[shortName] = [lon, lat];
-  if(typeof CITY_TZ !== 'undefined') CITY_TZ[shortName] = Math.round(lon / 15);
-}
+// Expose _resCountry for kes-report.js
+function getResCountry(){ return _resCountry; }
