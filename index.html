@@ -1548,7 +1548,7 @@ body{font-size:15px;line-height:1.75}
     <div class="rpt-hdr-ey">ELEMENT READING</div>
     <div class="rpt-hdr-t">命理分析报告</div>
     <div class="rpt-info-card" style="grid-template-columns:repeat(3,1fr)">
-      <div class="rpt-f"><div class="rpt-f-l">命　造</div><div class="rpt-f-v" id="rpt-gender"><b>乾造</b></div></div>
+      <div class="rpt-f"><div class="rpt-f-l">命　造</div><div class="rpt-f-v" id="rpt-gender">—</div></div>
       <div class="rpt-f"><div class="rpt-f-l">出生日期</div><div class="rpt-f-v" id="rpt-birth">—</div></div>
       <div class="rpt-f"><div class="rpt-f-l">日　主</div><div class="rpt-f-v" id="rpt-daymaster">—</div></div>
     </div>
@@ -1559,202 +1559,108 @@ body{font-size:15px;line-height:1.75}
     </div>
   </div>
 
-  <!-- ═══ 一、八字排盘 ═══ -->
-
   <!-- 01 四柱 -->
-  <div class="r-sec"><div class="r-num">01</div><div class="r-h">四柱八字</div><div class="r-sub">以真太阳时校正后排盘</div>
-    <div class="r-pillar-grid" id="rpt-pillars">
-      <!-- 动态生成四柱 -->
-    </div>
+  <div class="r-sec"><div class="r-num">01</div><div class="r-h">四柱八字</div><div class="r-sub" id="rpt-sub01">以真太阳时校正后排盘</div>
+    <div class="r-pillar-grid" id="rpt-pillars"></div>
   <div class="r-hr"></div></div>
 
   <!-- 02 干支关系 -->
   <div class="r-sec"><div class="r-num">02</div><div class="r-h">干支关系</div><div class="r-sub">柱内组合与柱间作用关系</div>
-    <div style="font-size:var(--fs-label);letter-spacing:.1em;color:var(--t4);margin-bottom:8px">柱内关系</div>
-    <div class="r-tbl" style="margin-bottom:16px">
-      <div class="r-tbl-head" style="grid-template-columns:48px 48px 1fr 1fr"><div>柱</div><div>组合</div><div>类型</div><div>含义</div></div>
-      <div id="rpt-gz-inner"><!-- 动态：覆/载/同体/盖头/截脚 --></div>
-    </div>
-    <div style="font-size:var(--fs-label);letter-spacing:.1em;color:var(--t4);margin-bottom:8px">柱间关系</div>
-    <div class="r-tbl">
-      <div class="r-tbl-head" style="grid-template-columns:1fr 1fr 1fr"><div>涉及</div><div>类型</div><div>含义</div></div>
-      <div id="rpt-gz-inter"><!-- 动态：天干合冲、地支合冲刑害 --></div>
-    </div>
-    <div id="rpt-gz-note" style="font-size:var(--fs-sm);color:var(--t3);margin-top:10px;line-height:1.7"></div>
+    <div id="rpt-relations"></div>
   <div class="r-hr"></div></div>
 
   <!-- 03 五行能量 -->
   <div class="r-sec"><div class="r-num">03</div><div class="r-h">五行能量分布</div><div class="r-sub">结合月令权重的五行实际力量</div>
-    <div class="r-wx-grid" id="rpt-wuxing">
-      <!-- 动态生成五行能量条 -->
-    </div>
+    <div class="r-wx-grid" id="rpt-wuxing"></div>
   <div class="r-hr"></div></div>
 
   <!-- 04 空亡 -->
   <div class="r-sec"><div class="r-num">04</div><div class="r-h">空亡</div><div class="r-sub">日柱与年柱所在旬的空缺之支</div>
-    <div id="rpt-kongwang" style="display:flex;flex-direction:column;gap:10px">
-      <!-- 动态生成空亡卡片 -->
-    </div>
+    <div id="rpt-kongwang" style="display:flex;flex-direction:column;gap:10px"></div>
   <div class="r-hr"></div></div>
 
   <!-- 05 神煞 -->
   <div class="r-sec" id="rpt-shensha-sec"><div class="r-num">05</div><div class="r-h">神煞</div><div class="r-sub">命局中存在的特殊星曜</div>
-    <div id="rpt-shensha" style="display:flex;flex-direction:column;gap:8px">
-      <!-- 动态生成：仅列存在的 -->
-    </div>
+    <div id="rpt-shensha" style="display:flex;flex-direction:column;gap:8px"></div>
   <div class="r-hr"></div></div>
 
-  <!-- 06 身强身弱 -->
+  <!-- 06 身强弱与格局 -->
   <div class="r-sec"><div class="r-num">06</div><div class="r-h">日主强弱与格局</div><div class="r-sub">以得令、得地、得势三维判据综合评定</div>
     <div class="r-str-meter" id="rpt-meter">
       <div class="r-meter-track"><div class="r-meter-seg"></div><div class="r-meter-seg"></div><div class="r-meter-seg"></div><div class="r-meter-seg"></div><div class="r-meter-seg"></div></div>
       <div class="r-meter-labels"><span>极弱</span><span>偏弱</span><span>中和</span><span>偏强</span><span>身强</span></div>
     </div>
     <div class="r-str-box">
-      <div class="r-str-grid" id="rpt-strength">
-        <!-- 动态：得令/得地/得势 -->
-      </div>
+      <div class="r-str-grid" id="rpt-strength"></div>
       <div class="r-str-result"><div class="r-str-verdict" id="rpt-verdict">—</div><div class="r-str-explain" id="rpt-verdict-explain"></div></div>
     </div>
     <div id="rpt-pattern" style="margin-top:16px;padding:14px 16px;background:var(--bg2);border-radius:8px;font-size:var(--fs-sm);color:var(--t2);line-height:1.8"></div>
-    <div class="r-str-note"><b>关于身强身弱：</b>这是对日主能量的客观描述，<b>不代表运势好坏</b>。身强者自主性强，身弱者善于借力。关键在于大运流年是否配合喜用。</div>
   <div class="r-hr"></div></div>
 
   <!-- 07 喜忌用神 -->
   <div class="r-sec"><div class="r-num">07</div><div class="r-h">喜忌用神</div><div class="r-sub">根据日主强弱推导，用于判断大运流年吉凶</div>
-    <div class="r-yj-grid" id="rpt-yongshen">
-      <!-- 动态：用神/忌神/调候 -->
-    </div>
-    <div id="rpt-tiaohuo" style="margin-top:16px;padding:14px 16px;background:var(--bg2);border-radius:8px;font-size:var(--fs-sm);color:var(--t3);line-height:1.8">
-    </div>
+    <div class="r-yj-grid" id="rpt-yongshen"></div>
+    <div id="rpt-tiaohuo" style="margin-top:16px;padding:14px 16px;background:var(--bg2);border-radius:8px;font-size:var(--fs-sm);color:var(--t3);line-height:1.8"></div>
   <div class="r-hr"></div></div>
-
-  <!-- ═══ 二、命主综述 ═══ -->
 
   <!-- 08 性格 -->
   <div class="r-sec"><div class="r-num">08</div><div class="r-h">本性与性格</div><div class="r-sub">基于日主五行、十神结构综合分析</div>
-    <div class="r-elem-id" id="rpt-elemid">
-      <div class="r-elem-icon">—</div>
-      <div><div class="r-elem-id-name"></div><div class="r-elem-id-desc"></div></div>
-    </div>
-    <div class="r-pq" id="rpt-quote"><div class="r-pq-text"></div><div class="r-pq-src">《滴天髓》</div></div>
-    <div class="r-prose" id="rpt-personality">
-      <!-- 动态：性格分析正文 -->
-    </div>
+    <div class="r-elem-id" id="rpt-elemid"><div class="r-elem-icon">—</div><div><div class="r-elem-id-name"></div><div class="r-elem-id-desc"></div></div></div>
+    <div class="r-pq" id="rpt-quote"><div class="r-pq-text"></div><div class="r-pq-src"></div></div>
+    <div class="r-prose" id="rpt-personality"></div>
   <div class="r-hr"></div></div>
 
-  <!-- 09 核心八字作用 -->
-  <div class="r-sec"><div class="r-num">09</div><div class="r-h">核心八字作用</div><div class="r-sub">命局中最关键的干支互动关系</div>
-    <div class="r-prose" id="rpt-interactions">
-      <!-- 动态：甲己合、双申夹攻等 -->
-    </div>
+  <!-- 09 感情 -->
+  <div class="r-sec"><div class="r-num">09</div><div class="r-h">感情与婚姻</div><div class="r-sub">配偶星、婚姻宫、桃花综合分析</div>
+    <div class="r-prose" id="rpt-love"></div>
   <div class="r-hr"></div></div>
 
-  <!-- 10 感情 -->
-  <div class="r-sec"><div class="r-num">10</div><div class="r-h">感情与婚姻</div><div class="r-sub">配偶星、婚姻宫、桃花综合分析</div>
-    <div class="r-prose" id="rpt-love">
-      <!-- 动态 -->
-    </div>
+  <!-- 10 子女 -->
+  <div class="r-sec"><div class="r-num">10</div><div class="r-h">子女</div><div class="r-sub">基于时柱与食伤星分析</div>
+    <div class="r-prose" id="rpt-children"></div>
   <div class="r-hr"></div></div>
 
-  <!-- 11 子女 -->
-  <div class="r-sec"><div class="r-num">11</div><div class="r-h">子女</div><div class="r-sub">基于时柱与食伤星分析</div>
-    <div class="r-prose" id="rpt-children">
-      <!-- 动态 -->
-    </div>
+  <!-- 11 事业与财运 -->
+  <div class="r-sec"><div class="r-num">11</div><div class="r-h">事业与财运</div><div class="r-sub">格局、行业方向、财运特点</div>
+    <div class="r-prose" id="rpt-career"></div>
   <div class="r-hr"></div></div>
 
-  <!-- 12 事业与财运 -->
-  <div class="r-sec"><div class="r-num">12</div><div class="r-h">事业与财运</div><div class="r-sub">格局、行业方向、财运阶段</div>
-    <div class="r-prose" id="rpt-career">
-      <!-- 动态 -->
-    </div>
-    <div class="r-tbl" style="margin-top:16px" id="rpt-fortune-tbl">
-      <div class="r-tbl-head" style="grid-template-columns:80px 80px 1fr"><div>阶段</div><div>大运</div><div>财运</div></div>
-      <!-- 动态：财运阶段表 -->
-    </div>
+  <!-- 12 健康 -->
+  <div class="r-sec"><div class="r-num">12</div><div class="r-h">健康提醒</div><div class="r-sub">根据五行偏枯和十神分析</div>
+    <div class="r-health-grid" id="rpt-health"></div>
   <div class="r-hr"></div></div>
 
-  <!-- 13 健康 -->
-  <div class="r-sec"><div class="r-num">13</div><div class="r-h">健康提醒</div><div class="r-sub">根据五行偏枯和十神分析</div>
-    <div class="r-health-grid" id="rpt-health">
-      <!-- 动态：健康卡片 -->
-    </div>
-    <div style="font-size:var(--fs-sm);color:var(--t3);margin-top:12px;line-height:1.7" id="rpt-health-note"></div>
+  <!-- 13 大运总览（含逐年） -->
+  <div class="r-sec"><div class="r-num">13</div><div class="r-h">大运总览</div><div class="r-sub" id="rpt-dayun-sub"></div>
+    <div class="r-dy-scroll" id="rpt-dayun-scroll"></div>
+    <div class="r-dy-summary" id="rpt-dayun-detail" style="margin-top:16px"></div>
+    <div id="rpt-dayun-table" style="margin-top:20px"></div>
   <div class="r-hr"></div></div>
 
-  <!-- ═══ 三、大运总览 ═══ -->
-
-  <!-- 14 大运 -->
-  <div class="r-sec"><div class="r-num">14</div><div class="r-h">大运总览</div><div class="r-sub" id="rpt-dayun-sub">阳年男命顺行</div>
-    <div class="r-dy-scroll" id="rpt-dayun-scroll">
-      <!-- 动态：8步大运横向滚动 -->
-    </div>
-    <div class="r-dy-summary" id="rpt-dayun-summary">
-      <!-- 动态：当前大运详述 -->
-    </div>
+  <!-- 14 流年流月 -->
+  <div class="r-sec"><div class="r-num">14</div><div class="r-h" id="rpt-ln-title">流年分析</div><div class="r-sub" id="rpt-ln-sub"></div>
+    <div class="r-prose" id="rpt-ln-summary" style="margin-bottom:20px"></div>
+    <div id="rpt-ln-months"></div>
   <div class="r-hr"></div></div>
 
-  <!-- ═══ 四、流年流月 ═══ -->
-
-  <!-- 15 流年总论 -->
-  <div class="r-sec"><div class="r-num">15</div><div class="r-h" id="rpt-liunian-title">流年分析</div><div class="r-sub" id="rpt-liunian-sub">当前大运第N年</div>
-    <div class="r-ly-detail" id="rpt-liunian-detail">
-      <!-- 动态：3段流年综述 -->
-    </div>
-    <div class="r-tbl" id="rpt-liuyue-tbl">
-      <div class="r-tbl-head r-tbl-3"><div>月份</div><div>干支</div><div>运势概要</div></div>
-      <!-- 动态：12个月 -->
-    </div>
+  <!-- 15 重要提醒 -->
+  <div class="r-sec"><div class="r-num">15</div><div class="r-h">重要提醒</div><div class="r-sub">需要特别关注的命理信号</div>
+    <div id="rpt-warnings" style="display:flex;flex-direction:column;gap:10px"></div>
   <div class="r-hr"></div></div>
 
-  <!-- ═══ 五、综合建议 ═══ -->
-
-  <!-- 16 重要提醒 -->
-  <div class="r-sec"><div class="r-num">16</div><div class="r-h">重要提醒</div><div class="r-sub">需要特别关注的命理信号</div>
-    <div id="rpt-warnings" style="display:flex;flex-direction:column;gap:10px">
-      <!-- 动态：预警卡片 -->
-    </div>
-    <div style="font-size:var(--fs-sm);color:var(--t3);margin-top:12px;line-height:1.7">以上提醒仅供参考，勿过度焦虑。</div>
-  <div class="r-hr"></div></div>
-
-  <!-- 17 大运逐年 -->
-  <div class="r-sec"><div class="r-num">17</div><div class="r-h" id="rpt-10yr-title">大运逐年提示</div><div class="r-sub">当前大运十年逐年运势</div>
-    <div class="r-tbl" id="rpt-10yr-tbl">
-      <div class="r-tbl-head" style="grid-template-columns:52px 52px 60px 1fr"><div>年份</div><div>干支</div><div>十神</div><div>要点</div></div>
-      <!-- 动态：10年 -->
-    </div>
-  <div class="r-hr"></div></div>
-
-  <!-- 18 综合建议 -->
-  <div class="r-sec"><div class="r-num">18</div><div class="r-h">综合建议</div><div class="r-sub">基于命局与现居地的实操方向</div>
-    <div class="r-rec-grid" id="rpt-recommendations">
-      <div class="r-rec-card full"><div class="r-rec-num">01</div><div class="r-rec-title">生财方式</div><div class="r-rec-body" id="rpt-rec-wealth"></div></div>
-      <div class="r-rec-card full"><div class="r-rec-num">02</div><div class="r-rec-title">感情建议</div><div class="r-rec-body" id="rpt-rec-love"></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">03</div><div class="r-rec-title">行业方向</div><div id="rpt-rec-industry"></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">04</div><div class="r-rec-title">方位与城市</div><div id="rpt-rec-location"></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">05</div><div class="r-rec-title">幸运颜色</div><div id="rpt-rec-color">
-        <div class="r-rec-swatches"><!-- 动态 --></div>
-      </div></div>
-      <div class="r-rec-card"><div class="r-rec-num">06</div><div class="r-rec-title">健康管理</div><div class="r-rec-body" id="rpt-rec-health"></div></div>
-    </div>
+  <!-- 16 综合建议 -->
+  <div class="r-sec"><div class="r-num">16</div><div class="r-h">综合建议</div><div class="r-sub">基于命局与现居地的实操方向</div>
+    <div class="r-rec-grid" id="rpt-recs"></div>
   </div>
 
   <div class="r-disclaimer">
-    <b>⚠ 免责声明 / Disclaimer</b><br>
-    本报告所有内容仅供娱乐与个人参考之用，<b>不构成且不应被视为投资、理财、医疗健康、心理咨询、法律、感情关系或任何其他类别的专业建议。</b>
-    任何依据本报告内容所做出的决策均由用户自行承担全部责任。如需专业意见，请咨询持牌专业人士。<br>
-    <span style="color:var(--t4);font-size:10px;margin-top:4px;display:inline-block">
-    All content in this report is for entertainment and personal reference purposes only and <b>does not constitute professional advice</b> of any kind.
-    Any decisions made based on this content are solely at the user's own risk. Please consult licensed professionals for expert guidance.
-    </span>
+    <b>⚠ 免责声明</b><br>
+    本报告所有内容仅供娱乐与个人参考之用，<b>不构成任何专业建议。</b>任何依据本报告内容做出的决策由用户自行承担责任。
   </div>
-
-  <div class="r-footer">KES · 命元之钥<br>本报告仅供参考，命运在于自己的选择与努力</div>
+  <div class="r-footer">KES · 命元之钥</div>
 
 </div>
 </div>
-
 <div class="page" id="p-shop">
 
   <div class="shop-hero" style="display:block;padding:clamp(48px,6vh,80px) clamp(32px,5vw,72px) clamp(36px,5vh,56px);border-bottom:1px solid var(--line);position:relative;overflow:hidden">
