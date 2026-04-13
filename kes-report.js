@@ -7,7 +7,7 @@ var S_WX={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土
 var B_WX={'子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水'};
 var SS_C={'比肩':'bijian','劫财':'jiecai','食神':'shishen','伤官':'shangguan','偏财':'piancai','正财':'zhengcai','七杀':'qisha','正官':'zhengguan','偏印':'pianyin','正印':'zhengyin','日主':'rizhu'};
 var HR_MAP={'子':0,'丑':2,'寅':4,'卯':6,'辰':8,'巳':10,'午':12,'未':14,'申':16,'酉':18,'戌':20,'亥':22};
-var SHA_MEAN={'天乙贵人':'一生有贵人扶持之象，遇困难易逢贵人相助','华盖':'命主有独处倾向，对哲学、玄学、文化艺术有天然兴趣','桃花':'异性缘较旺，注重外在形象和人际交往','驿马':'一生走动多，适合与外地或旅行相关的发展','禄神':'自带禄位，衣食无忧的先天条件','羊刃':'性格刚强果断，有魄力但也需控制脾气'};
+var SHA_MEAN={'天乙贵人':'一生有贵人扶持之象，遇困难易逢贵人相助','华盖':'命主有独处倾向，对哲学、玄学、文化艺术有天然兴趣','桃花':'异性缘较旺，注重外在形象和人际交往','驿马':'一生走动多，适合与外地或旅行相关的发展','禄神':'自带禄位，衣食无忧的先天条件','羊刃':'性格刚强果断，有魄力但也需控制脾气','文昌':'聪明好学，有文才学识，利于考试和学术','将星':'有领导能力和权威感，适合管理岗位','天德贵人':'逢凶化吉之星，一生少遇大灾大难','月德贵人':'性情温和，为人慈善，一生平安少灾','太极贵人':'悟性极高，适合研究深奥学问','金舆':'出行多有贵人接送，一生多得人助','劫煞':'做事果断有魄力，但也有冲动冒险倾向'};
 var STEM_IMG={'甲':'参天大树','乙':'小草藤蔓','丙':'太阳之火','丁':'灯烛之火','戊':'大地之土','己':'田园之土','庚':'刀剑之金','辛':'首饰之金','壬':'江河之水','癸':'雨露之水'};
 
 function $(id){return document.getElementById(id)}
@@ -62,8 +62,6 @@ function R01(p,hid,gods,kw){
     var isDay=k==='day';
     var stemGod=isDay?'日主':(gods[k]||{}).stem_god||'';
     var branchGod=(gods[k]||{}).branch_god||'';
-    var ssCls=SS_C[stemGod]||'rizhu';
-    var bgCls=SS_C[branchGod]||'rizhu';
     var dayCls=isDay?' r-day-'+sc:'';
     var kongMk=ks.has(branch)?'<span class="r-kong">空亡</span>':'';
     var hiddenGods=(gods[k]||{}).hidden_gods||[];
@@ -71,9 +69,9 @@ function R01(p,hid,gods,kw){
     var nayinStr=p[k].nayin||'';
     h+='<div class="r-pillar'+dayCls+'">'+
       '<div class="r-pillar-pos">'+lbl[i]+'</div>'+
-      '<div class="r-pillar-ss r-ss-'+ssCls+'">'+stemGod+'</div>'+
-      '<div class="r-pillar-gz"><span class="e-'+sc+'" style="background:var(--'+sc+'-bg,rgba(200,200,200,.08));padding:6px 10px;border-radius:6px">'+stem+'</span><span class="e-'+bc+'" style="background:var(--'+bc+'-bg,rgba(200,200,200,.08));padding:6px 10px;border-radius:6px">'+branch+'</span></div>'+
-      '<div class="r-pillar-ss r-ss-'+bgCls+'" style="font-size:10px;margin-top:4px">'+branchGod+'</div>'+
+      '<div class="r-pillar-ss" style="background:var(--'+sc+'-bg,rgba(200,200,200,.08));color:var(--'+sc+');border:1px solid var(--'+sc+'-ln,rgba(200,200,200,.15))">'+stemGod+'</div>'+
+      '<div class="r-pillar-gz"><span class="e-'+sc+'">'+stem+'</span><span class="e-'+bc+'">'+branch+'</span></div>'+
+      '<div class="r-pillar-ss" style="background:var(--'+bc+'-bg,rgba(200,200,200,.08));color:var(--'+bc+');border:1px solid var(--'+bc+'-ln,rgba(200,200,200,.15));font-size:10px;margin-top:4px">'+branchGod+'</div>'+
       '<div class="r-pillar-hidden">'+hh+'</div>'+
       '<div style="font-size:9px;color:var(--t4);margin-top:6px;border-top:1px solid var(--line);padding-top:4px">'+nayinStr+'</div>'+
       kongMk+'</div>';
@@ -147,20 +145,8 @@ function R13(dayun,tenYears){
   if(!dayun)return;
   T('rpt-dayun-sub',(dayun.is_forward?'顺行':'逆行')+'　起运约'+dayun.onset_age+'岁');
   var curYear=new Date().getFullYear(),curAge=dayun.current_age;
-  var h='';
-  (dayun.periods||[]).forEach(function(d){
-    var isCur=(d.start_age<=curAge&&curAge<=d.end_age);
-    var sY=curYear-curAge+d.start_age;
-    h+='<div class="r-dy-item'+(isCur?' cur':'')+'">'+(isCur?'<div class="r-dy-label">当前</div>':'')+
-      '<div class="r-dy-gz">'+ec(d.stem)+ecb(d.branch)+'</div>'+
-      '<div style="font-size:10px;color:var(--t3);margin-top:4px">'+d.ten_god_stem+'</div>'+
-      '<div class="r-dy-age">'+d.start_age+'-'+d.end_age+'岁</div>'+
-      '<div style="font-size:9px;color:var(--t4)">~'+sY+'年</div></div>';
-  });
-  H('rpt-dayun-scroll',h);
+  H('rpt-dayun-scroll','');
   var sumH='';
-  var cur=dayun.current;
-  if(cur){sumH+='<div style="margin-bottom:20px;padding:16px;background:var(--bg2);border-radius:8px"><div style="font-size:14px;font-weight:700;color:var(--t1)">当前大运：'+cur.stem+cur.branch+'（'+cur.ten_god_stem+'）</div><div style="font-size:12px;color:var(--t3);margin:4px 0">'+cur.start_age+'-'+cur.end_age+'岁 · '+(cur.keyword||'')+'</div><div style="font-size:var(--fs-sm);color:var(--t2);line-height:1.8;margin-top:8px">'+(cur.summary||'')+'</div></div>'}
   sumH+='<div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:60px 60px 80px 80px 1fr"><div>大运</div><div>年龄</div><div>年份(约)</div><div>核心</div><div>概要</div></div>';
   (dayun.periods||[]).forEach(function(d){
     var isCur=(d.start_age<=curAge&&curAge<=d.end_age);
@@ -175,8 +161,8 @@ function R13(dayun,tenYears){
   });
   sumH+='</div>';
   if(tenYears&&tenYears.length){
-    sumH+='<div style="margin-top:24px;font-size:14px;font-weight:700;color:var(--t1);margin-bottom:12px">逐年运势</div><div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:52px 60px 1fr"><div>年份</div><div>干支</div><div>要点</div></div>';
-    tenYears.forEach(function(yr){sumH+='<div class="r-tbl-row" style="grid-template-columns:52px 60px 1fr"><div>'+yr.year+'</div><div>'+ec(yr.stem)+ecb(yr.branch)+'</div><div class="r-a-note">'+yr.text+'</div></div>'});
+    sumH+='<div style="margin-top:24px;font-size:14px;font-weight:700;color:var(--t1);margin-bottom:12px">逐年运势</div><div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:52px 60px 80px 1fr"><div>年份</div><div>干支</div><div>核心</div><div>概要</div></div>';
+    tenYears.forEach(function(yr){sumH+='<div class="r-tbl-row" style="grid-template-columns:52px 60px 80px 1fr"><div>'+yr.year+'</div><div>'+ec(yr.stem)+ecb(yr.branch)+'</div><div style="font-weight:600;color:var(--t1)">'+(yr.keyword||'')+'</div><div class="r-a-note">'+yr.text+'</div></div>'});
     sumH+='</div>';
   }
   H('rpt-dayun-detail',sumH);
@@ -188,19 +174,17 @@ function R14(ln,months){
   T('rpt-ln-sub',ln.gz+'年');
   var sumH='<div class="r-ly-body">';(ln.summary||[]).forEach(function(p){if(p)sumH+='<p>'+p+'</p>'});if(ln.text)sumH+='<p>'+ln.text+'</p>';sumH+='</div>';
   H('rpt-ln-summary',sumH);
-  if(months&&months.length){var h='<div class="r-tbl-head r-tbl-3"><div>月份</div><div>干支</div><div>运势概要</div></div>';months.forEach(function(m){h+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div class="r-a-body"><div class="r-a-note"><b>'+m.stem_god+'</b>'+(m.text?' — '+m.text:'')+'</div></div></div>'});H('rpt-ln-months',h)}
+  if(months&&months.length){var h='<div class="r-tbl-head" style="grid-template-columns:70px 60px 80px 1fr"><div>月份</div><div>干支</div><div>核心</div><div>概要</div></div>';months.forEach(function(m){var kw=m.good?'顺':'守';if(m.growth==='长生'||m.growth==='临官'||m.growth==='帝旺')kw='旺';h+='<div class="r-tbl-row" style="grid-template-columns:70px 60px 80px 1fr"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div style="font-weight:600;color:var(--t1)">'+kw+'</div><div class="r-a-note">'+m.text+'</div></div>'});H('rpt-ln-months',h)}
 }
 
 function R15(warnings,rec,career,dayun,yongshen){
   var wh='';if(warnings&&warnings.length){warnings.forEach(function(w){var cls=w.level==='red'?'w-red':w.level==='blue'?'w-blue':'w-gold';wh+='<div class="r-warn '+cls+'"><div class="r-warn-title">'+w.title+'</div><div class="r-warn-body">'+w.body+'</div></div>'})}else{wh='<div class="r-warn w-gold"><div class="r-warn-title">整体平稳</div><div class="r-warn-body">命局无特别严重的冲突标记。</div></div>'}
   H('rpt-warnings',wh);
   if(!rec)return;
-  var wNote=career&&career.wealth_note?career.wealth_note:'';
-  if(dayun&&dayun.periods){var goodRuns=[];dayun.periods.forEach(function(d){if(d.stem_good&&d.branch_good)goodRuns.push(d.stem+d.branch+'运（'+d.start_age+'-'+d.end_age+'岁）')});if(goodRuns.length)wNote+='财运高峰期：'+goodRuns.join('、')+'。'}
-  H('rpt-rec-wealth',wNote||'根据喜用五行调整理财方向。');
-  var loveH='';if(yongshen){var xi=yongshen.xi_wuxing||[];loveH='喜用五行为'+xi.join('、')+'，配偶五行属性与喜用相合则婚姻助运。'}H('rpt-rec-love',loveH||'根据配偶星和配偶宫综合判断。');
+  H('rpt-rec-wealth',rec.wealth_advice||(career&&career.wealth_note?career.wealth_note:'根据喜用五行调整理财方向。'));
+  H('rpt-rec-love',rec.love_advice||'根据配偶星和配偶宫综合判断。');
   var indH='';(rec.industries_xi||[]).forEach(function(x){indH+='<div style="margin-bottom:6px"><span style="font-size:10px;color:var(--t4)">喜·'+x.wuxing+'</span><br>'+x.items.join('、')+'</div>'});H('rpt-rec-industry',indH||'参考喜用五行选择行业方向。');
   var cityH='';if(rec.cities&&rec.cities.length){rec.cities.forEach(function(c){cityH+='<div style="margin-bottom:6px"><span style="font-size:10px;color:var(--t4)">'+c.direction+'</span><br>'+c.cities.join('、')+'</div>'})}H('rpt-rec-location',cityH||'优先选择喜用五行方位的城市。');
   var colH='<div class="r-rec-swatches">';(rec.color_xi||[]).forEach(function(c){colH+='<div class="r-rec-swatch" style="background:var(--'+(WX_C[c.wuxing]||'tu')+'-bg,rgba(200,200,200,.1))"><div class="r-rec-sw-label" style="color:var(--'+(WX_C[c.wuxing]||'tu')+')">'+c.wuxing+'·喜</div><div class="r-rec-sw-names">'+c.colors.join('、')+'</div></div>'});colH+='</div>';H('rpt-rec-color',colH);
-  var healthH='';if(rec.color_ji&&rec.color_ji.length){healthH='忌色：'+rec.color_ji.map(function(c){return c.colors.join('、')+'（'+c.wuxing+'）'}).join('，')+'。日常穿着、居家环境以喜用色为主。'}H('rpt-rec-health',healthH||'关注五行偏枯对应的脏腑。');
+  H('rpt-rec-health',rec.health_advice||'关注五行偏枯对应的脏腑。');
 }
