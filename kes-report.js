@@ -157,16 +157,16 @@ function R13(dayun,tenYears){
     tenYears.forEach(function(yr){var fl=yr.flags&&yr.flags.length?' <b style="color:var(--huo)">'+yr.flags.join('、')+'</b>':'';sumH+='<div class="r-tbl-row" style="grid-template-columns:52px 52px 60px 1fr"><div>'+yr.year+'</div><div>'+ec(yr.stem)+ecb(yr.branch)+'</div><div>'+yr.stem_god+'</div><div class="r-a-note">'+yr.text+fl+'</div></div>'});
     sumH+='</div>';
   }
-  H('rpt-dayun-summary',sumH);
+  H('rpt-dayun-detail',sumH);
 }
 
 function R14(ln,months){
   if(!ln)return;
-  T('rpt-liunian-title',ln.year+'年 '+ln.gz+'年运势');
-  T('rpt-liunian-sub',ln.gz+'年');
+  T('rpt-ln-title',ln.year+'年 '+ln.gz+'年运势');
+  T('rpt-ln-sub',ln.gz+'年');
   var sumH='<div class="r-ly-body">';(ln.summary||[]).forEach(function(p){if(p)sumH+='<p>'+p+'</p>'});if(ln.text)sumH+='<p>'+ln.text+'</p>';sumH+='</div>';
-  H('rpt-liunian-detail',sumH);
-  if(months&&months.length){var h='<div class="r-tbl-head r-tbl-3"><div>月份</div><div>干支</div><div>运势概要</div></div>';months.forEach(function(m){h+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div class="r-a-body"><div class="r-a-note"><b>'+m.stem_god+'</b>'+(m.text?' — '+m.text:'')+'</div></div></div>'});H('rpt-liuyue-tbl',h)}
+  H('rpt-ln-summary',sumH);
+  if(months&&months.length){var h='<div class="r-tbl-head r-tbl-3"><div>月份</div><div>干支</div><div>运势概要</div></div>';months.forEach(function(m){h+='<div class="r-tbl-row r-tbl-3"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div class="r-a-body"><div class="r-a-note"><b>'+m.stem_god+'</b>'+(m.text?' — '+m.text:'')+'</div></div></div>'});H('rpt-ln-months',h)}
 }
 
 function R15(warnings,rec,career){

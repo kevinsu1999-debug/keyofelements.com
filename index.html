@@ -1562,11 +1562,16 @@ body{font-size:15px;line-height:1.75}
   <!-- 01 四柱 -->
   <div class="r-sec"><div class="r-num">01</div><div class="r-h">四柱八字</div><div class="r-sub" id="rpt-sub01">以真太阳时校正后排盘</div>
     <div class="r-pillar-grid" id="rpt-pillars"></div>
+    <div id="rpt-nayin" style="display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:12px"></div>
   <div class="r-hr"></div></div>
 
   <!-- 02 干支关系 -->
   <div class="r-sec"><div class="r-num">02</div><div class="r-h">干支关系</div><div class="r-sub">柱内组合与柱间作用关系</div>
-    <div id="rpt-relations"></div>
+    <div id="rpt-relations">
+      <div class="r-tbl" id="rpt-gz-inner"></div>
+      <div class="r-tbl" id="rpt-gz-inter" style="margin-top:12px"></div>
+      <div id="rpt-gz-note" style="font-size:var(--fs-sm);color:var(--t3);margin-top:8px"></div>
+    </div>
   <div class="r-hr"></div></div>
 
   <!-- 03 五行能量 -->
@@ -1628,6 +1633,7 @@ body{font-size:15px;line-height:1.75}
   <!-- 12 健康 -->
   <div class="r-sec"><div class="r-num">12</div><div class="r-h">健康提醒</div><div class="r-sub">根据五行偏枯和十神分析</div>
     <div class="r-health-grid" id="rpt-health"></div>
+    <div id="rpt-health-note" style="font-size:var(--fs-sm);color:var(--t3);margin-top:12px;line-height:1.7"></div>
   <div class="r-hr"></div></div>
 
   <!-- 13 大运总览（含逐年） -->
@@ -1650,7 +1656,14 @@ body{font-size:15px;line-height:1.75}
 
   <!-- 16 综合建议 -->
   <div class="r-sec"><div class="r-num">16</div><div class="r-h">综合建议</div><div class="r-sub">基于命局与现居地的实操方向</div>
-    <div class="r-rec-grid" id="rpt-recs"></div>
+    <div class="r-rec-grid" id="rpt-recs">
+      <div class="r-rec-card"><div class="r-rec-num">财运方向</div><div class="r-rec-body" id="rpt-rec-wealth"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">感情建议</div><div class="r-rec-body" id="rpt-rec-love"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">行业推荐</div><div class="r-rec-body" id="rpt-rec-industry"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">宜居方位</div><div class="r-rec-body" id="rpt-rec-location"></div></div>
+      <div class="r-rec-card full"><div class="r-rec-num">幸运颜色</div><div class="r-rec-body" id="rpt-rec-color"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">养生重点</div><div class="r-rec-body" id="rpt-rec-health"></div></div>
+    </div>
   </div>
 
   <div class="r-disclaimer">
