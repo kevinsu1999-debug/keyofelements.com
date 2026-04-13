@@ -133,11 +133,11 @@ function R07(ys){
 
 function R08(per,ds,wx){if(!per)return;var c=WX_C[wx];H('rpt-elemid','<div class="r-elem-icon '+c+'">'+ds+'</div><div><div class="r-elem-id-name">'+ds+' · '+wx+'命</div><div class="r-elem-id-desc">'+(STEM_IMG[ds]||'')+'</div></div>');if(per.quote)H('rpt-quote','<div class="r-pq-text">'+per.quote+'</div><div class="r-pq-src">'+per.quote_src+'</div>');var h='<p>'+per.intro.replace(/\n\n/g,'</p><p>')+'</p>';if(per.traits&&per.traits.length){h+='<table style="width:100%;border-collapse:collapse;margin-top:16px">';per.traits.forEach(function(t){h+='<tr><td style="padding:8px 0;border-bottom:1px solid var(--line);font-weight:600;white-space:nowrap;width:60px;vertical-align:top">'+t.layer+'</td><td style="padding:8px 0 8px 12px;border-bottom:1px solid var(--line);color:var(--t2)">'+t.text+'</td></tr>'});h+='</table>'}H('rpt-personality',h)}
 
-function R09(rel){if(!rel)return;var h='';if(rel.spouse_star)h+='<p><b>配偶星</b>——'+rel.spouse_star+'</p>';if(rel.kong_note)h+='<p>'+rel.kong_note+'</p>';if(rel.palace)h+='<p><b>配偶宫</b>——'+rel.palace+'</p>';if(rel.marriage)h+='<p><b>婚姻</b>——'+rel.marriage+'</p>';H('rpt-love',h||'<p>感情分析正在生成中。</p>')}
+function R09(rel){if(!rel)return;var h='';if(rel.prose){h='<div class="r-prose">'+rel.prose.replace(/\n\n/g,'</p><p>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');h='<p>'+h+'</p>'}else{if(rel.spouse_star)h+='<p>'+rel.spouse_star+'</p>';if(rel.kong_note)h+='<p>'+rel.kong_note+'</p>';if(rel.palace)h+='<p>'+rel.palace+'</p>';if(rel.marriage)h+='<p>'+rel.marriage+'</p>'}H('rpt-love',h||'<p>感情分析正在生成中。</p>')}
 
 function R10(ch){H('rpt-children','<p>'+(ch||'')+'</p>')}
 
-function R11(career){if(!career)return;var h='<p>'+career.career+'</p>';if(career.wealth_note)h+='<p>'+career.wealth_note+'</p>';if(career.industries&&career.industries.length)h+='<p><b>适合行业方向：</b>'+career.industries.join('、')+'</p>';H('rpt-career',h)}
+function R11(career){if(!career)return;var h='';if(career.prose){h=career.prose.replace(/\n\n/g,'</p><p>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');h='<p>'+h+'</p>'}else{h='<p>'+career.career+'</p>';if(career.wealth_note)h+='<p>'+career.wealth_note+'</p>'}H('rpt-career',h)}
 
 function R12(items){if(!items||!items.length)return;var h='';items.forEach(function(x){h+='<div class="r-hc"><div class="r-hc-title">'+x.part+'</div><div class="r-hc-body">'+x.reason+'</div></div>'});H('rpt-health',h);H('rpt-health-note','大运走喜用神五行运时身体好，走忌神运时需注意保养。')}
 
@@ -174,17 +174,18 @@ function R14(ln,months){
   T('rpt-ln-sub',ln.gz+'年');
   var sumH='<div class="r-ly-body">';(ln.summary||[]).forEach(function(p){if(p)sumH+='<p>'+p+'</p>'});if(ln.text)sumH+='<p>'+ln.text+'</p>';sumH+='</div>';
   H('rpt-ln-summary',sumH);
-  if(months&&months.length){var h='<div class="r-tbl-head" style="grid-template-columns:70px 60px 80px 1fr"><div>月份</div><div>干支</div><div>核心</div><div>概要</div></div>';months.forEach(function(m){var kw=m.good?'顺':'守';if(m.growth==='长生'||m.growth==='临官'||m.growth==='帝旺')kw='旺';h+='<div class="r-tbl-row" style="grid-template-columns:70px 60px 80px 1fr"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div style="font-weight:600;color:var(--t1)">'+kw+'</div><div class="r-a-note">'+m.text+'</div></div>'});H('rpt-ln-months',h)}
+  if(months&&months.length){var h='<div class="r-tbl-head" style="grid-template-columns:70px 60px 80px 1fr"><div>月份</div><div>干支</div><div>核心</div><div>概要</div></div>';months.forEach(function(m){var kw=m.keyword||(m.good?'顺':'守');h+='<div class="r-tbl-row" style="grid-template-columns:70px 60px 80px 1fr"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div style="font-weight:600;color:var(--t1)">'+kw+'</div><div class="r-a-note">'+m.text+'</div></div>'});H('rpt-ln-months',h)}
 }
 
 function R15(warnings,rec,career,dayun,yongshen){
-  var wh='';if(warnings&&warnings.length){warnings.forEach(function(w){var cls=w.level==='red'?'w-red':w.level==='blue'?'w-blue':'w-gold';wh+='<div class="r-warn '+cls+'"><div class="r-warn-title">'+w.title+'</div><div class="r-warn-body">'+w.body+'</div></div>'})}else{wh='<div class="r-warn w-gold"><div class="r-warn-title">整体平稳</div><div class="r-warn-body">命局无特别严重的冲突标记。</div></div>'}
+  var wh='';if(warnings&&warnings.length){warnings.forEach(function(w){wh+='<div class="r-warn"><div class="r-warn-title">'+w.title+'</div><div class="r-warn-body">'+w.body+'</div></div>'})}else{wh='<div class="r-warn"><div class="r-warn-title">整体平稳</div><div class="r-warn-body">命局无特别严重的冲突标记。</div></div>'}
   H('rpt-warnings',wh);
   if(!rec)return;
-  H('rpt-rec-wealth',rec.wealth_advice||(career&&career.wealth_note?career.wealth_note:'根据喜用五行调整理财方向。'));
-  H('rpt-rec-love',rec.love_advice||'根据配偶星和配偶宫综合判断。');
-  var indH='';(rec.industries_xi||[]).forEach(function(x){indH+='<div style="margin-bottom:6px"><span style="font-size:10px;color:var(--t4)">喜·'+x.wuxing+'</span><br>'+x.items.join('、')+'</div>'});H('rpt-rec-industry',indH||'参考喜用五行选择行业方向。');
-  var cityH='';if(rec.cities&&rec.cities.length){rec.cities.forEach(function(c){cityH+='<div style="margin-bottom:6px"><span style="font-size:10px;color:var(--t4)">'+c.direction+'</span><br>'+c.cities.join('、')+'</div>'})}H('rpt-rec-location',cityH||'优先选择喜用五行方位的城市。');
+  if(rec.current_dayun_advice)H('rpt-rec-wealth','<div style="margin-bottom:16px"><div style="font-weight:600;color:var(--t1);margin-bottom:6px">当前大运综合建议</div><div>'+rec.current_dayun_advice+'</div></div>'+(rec.current_liunian_advice?'<div style="margin-bottom:16px"><div style="font-weight:600;color:var(--t1);margin-bottom:6px">当前流年综合建议</div><div>'+rec.current_liunian_advice+'</div></div>':'')+'<div style="font-weight:600;color:var(--t1);margin-bottom:6px">财运方向</div><div>'+(rec.wealth_advice||'')+'</div>');
+  else H('rpt-rec-wealth',rec.wealth_advice||(career&&career.wealth_note?career.wealth_note:''));
+  H('rpt-rec-love',rec.love_advice||'');
+  H('rpt-rec-industry',rec.industry_prose||'参考喜用五行选择行业方向。');
+  var cityH='';if(rec.cities&&rec.cities.length){rec.cities.forEach(function(c){cityH+='<div style="margin-bottom:6px"><span style="font-size:10px;color:var(--t4)">'+c.direction+'</span><br>'+c.cities.join('、')+'</div>'})}H('rpt-rec-location',cityH||'');
   var colH='<div class="r-rec-swatches">';(rec.color_xi||[]).forEach(function(c){colH+='<div class="r-rec-swatch" style="background:var(--'+(WX_C[c.wuxing]||'tu')+'-bg,rgba(200,200,200,.1))"><div class="r-rec-sw-label" style="color:var(--'+(WX_C[c.wuxing]||'tu')+')">'+c.wuxing+'·喜</div><div class="r-rec-sw-names">'+c.colors.join('、')+'</div></div>'});colH+='</div>';H('rpt-rec-color',colH);
-  H('rpt-rec-health',rec.health_advice||'关注五行偏枯对应的脏腑。');
+  H('rpt-rec-health',rec.health_advice||'');
 }
