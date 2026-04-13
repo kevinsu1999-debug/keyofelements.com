@@ -1065,8 +1065,8 @@ body{font-size:15px;line-height:1.75}
 .r-tbl{border:1px solid var(--line);border-radius:var(--r);overflow:hidden}.r-tbl-head{display:grid;padding:10px 16px;background:var(--bg2);font-size:var(--fs-xs);letter-spacing:.06em;color:var(--t3);border-bottom:1px solid var(--line)}.r-tbl-row{display:grid;padding:12px 16px;border-bottom:1px solid var(--line);font-size:var(--fs-sm);align-items:center}.r-tbl-row:last-child{border-bottom:none}.r-tbl-row.now{background:rgba(134,150,167,.04)}.r-tbl-row.r-tbl-cur{background:rgba(134,150,167,.06);border-left:3px solid var(--a)}.r-tbl-3{grid-template-columns:52px 52px 1fr}.r-a-year{font-size:var(--fs-sm);color:var(--t2)}.r-tbl-row.now .r-a-year{color:var(--t1);font-weight:600}.r-a-gz{font-size:var(--fs-sm);font-weight:700}.r-a-body{display:flex;align-items:center;gap:8px}.r-a-stars{font-size:var(--fs-sm);flex-shrink:0;letter-spacing:1px}.r-a-note{font-size:var(--fs-sm);color:var(--t2);line-height:1.6}.r-a-note b{color:var(--t1);font-weight:600}
 /* liunian detail */
 .r-ly-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;margin-bottom:20px}.r-ly-h{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:4px}.r-ly-sub{font-size:var(--fs-sm);color:var(--t3);margin-bottom:16px}.r-ly-body{font-size:var(--fs);color:var(--t2);line-height:1.9}.r-ly-body p{margin-bottom:12px}.r-ly-body b{color:var(--t1);font-weight:600}
-/* warnings */
-.r-warn{border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden}.r-warn::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px}.r-warn.w-red::before{background:var(--huo)}.r-warn.w-red{border-color:var(--huo-l);background:var(--huo-bg)}.r-warn.w-gold::before{background:var(--jin)}.r-warn.w-gold{border-color:var(--jin-l);background:var(--jin-bg)}.r-warn.w-blue::before{background:var(--shui)}.r-warn.w-blue{border-color:var(--shui-l);background:var(--shui-bg)}.r-warn-title{font-size:var(--fs-sm);font-weight:600;color:var(--t1);margin-bottom:6px}.r-warn-body{font-size:var(--fs-sm);color:var(--t2);line-height:1.8}.r-warn-body b{color:var(--t1);font-weight:600}
+/* warnings - clean white style */
+.r-warn{border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;background:var(--card)}.r-warn::before{display:none}.r-warn-title{font-size:var(--fs-sm);font-weight:600;color:var(--t1);margin-bottom:6px}.r-warn-body{font-size:var(--fs-sm);color:var(--t2);line-height:1.8}.r-warn-body b{color:var(--t1);font-weight:600}
 /* recommendations */
 .r-rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.r-rec-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}.r-rec-card.full{grid-column:1/-1}.r-rec-num{font-size:var(--fs-xs);color:var(--t4);letter-spacing:.1em;margin-bottom:8px}.r-rec-title{font-size:var(--fs);font-weight:600;color:var(--t1);line-height:1.5}.r-rec-body{font-size:var(--fs-sm);color:var(--t2);line-height:1.8}.r-rec-body b{color:var(--t1);font-weight:600}.r-rec-list{margin-top:6px;padding-left:0;list-style:none}.r-rec-list li{font-size:var(--fs-sm);color:var(--t2);line-height:1.8;padding-left:14px;position:relative}.r-rec-list li::before{content:'·';position:absolute;left:0;color:var(--t4);font-weight:700}.r-rec-swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}.r-rec-swatch{border-radius:8px;padding:10px 12px;border:1px solid var(--line)}.r-rec-sw-label{font-size:var(--fs-xs);letter-spacing:.08em;font-weight:600;margin-bottom:8px}.r-rec-sw-dots{display:flex;gap:5px;margin-bottom:6px}.r-rec-sw-dot{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,.06)}.r-rec-sw-names{font-size:var(--fs-xs);color:var(--t3)}.r-rec-tag{display:inline-block;margin-top:10px;padding:5px 14px;background:var(--bg2);border-radius:100px;font-size:var(--fs-sm);color:var(--t2)}.r-rec-tag b{font-weight:600;color:var(--t1)}
 /* ziwei */
@@ -1655,14 +1655,7 @@ body{font-size:15px;line-height:1.75}
 
   <!-- 16 综合建议 -->
   <div class="r-sec"><div class="r-num">16</div><div class="r-h">综合建议</div><div class="r-sub">基于命局与现居地的实操方向</div>
-    <div class="r-rec-grid" id="rpt-recs">
-      <div class="r-rec-card"><div class="r-rec-num">财运方向</div><div class="r-rec-body" id="rpt-rec-wealth"></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">感情建议</div><div class="r-rec-body" id="rpt-rec-love"></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">行业推荐</div><div class="r-rec-body" id="rpt-rec-industry"></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">宜居方位</div><div class="r-rec-body" id="rpt-rec-location"></div></div>
-      <div class="r-rec-card full"><div class="r-rec-num">幸运颜色</div><div class="r-rec-body" id="rpt-rec-color"></div></div>
-      <div class="r-rec-card"><div class="r-rec-num">养生重点</div><div class="r-rec-body" id="rpt-rec-health"></div></div>
-    </div>
+    <div id="rpt-recs"></div>
   </div>
 
   <div class="r-disclaimer">

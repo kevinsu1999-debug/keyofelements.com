@@ -161,8 +161,9 @@ function R13(dayun,tenYears){
   });
   sumH+='</div>';
   if(tenYears&&tenYears.length){
-    sumH+='<div style="margin-top:24px;font-size:14px;font-weight:700;color:var(--t1);margin-bottom:12px">逐年运势</div><div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:52px 60px 80px 1fr"><div>年份</div><div>干支</div><div>核心</div><div>概要</div></div>';
-    tenYears.forEach(function(yr){sumH+='<div class="r-tbl-row" style="grid-template-columns:52px 60px 80px 1fr"><div>'+yr.year+'</div><div>'+ec(yr.stem)+ecb(yr.branch)+'</div><div style="font-weight:600;color:var(--t1)">'+(yr.keyword||'')+'</div><div class="r-a-note">'+yr.text+'</div></div>'});
+    var birthYear=curYear-curAge;
+    sumH+='<div style="margin-top:24px;font-size:14px;font-weight:700;color:var(--t1);margin-bottom:12px">逐年运势</div><div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:60px 60px 80px 80px 1fr"><div>年份</div><div>干支</div><div>年龄(约)</div><div>核心</div><div>概要</div></div>';
+    tenYears.forEach(function(yr){var age=yr.year-birthYear;sumH+='<div class="r-tbl-row" style="grid-template-columns:60px 60px 80px 80px 1fr"><div>'+yr.year+'</div><div>'+ec(yr.stem)+ecb(yr.branch)+'</div><div>'+age+'岁</div><div style="font-weight:600;color:var(--t1)">'+(yr.keyword||'')+'</div><div class="r-a-note">'+yr.text+'</div></div>'});
     sumH+='</div>';
   }
   H('rpt-dayun-detail',sumH);
@@ -172,20 +173,26 @@ function R14(ln,months){
   if(!ln)return;
   T('rpt-ln-title',ln.year+'年 '+ln.gz+'年运势');
   T('rpt-ln-sub',ln.gz+'年');
-  var sumH='<div class="r-ly-body">';(ln.summary||[]).forEach(function(p){if(p)sumH+='<p>'+p+'</p>'});if(ln.text)sumH+='<p>'+ln.text+'</p>';sumH+='</div>';
+  var sumH='<div class="r-ly-detail"><div class="r-ly-h">'+ln.year+'年流年综述</div><div class="r-ly-body">';(ln.summary||[]).forEach(function(p){if(p)sumH+='<p>'+p+'</p>'});if(ln.text)sumH+='<p>'+ln.text+'</p>';sumH+='</div></div>';
   H('rpt-ln-summary',sumH);
-  if(months&&months.length){var h='<div class="r-tbl-head" style="grid-template-columns:70px 60px 80px 1fr"><div>月份</div><div>干支</div><div>核心</div><div>概要</div></div>';months.forEach(function(m){var kw=m.keyword||(m.good?'顺':'守');h+='<div class="r-tbl-row" style="grid-template-columns:70px 60px 80px 1fr"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div style="font-weight:600;color:var(--t1)">'+kw+'</div><div class="r-a-note">'+m.text+'</div></div>'});H('rpt-ln-months',h)}
+  if(months&&months.length){var h='<div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:60px 60px 80px 80px 1fr"><div>月份</div><div>干支</div><div>十神</div><div>核心</div><div>概要</div></div>';months.forEach(function(m){var kw=m.keyword||(m.good?'顺':'守');h+='<div class="r-tbl-row" style="grid-template-columns:60px 60px 80px 80px 1fr"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div style="font-size:var(--fs-sm);color:var(--t2)">'+(m.stem_god||'')+'</div><div style="font-weight:600;color:var(--t1)">'+kw+'</div><div class="r-a-note">'+m.text+'</div></div>'});h+='</div>';H('rpt-ln-months',h)}
 }
 
 function R15(warnings,rec,career,dayun,yongshen){
-  var wh='';if(warnings&&warnings.length){warnings.forEach(function(w){wh+='<div class="r-warn"><div class="r-warn-title">'+w.title+'</div><div class="r-warn-body">'+w.body+'</div></div>'})}else{wh='<div class="r-warn"><div class="r-warn-title">整体平稳</div><div class="r-warn-body">命局无特别严重的冲突标记。</div></div>'}
+  var wh='';if(warnings&&warnings.length){warnings.forEach(function(w){wh+='<div class="r-warn" style="background:var(--card);border-color:var(--line)"><div class="r-warn-title">'+w.title+'</div><div class="r-warn-body">'+w.body+'</div></div>'})}else{wh='<div class="r-warn" style="background:var(--card);border-color:var(--line)"><div class="r-warn-title">整体平稳</div><div class="r-warn-body">命局无特别严重的冲突标记。</div></div>'}
   H('rpt-warnings',wh);
   if(!rec)return;
-  if(rec.current_dayun_advice)H('rpt-rec-wealth','<div style="margin-bottom:16px"><div style="font-weight:600;color:var(--t1);margin-bottom:6px">当前大运综合建议</div><div>'+rec.current_dayun_advice+'</div></div>'+(rec.current_liunian_advice?'<div style="margin-bottom:16px"><div style="font-weight:600;color:var(--t1);margin-bottom:6px">当前流年综合建议</div><div>'+rec.current_liunian_advice+'</div></div>':'')+'<div style="font-weight:600;color:var(--t1);margin-bottom:6px">财运方向</div><div>'+(rec.wealth_advice||'')+'</div>');
-  else H('rpt-rec-wealth',rec.wealth_advice||(career&&career.wealth_note?career.wealth_note:''));
-  H('rpt-rec-love',rec.love_advice||'');
-  H('rpt-rec-industry',rec.industry_prose||'参考喜用五行选择行业方向。');
-  var cityH='';if(rec.cities&&rec.cities.length){rec.cities.forEach(function(c){cityH+='<div style="margin-bottom:6px"><span style="font-size:10px;color:var(--t4)">'+c.direction+'</span><br>'+c.cities.join('、')+'</div>'})}H('rpt-rec-location',cityH||'');
-  var colH='<div class="r-rec-swatches">';(rec.color_xi||[]).forEach(function(c){colH+='<div class="r-rec-swatch" style="background:var(--'+(WX_C[c.wuxing]||'tu')+'-bg,rgba(200,200,200,.1))"><div class="r-rec-sw-label" style="color:var(--'+(WX_C[c.wuxing]||'tu')+')">'+c.wuxing+'·喜</div><div class="r-rec-sw-names">'+c.colors.join('、')+'</div></div>'});colH+='</div>';H('rpt-rec-color',colH);
-  H('rpt-rec-health',rec.health_advice||'');
+  var rh='<div class="r-rec-card full" style="grid-column:1/-1">';
+  if(rec.current_dayun_advice)rh+='<div style="margin-bottom:20px"><div style="font-weight:700;color:var(--t1);font-size:14px;margin-bottom:8px">当前大运综合建议</div><p style="margin:0;line-height:1.9;color:var(--t2)">'+rec.current_dayun_advice+'</p></div>';
+  if(rec.current_liunian_advice)rh+='<div style="margin-bottom:20px"><div style="font-weight:700;color:var(--t1);font-size:14px;margin-bottom:8px">当前流年综合建议</div><p style="margin:0;line-height:1.9;color:var(--t2)">'+rec.current_liunian_advice+'</p></div>';
+  rh+='<div style="margin-bottom:20px"><div style="font-weight:700;color:var(--t1);font-size:14px;margin-bottom:8px">财运</div><p style="margin:0;line-height:1.9;color:var(--t2)">'+(rec.wealth_advice||(career&&career.wealth_note?career.wealth_note:''))+'</p></div>';
+  rh+='<div style="margin-bottom:20px"><div style="font-weight:700;color:var(--t1);font-size:14px;margin-bottom:8px">感情</div><p style="margin:0;line-height:1.9;color:var(--t2)">'+(rec.love_advice||'')+'</p></div>';
+  rh+='<div style="margin-bottom:20px"><div style="font-weight:700;color:var(--t1);font-size:14px;margin-bottom:8px">行业</div><p style="margin:0;line-height:1.9;color:var(--t2)">'+(rec.industry_prose||'参考喜用五行选择行业方向。')+'</p></div>';
+  rh+='<div style="margin-bottom:20px"><div style="font-weight:700;color:var(--t1);font-size:14px;margin-bottom:8px">健康</div><p style="margin:0;line-height:1.9;color:var(--t2)">'+(rec.health_advice||'')+'</p></div>';
+  var cityH='';if(rec.cities&&rec.cities.length){rec.cities.forEach(function(c){cityH+='<span style="color:var(--t3);font-size:12px">'+c.direction+'：</span>'+c.cities.join('、')+'　'})}
+  if(cityH)rh+='<div style="margin-bottom:20px"><div style="font-weight:700;color:var(--t1);font-size:14px;margin-bottom:8px">宜居方位</div><p style="margin:0;line-height:1.9;color:var(--t2)">'+cityH+'</p></div>';
+  var colH='';(rec.color_xi||[]).forEach(function(c){colH+=c.wuxing+'·喜：'+c.colors.join('、')+'　'});
+  if(colH)rh+='<div style="margin-bottom:0"><div style="font-weight:700;color:var(--t1);font-size:14px;margin-bottom:8px">幸运颜色</div><p style="margin:0;line-height:1.9;color:var(--t2)">'+colH+'</p></div>';
+  rh+='</div>';
+  H('rpt-recs',rh);
 }
