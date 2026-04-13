@@ -163,11 +163,11 @@ function R15(warnings,rec,career,dayun,yongshen){
   rh+='<div style="margin-bottom:20px">'+sT(L('感情','Relationships'))+sB(rec.love_advice||'')+'</div>';
   rh+='<div style="margin-bottom:20px">'+sT(L('行业','Industry'))+sB(rec.industry_prose||L('参考喜用五行选择行业方向。','Refer to favorable elements.'))+'</div>';
   rh+='<div style="margin-bottom:20px">'+sT(L('健康','Health'))+sB(rec.health_advice||'')+'</div>';
-  var dirH='';if(rec.directions&&rec.directions.length){rec.directions.forEach(function(d){dirH+=(isEn?d.direction:d.direction)+' ('+d.wuxing+')　'})}
+  var dirH='';if(rec.directions&&rec.directions.length){rec.directions.forEach(function(d){dirH+=(isEn?d.direction+'('+d.wuxing+')':d.direction+'('+d.wuxing+')')+'　'})}
   if(dirH)rh+='<div style="margin-bottom:20px">'+sT(L('宜居方位','Favorable Directions'))+sB(dirH)+'</div>';
-  var cityH='';if(rec.cities&&rec.cities.length){rec.cities.forEach(function(c){cityH+='<div style="margin-bottom:4px"><span style="font-weight:500">'+c.wuxing+'</span>: '+c.cities.join(', ')+'</div>'})}
+  var cityH='';if(rec.cities&&rec.cities.length){rec.cities.forEach(function(c){cityH+='<div style="margin-bottom:4px"><span style="font-weight:500">'+c.wuxing+'</span>: '+c.cities.join(isEn?', ':'、')+'</div>'})}
   if(cityH)rh+='<div style="margin-bottom:20px">'+sT(L('宜居城市','Favorable Cities'))+sB(cityH)+'</div>';
-  var colH='';(rec.color_xi||[]).forEach(function(c){colH+=c.wuxing+': '+c.colors.join(', ')+'　'});
+  var colH='';(rec.color_xi||[]).forEach(function(c){colH+=c.wuxing+': '+c.colors.join(isEn?', ':'、')+'　'});
   if(colH)rh+='<div>'+sT(L('幸运颜色','Lucky Colors'))+sB(colH)+'</div>';
   rh+='</div>';H('rpt-recs',rh);
 }
