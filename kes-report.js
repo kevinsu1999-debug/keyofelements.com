@@ -128,7 +128,7 @@ function R07(ys){
     '<div class="r-yj-card"><div class="r-yj-label">喜用神</div><div class="r-yj-chars">'+chars(ys.xi)+'</div></div>'+
     '<div class="r-yj-card"><div class="r-yj-label">忌　神</div><div class="r-yj-chars">'+chars(ys.ji)+'</div></div>'+
     '<div class="r-yj-card"><div class="r-yj-label">调候用神</div><div class="r-yj-chars">'+(ys.tiaohuo||[]).map(function(t){return '<span class="r-yj-char '+(WX_C[S_WX[t]]||'tu')+'">'+t+'</span>'}).join('')+'</div></div>');
-  if(ys.tiaohuo_note){var note=ys.tiaohuo_note.replace(/调候用神：[^。]+[。]?/,'').trim();if(note)H('rpt-tiaohuo',note)}
+  if(ys.tiaohuo_note){var note=ys.tiaohuo_note.replace(/调候用神：[^。]+[。]?/,'').trim();var explain='调候用神是根据出生月份的气候寒暖，额外取用的平衡之神——与喜忌用神互为补充，喜忌管五行强弱，调候管气候冷热。';H('rpt-tiaohuo',(note?note+'　':'')+ explain)}
 }
 
 function R08(per,ds,wx){if(!per)return;var c=WX_C[wx];H('rpt-elemid','<div class="r-elem-icon '+c+'">'+ds+'</div><div><div class="r-elem-id-name">'+ds+' · '+wx+'命</div><div class="r-elem-id-desc">'+(STEM_IMG[ds]||'')+'</div></div>');if(per.quote)H('rpt-quote','<div class="r-pq-text">'+per.quote+'</div><div class="r-pq-src">'+per.quote_src+'</div>');var h='<p>'+per.intro.replace(/\n\n/g,'</p><p>')+'</p>';if(per.traits&&per.traits.length){h+='<table style="width:100%;border-collapse:collapse;margin-top:16px">';per.traits.forEach(function(t){h+='<tr><td style="padding:8px 0;border-bottom:1px solid var(--line);font-weight:600;white-space:nowrap;width:60px;vertical-align:top">'+t.layer+'</td><td style="padding:8px 0 8px 12px;border-bottom:1px solid var(--line);color:var(--t2)">'+t.text+'</td></tr>'});h+='</table>'}H('rpt-personality',h)}
@@ -173,9 +173,10 @@ function R14(ln,months){
   if(!ln)return;
   T('rpt-ln-title',ln.year+'年 '+ln.gz+'年运势');
   T('rpt-ln-sub',ln.gz+'年');
-  var sumH='<div class="r-ly-detail"><div class="r-ly-h">'+ln.year+'年流年综述</div><div class="r-ly-body">';(ln.summary||[]).forEach(function(p){if(p)sumH+='<p>'+p+'</p>'});if(ln.text)sumH+='<p>'+ln.text+'</p>';sumH+='</div></div>';
+  var allText='';(ln.summary||[]).forEach(function(p){if(p)allText+=p});if(ln.text)allText+=ln.text;
+  var sumH='<div class="r-ly-detail"><div class="r-ly-h">'+ln.year+'年流年综述</div><div class="r-ly-body"><p>'+allText+'</p></div></div>';
   H('rpt-ln-summary',sumH);
-  if(months&&months.length){var h='<div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:60px 60px 80px 80px 1fr"><div>月份</div><div>干支</div><div>十神</div><div>核心</div><div>概要</div></div>';months.forEach(function(m){var kw=m.keyword||(m.good?'顺':'守');h+='<div class="r-tbl-row" style="grid-template-columns:60px 60px 80px 80px 1fr"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div style="font-size:var(--fs-sm);color:var(--t2)">'+(m.stem_god||'')+'</div><div style="font-weight:600;color:var(--t1)">'+kw+'</div><div class="r-a-note">'+m.text+'</div></div>'});h+='</div>';H('rpt-ln-months',h)}
+  if(months&&months.length){var h='<div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden"><div class="r-tbl" style="border:none"><div class="r-tbl-head" style="grid-template-columns:60px 60px 80px 80px 1fr"><div>月份</div><div>干支</div><div>十神</div><div>核心</div><div>概要</div></div>';months.forEach(function(m){var kw=m.keyword||(m.good?'顺':'守');h+='<div class="r-tbl-row" style="grid-template-columns:60px 60px 80px 80px 1fr"><div class="r-a-year">'+m.start_date+'</div><div class="r-a-gz">'+ec(m.stem)+ecb(m.branch)+'</div><div style="font-size:var(--fs-sm);color:var(--t2)">'+(m.stem_god||'')+'</div><div style="font-weight:600;color:var(--t1)">'+kw+'</div><div class="r-a-note">'+m.text+'</div></div>'});h+='</div></div>';H('rpt-ln-months',h)}
 }
 
 function R15(warnings,rec,career,dayun,yongshen){
