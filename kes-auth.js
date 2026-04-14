@@ -241,6 +241,16 @@ function promptPayment(){
 }
 
 async function handlePayment(){
+  // Require login before payment
+  if(!kesUser){
+    openLogin('login');
+    return;
+  }
+  // If already paid, just unlock
+  if(kesUser.paid){
+    unlockReport();
+    return;
+  }
   // If Stripe is configured, redirect to Stripe Checkout
   if(KES_CONFIG.STRIPE_PUBLISHABLE_KEY && KES_CONFIG.STRIPE_PUBLISHABLE_KEY !== 'YOUR_STRIPE_PUBLISHABLE_KEY_HERE'){
     try {
@@ -350,6 +360,12 @@ if(sessionStorage.getItem('kes_disc')==='1'){
 function renderStripePricing(){
   var container = document.getElementById('stripe-container');
   if(!container) return;
+  // If already paid, hide the whole unlock area
+  if(kesUser && kesUser.paid){
+    var unlock = document.getElementById('rpt-unlock');
+    if(unlock) unlock.style.display = 'none';
+    return;
+  }
   if(!KES_CONFIG.STRIPE_PRICING_TABLE_ID || KES_CONFIG.STRIPE_PRICING_TABLE_ID === 'YOUR_STRIPE_PRICING_TABLE_ID') {
     // Fallback: simple button
     container.innerHTML = '<button style="padding:12px 32px;background:var(--t1,#1a1814);color:#fff;border:none;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.1em;cursor:pointer;font-family:inherit" onclick="handlePayment()">' + (isZh ? '购买完整报告 ' + KES_CONFIG.REPORT_PRICE : 'Purchase full report ' + KES_CONFIG.REPORT_PRICE_EN) + '</button>';

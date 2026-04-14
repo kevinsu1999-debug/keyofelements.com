@@ -280,8 +280,14 @@ function doUnlockAdvanced(){
   if(unlock) unlock.style.display = 'none';
   if(content) content.style.display = '';
   if(lockIcon) lockIcon.innerHTML = '';
-  // Remember unlock
   try { sessionStorage.setItem('kes_unlocked','1'); } catch(e){}
+}
+
+function toggleNav(){
+  var btn=document.getElementById('navBurger');
+  var links=document.getElementById('nav-main');
+  if(btn)btn.classList.toggle('open');
+  if(links)links.classList.toggle('open');
 }
 
 // Check if already unlocked (session)
