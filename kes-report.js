@@ -79,6 +79,10 @@ function renderReport(d){
   R06(d.strength,d.pattern,ds,wx);R07(d.yongshen);R08(d.personality,ds,wx,c);
   R09(d.relationship);R10(d.children);R11(d.career);R12(d.health);
   R13(d.dayun,d.ten_years);R14(d.liunian,d.liuyue);R15(d.warnings,d.recommendations,d.career,d.dayun,d.yongshen);
+  /* Show tabs */
+  var tabs=document.getElementById('rpt-tabs');if(tabs)tabs.style.display='';
+  /* If already unlocked, show advanced content */
+  if(_rptUnlocked) doUnlockAdvanced();
 }
 
 /* 01 Four Pillars — EN: no ten-god labels, only Chinese chars + position labels */
@@ -227,3 +231,58 @@ function R15(warnings,rec,career,dayun,yongshen){
   if(colH)rh+='<div>'+sT(L('幸运颜色','Lucky colors'))+sB(colH)+'</div>';
   rh+='</div>';H('rpt-recs',rh);
 }
+
+/* ═══ Report Tabs ═══ */
+var _rptUnlocked = false;
+
+function switchRptTab(tab, btn){
+  document.querySelectorAll('.rpt-tab').forEach(function(t){t.classList.remove('on')});
+  btn.classList.add('on');
+  document.querySelectorAll('.rpt-tab-content').forEach(function(c){c.classList.remove('on')});
+  var el = document.getElementById('rpt-tab-'+tab);
+  if(el) el.classList.add('on');
+  
+  // If advanced tab and not unlocked, show unlock overlay
+  if(tab === 'advanced' && !_rptUnlocked){
+    var unlock = document.getElementById('rpt-unlock');
+    var content = document.getElementById('rpt-advanced-content');
+    if(unlock) unlock.style.display = '';
+    if(content) content.style.display = 'none';
+  }
+}
+
+function tryUnlockCode(){
+  var input = document.getElementById('unlockCode');
+  var err = document.getElementById('unlockErr');
+  var code = (input.value||'').trim().toUpperCase();
+  
+  var validCodes = (typeof KES_CONFIG !== 'undefined' && KES_CONFIG.VALID_CODES) ? KES_CONFIG.VALID_CODES : ['KESVIP'];
+  
+  if(validCodes.indexOf(code) >= 0){
+    doUnlockAdvanced();
+  } else {
+    if(err) err.style.display = 'block';
+    input.style.borderColor = 'var(--huo,#a84848)';
+    setTimeout(function(){
+      if(err) err.style.display = 'none';
+      input.style.borderColor = 'var(--line,#eee)';
+    }, 3000);
+  }
+}
+
+function doUnlockAdvanced(){
+  _rptUnlocked = true;
+  var unlock = document.getElementById('rpt-unlock');
+  var content = document.getElementById('rpt-advanced-content');
+  var lockIcon = document.getElementById('tab-lock-icon');
+  if(unlock) unlock.style.display = 'none';
+  if(content) content.style.display = '';
+  if(lockIcon) lockIcon.textContent = '';
+  // Remember unlock
+  try { sessionStorage.setItem('kes_unlocked','1'); } catch(e){}
+}
+
+// Check if already unlocked (session)
+try {
+  if(sessionStorage.getItem('kes_unlocked')==='1') _rptUnlocked = true;
+} catch(e){}

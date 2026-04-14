@@ -284,19 +284,30 @@ async function markAsPaid(){
 
 /* ── Report Lock / Unlock ── */
 function unlockReport(){
+  // Legacy paywall (if exists)
   var gate = document.getElementById('paywallGate');
   var cta = document.getElementById('paywallCta');
   if(gate) gate.classList.remove('locked');
   if(cta) cta.style.display = 'none';
+  // New tab system
+  if(typeof doUnlockAdvanced === 'function') doUnlockAdvanced();
 }
 
 function lockReport(){
+  // Legacy paywall
   var gate = document.getElementById('paywallGate');
   var cta = document.getElementById('paywallCta');
   if(gate) gate.classList.add('locked');
   if(cta) cta.style.display = '';
-  var input = document.getElementById('bypassCode');
-  if(input) input.value = '';
+  // New tab system
+  if(typeof _rptUnlocked !== 'undefined') _rptUnlocked = false;
+  try { sessionStorage.removeItem('kes_unlocked'); } catch(e){}
+  var unlock = document.getElementById('rpt-unlock');
+  var adv = document.getElementById('rpt-advanced-content');
+  var lock = document.getElementById('tab-lock-icon');
+  if(unlock) unlock.style.display = '';
+  if(adv) adv.style.display = 'none';
+  if(lock) lock.textContent = '🔒';
 }
 
 /* ── Bypass Code ── */
