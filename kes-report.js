@@ -177,9 +177,9 @@ function R13(dayun,tenYears){
   T('rpt-dayun-sub',(dayun.is_forward?L('顺行','Forward'):L('逆行','Reverse'))+'　'+L('起运约','Onset ~')+dayun.onset_age+L('岁',' yrs'));
   var curYear=new Date().getFullYear(),curAge=dayun.current_age;H('rpt-dayun-scroll','');
   var sumH='<div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:60px 60px 80px 60px 1fr"><div>'+L('大运','Cycle')+'</div><div>'+L('年龄','Age')+'</div><div>'+L('年份','Year')+'</div><div>'+L('评分','Rating')+'</div><div>'+L('概要','Summary')+'</div></div>';
-  (dayun.periods||[]).forEach(function(d){var isCur=(d.start_age<=curAge&&curAge<=d.end_age);var sY=curYear-curAge+d.start_age;var eY=sY+9;var sm=isEn?(d.summary_en||d.summary||''):d.summary||'';var rating=d.stem_good&&d.branch_good?4:(d.stem_good||d.branch_good)?3:1;sumH+='<div class="r-tbl-row'+(isCur?' r-tbl-cur':'')+'" style="grid-template-columns:60px 60px 80px 60px 1fr"><div style="font-weight:600">'+ec(d.stem)+ecb(d.branch)+'</div><div>'+d.start_age+'-'+d.end_age+'</div><div>'+sY+'-'+eY+'</div><div>'+dots(rating)+'</div><div class="r-a-note">'+sm+'</div></div>'});
+  (dayun.periods||[]).forEach(function(d){var isCur=(d.start_age<=curAge&&curAge<=d.end_age);var sY=curYear-curAge+d.start_age;var eY=sY+9;var sm=isEn?(d.summary_en||d.summary||''):d.summary||'';var rating=d.stem_good&&d.branch_good?4:d.stem_good?1.8:d.branch_good?0:-3;sumH+='<div class="r-tbl-row'+(isCur?' r-tbl-cur':'')+'" style="grid-template-columns:60px 60px 80px 60px 1fr"><div style="font-weight:600">'+ec(d.stem)+ecb(d.branch)+'</div><div>'+d.start_age+'-'+d.end_age+'</div><div>'+sY+'-'+eY+'</div><div>'+dots(rating)+'</div><div class="r-a-note">'+sm+'</div></div>'});
   sumH+='</div>';
-  if(tenYears&&tenYears.length){var bY=curYear-curAge;sumH+='<div style="margin-top:24px;font-size:14px;font-weight:700;color:var(--t1);margin-bottom:12px">'+L('逐年运势','Year by year')+'</div><div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:50px 50px 50px 60px 1fr"><div>'+L('年份','Year')+'</div><div>'+L('干支','Pillars')+'</div><div>'+L('年龄','Age')+'</div><div>'+L('评分','Rating')+'</div><div>'+L('概要','Summary')+'</div></div>';tenYears.forEach(function(yr){var age=yr.year-bY;var txt=isEn?(yr.text_en||yr.text||''):yr.text||'';var sc=yr.score!==undefined?yr.score:0;sumH+='<div class="r-tbl-row" style="grid-template-columns:50px 50px 50px 60px 1fr"><div>'+yr.year+'</div><div>'+ec(yr.stem)+ecb(yr.branch)+'</div><div>'+age+'</div><div>'+dots(sc)+'</div><div class="r-a-note">'+txt+'</div></div>'});sumH+='</div>'}
+  if(tenYears&&tenYears.length){var bY=curYear-curAge;sumH+='<div style="margin-top:24px;font-size:14px;font-weight:700;color:var(--t1);margin-bottom:12px">'+L('逐年运势','Year by year')+'</div><div class="r-tbl"><div class="r-tbl-head" style="grid-template-columns:50px 50px 50px 60px 1fr"><div>'+L('年份','Year')+'</div><div>'+L('干支','Pillars')+'</div><div>'+L('年龄','Age')+'</div><div>'+L('评分','Rating')+'</div><div>'+L('概要','Summary')+'</div></div>';tenYears.forEach(function(yr){var age=yr.year-bY;var txt=isEn?(yr.text_en||yr.text||''):yr.text||'';var sc=(yr.score!==undefined&&yr.score!==null)?yr.score:(yr.judged?yr.judged.score:0);sumH+='<div class="r-tbl-row" style="grid-template-columns:50px 50px 50px 60px 1fr"><div>'+yr.year+'</div><div>'+ec(yr.stem)+ecb(yr.branch)+'</div><div>'+age+'</div><div>'+dots(sc)+'</div><div class="r-a-note">'+txt+'</div></div>'});sumH+='</div>'}
   H('rpt-dayun-detail',sumH);
 }
 
@@ -197,7 +197,7 @@ function R14(ln,months){
     var hdr=isEn?'<div>'+L('月份','Month')+'</div><div>'+L('干支','Pillars')+'</div><div>'+L('评分','Rating')+'</div><div>'+L('概要','Summary')+'</div>':'<div>月份</div><div>干支</div><div>十神</div><div>评分</div><div>概要</div>';
     var h='<div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden"><div class="r-tbl" style="border:none"><div class="r-tbl-head" style="grid-template-columns:'+cols+'">'+hdr+'</div>';
     months.forEach(function(m){
-      var msc=m.good?3:1;
+      var msc=m.good?1.8:-1;
       var dt=fmtDate(m.start_date||'');
       var txt=isEn?(m.text_en||m.text||''):(m.text||'');
       if(isEn){
