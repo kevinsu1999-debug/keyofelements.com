@@ -135,10 +135,12 @@ function R06(s,pat,ds,wx){
   T('rpt-verdict',s.verdict);
   T('rpt-verdict-explain',L('得令','Seasonal')+'：'+(s.de_ling?'✓':'✗')+'　'+L('得地','Rooted')+'：'+(s.de_di?'✓':'✗')+'　'+L('得势','Support')+'：'+(s.de_shi?'✓':'✗'));
   var strH='';[{k:L('得　令','Seasonal'),v:s.de_ling,d:s.ling_detail},{k:L('得　地','Rooted'),v:s.de_di,d:s.di_detail},{k:L('得　势','Support'),v:s.de_shi,d:s.shi_detail}].forEach(function(x){strH+='<div class="r-str-item"><div class="r-str-label">'+x.k+'</div><div class="r-str-val '+(x.v?'yes':'no')+'">'+(x.v?L('已得','Yes'):L('未得','No'))+'</div><div class="r-str-detail">'+(x.d||'')+'</div></div>'});
-  /* Disclaimer */
-  strH+='<div style="margin-top:12px;padding:10px 12px;background:var(--bg3,rgba(0,0,0,.02));border-radius:8px;font-size:11px;color:var(--t3);line-height:1.7">'+L('注：身强身弱仅作为命理分析的判断依据，用于推导喜忌用神和大运流年吉凶，并非对命主本身强弱好坏的评判。','Note: Day master strength is used solely as an analytical framework for determining favorable elements and assessing luck cycles. It is not a judgment of the individual.')+'</div>';
   H('rpt-strength',strH);
-  if(pat)H('rpt-pattern','<b>'+L('格局：','Pattern: ')+pat.name+'</b><br>'+(pat.description||''));
+  if(pat)H('rpt-pattern','<b>'+L('格局：','Pattern: ')+pat.name+'</b>'+(isEn?'':'<br>'+(pat.description||'')));
+  /* Disclaimer below card */
+  var discEl=$('rpt-strength-disc');
+  if(!discEl){discEl=document.createElement('div');discEl.id='rpt-strength-disc';var parent=$('rpt-strength');if(parent&&parent.parentNode)parent.parentNode.appendChild(discEl)}
+  if(discEl)discEl.innerHTML='<div style="margin-top:16px;padding:12px 16px;background:var(--bg3,rgba(0,0,0,.02));border:1px solid var(--line,#eee);border-radius:8px;font-size:11px;color:var(--t3);line-height:1.7">'+L('注：身强身弱仅作为命理分析的判断依据，用于推导喜忌用神和大运流年吉凶，并非对命主本身强弱好坏的评判。','Note: Day master strength is used solely as an analytical framework for determining favorable elements and assessing luck cycles. It is not a judgment of the individual.')+'</div>';
 }
 
 /* 07 Yongshen — clean format, no pinyin */
