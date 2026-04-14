@@ -83,6 +83,8 @@ function renderReport(d){
   var tabs=document.getElementById('rpt-tabs');if(tabs)tabs.style.display='';
   /* If already unlocked, show advanced content */
   if(_rptUnlocked) doUnlockAdvanced();
+  /* Render Stripe pricing in unlock area */
+  if(typeof renderStripePricing==='function') setTimeout(renderStripePricing, 300);
 }
 
 /* 01 Four Pillars — EN: no ten-god labels, only Chinese chars + position labels */

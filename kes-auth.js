@@ -332,6 +332,7 @@ function updateUserUI(){
     acctLink.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 13c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> ' + displayName;
   }
   if(kesUser && kesUser.paid) unlockReport();
+  setTimeout(renderStripePricing, 200);
 }
 
 /* ── Disclaimer ── */
@@ -344,5 +345,28 @@ if(sessionStorage.getItem('kes_disc')==='1'){
   if(db) db.classList.add('hidden');
 }
 
+
+/* ── Render Stripe Pricing Table ── */
+function renderStripePricing(){
+  var container = document.getElementById('stripe-container');
+  if(!container) return;
+  if(!KES_CONFIG.STRIPE_PRICING_TABLE_ID || KES_CONFIG.STRIPE_PRICING_TABLE_ID === 'YOUR_STRIPE_PRICING_TABLE_ID') {
+    // Fallback: simple button
+    container.innerHTML = '<button style="padding:12px 32px;background:var(--t1,#1a1814);color:#fff;border:none;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.1em;cursor:pointer;font-family:inherit" onclick="handlePayment()">' + (isZh ? '购买完整报告 ' + KES_CONFIG.REPORT_PRICE : 'Purchase full report ' + KES_CONFIG.REPORT_PRICE_EN) + '</button>';
+    return;
+  }
+  var table = document.createElement('stripe-pricing-table');
+  table.setAttribute('pricing-table-id', KES_CONFIG.STRIPE_PRICING_TABLE_ID);
+  table.setAttribute('publishable-key', KES_CONFIG.STRIPE_PUBLISHABLE_KEY);
+  if(kesUser && kesUser.email){
+    table.setAttribute('customer-email', kesUser.email);
+  }
+  container.innerHTML = '';
+  container.appendChild(table);
+}
+
 /* ── Init ── */
 initAuth();
+
+// Render Stripe pricing when page loads
+document.addEventListener("DOMContentLoaded", function(){ setTimeout(renderStripePricing, 500); });
