@@ -277,7 +277,7 @@ function doUnlockAdvanced(){
   var lockIcon = document.getElementById('tab-lock-icon');
   if(unlock) unlock.style.display = 'none';
   if(content) content.style.display = '';
-  if(lockIcon) lockIcon.textContent = '';
+  if(lockIcon) lockIcon.innerHTML = '';
   // Remember unlock
   try { sessionStorage.setItem('kes_unlocked','1'); } catch(e){}
 }
