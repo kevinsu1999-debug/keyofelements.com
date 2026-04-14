@@ -1108,7 +1108,7 @@ body{font-size:15px;line-height:1.75}
 .r-disclaimer b{color:var(--t2);font-weight:600}
 
 /* ── PAYWALL OVERLAY ── */
-
+.paywall-gate{position:relative}
 
 /* ── LOADING OVERLAY ── */
 .kes-loading{
@@ -1131,18 +1131,31 @@ body{font-size:15px;line-height:1.75}
 @keyframes wx-pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.5);opacity:1}}
 .kes-loading .load-text{font-size:13px;color:var(--t3);letter-spacing:.06em;text-align:center;line-height:1.8}
 .kes-loading .load-step{font-size:11px;color:var(--t4);margin-top:-16px;letter-spacing:.04em;min-height:20px}
+.paywall-gate.locked::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:200px;
+  background:linear-gradient(to bottom,rgba(244,242,238,0) 0%,rgba(244,242,238,1) 70%);
+  pointer-events:none;z-index:10;
+}
+.paywall-gate.locked .r-sec{pointer-events:none;filter:blur(6px);user-select:none}
 
-
-
-
-
-
-
-
-
-
-
-
+.paywall-cta{
+  position:relative;z-index:20;
+  text-align:center;padding:48px 32px;
+  max-width:520px;margin:0 auto;
+}
+.paywall-cta .pw-icon{font-size:32px;margin-bottom:12px;opacity:.4}
+.paywall-cta .pw-title{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:8px;letter-spacing:.04em}
+.paywall-cta .pw-sub{font-size:13px;color:var(--t2);line-height:1.8;margin-bottom:24px}
+.paywall-cta .pw-btn{
+  display:inline-block;padding:14px 40px;border-radius:100px;
+  background:var(--t1);color:#fff;font-size:12px;font-weight:600;
+  letter-spacing:.1em;cursor:pointer;border:none;font-family:inherit;
+  transition:all .2s;margin:0 6px 8px;
+}
+.paywall-cta .pw-btn:hover{opacity:.85}
+.paywall-cta .pw-btn.secondary{background:transparent;color:var(--t1);border:1px solid var(--line2)}
+.paywall-cta .pw-btn.secondary:hover{background:var(--bg2)}
+.paywall-cta .pw-free{font-size:11px;color:var(--t3);margin-top:12px}
 
 /* ── LOGIN MODAL ── */
 .login-overlay{
@@ -1196,161 +1209,17 @@ body{font-size:15px;line-height:1.75}
 .pdp-divider{width:100%;height:1px;background:var(--line);margin:24px 0}
 .pdp-desc{font-size:13px;color:var(--t2);line-height:1.9}
 
-
-
-
-/* ═══ Report Tabs (aurora) ═══ */
+/* Report Tabs */
 .rpt-tabs{display:flex;gap:0;margin:0;position:sticky;top:0;z-index:10;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,rgba(82,138,98,.08) 0%,rgba(134,150,167,.1) 25%,rgba(168,72,72,.06) 50%,rgba(160,136,40,.08) 75%,rgba(122,98,72,.06) 100%);background-size:300% 100%;animation:tab-aurora 12s ease-in-out infinite;border:1px solid var(--line)}
 @keyframes tab-aurora{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .rpt-tab{flex:1;padding:18px 20px;font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--t3);cursor:pointer;text-align:center;border:none;background:none;font-family:inherit;position:relative;transition:all .3s}
 .rpt-tab.on{color:var(--t1);background:rgba(255,255,255,.6)}
 .rpt-tab.on::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--t1);border-radius:1px}
-.rpt-tab .tab-lock{display:inline-block;margin-left:6px;font-size:10px;opacity:.4;vertical-align:middle}
-.rpt-tab-content{display:none}
-.rpt-tab-content.on{display:block}
-.rpt-unlock{padding:48px 24px;text-align:center;background:linear-gradient(135deg,rgba(82,138,98,.04) 0%,rgba(134,150,167,.06) 50%,rgba(168,72,72,.03) 100%);border:1px solid var(--line);border-radius:16px;margin:32px auto;max-width:480px}
-.rpt-unlock-icon{width:40px;height:40px;margin:0 auto 16px;border:2px solid var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center}
-.rpt-unlock-icon svg{width:18px;height:18px;stroke:var(--t3);fill:none;stroke-width:1.5}
-.rpt-unlock-title{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:8px;letter-spacing:.04em}
-.rpt-unlock-sub{font-size:13px;color:var(--t2);line-height:1.8;margin-bottom:24px}
-.rpt-unlock-row{display:flex;gap:8px;max-width:300px;margin:0 auto}
-.rpt-unlock-input{flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;text-align:center;font-family:inherit;outline:none;letter-spacing:.1em;text-transform:uppercase;background:var(--bg)}
-.rpt-unlock-input:focus{border-color:var(--t1)}
-.rpt-unlock-btn{padding:10px 20px;background:var(--t1);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.08em;font-family:inherit}
-.rpt-unlock-err{font-size:11px;color:var(--huo);margin-top:8px;display:none}
-.rpt-unlock-or{font-size:11px;color:var(--t4);margin:20px 0 16px}
-.rpt-unlock-pay{padding:12px 32px;background:var(--t1);color:#fff;border:none;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.12em;cursor:pointer;font-family:inherit}
-
-/* ═══ Mobile: Report Tables ═══ */
-@media(max-width:768px){
-  .rpt-tabs{border-radius:8px;margin:0 16px}
-  .rpt-tab{padding:14px 12px;font-size:12px}
-  .r-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .r-tbl-head,.r-tbl-row{min-width:500px}
-  .r-pillar{padding:10px 6px}
-  .r-pillar-gz{font-size:28px}
-  .r-yj-card{padding:12px 8px}
-  .r-yj-chars{gap:2px}
-  .r-wx{flex-direction:row;align-items:center;gap:6px}
-  .rpt-unlock{margin:20px 16px;padding:32px 16px}
-  .rpt-unlock-title{font-size:16px}
-  .rpt-unlock-row{flex-direction:column;max-width:100%}
-  .rpt-unlock-input{width:100%}
-  .rpt-unlock-btn{width:100%;padding:12px}
-}
-
-
-
-/* ═══ Mobile: Full Report Responsive ═══ */
-@media(max-width:768px){
-  /* Header meta cards */
-  .rpt-info-card{grid-template-columns:1fr 1fr !important;gap:0}
-  .rpt-f{padding:8px 10px;font-size:12px}
-  .rpt-hdr{padding:32px 16px 24px}
-  .rpt-hdr-t{font-size:24px !important}
-  
-  /* Tab bar */
-  .rpt-tabs{margin:0 16px;border-radius:10px}
-  .rpt-tab{padding:14px 10px;font-size:12px;letter-spacing:.03em}
-  
-  /* Four pillars — 2x2 grid */
-  #rpt-pillars,.r-pillar-grid{display:grid !important;grid-template-columns:1fr 1fr !important;gap:6px !important}
-  .r-pillar{padding:12px 8px}
-  .r-pillar-gz{font-size:26px !important}
-  .r-pillar-ss{font-size:9px !important;padding:2px 6px !important}
-  .r-pillar-hidden{gap:4px !important}
-  .r-pillar-h{font-size:11px !important}
-  
-  /* Five elements — keep 5 cols but compact */
-  .r-wx-grid{gap:4px !important}
-  .r-wx{padding:10px 4px !important}
-  .r-wx-char{font-size:20px !important;margin-bottom:6px !important}
-  .r-wx-pct{font-size:12px !important}
-  .r-wx-bar-wrap{margin:4px 0 !important}
-  
-  /* Strength meter */
-  .r-str-grid{grid-template-columns:1fr !important}
-  .r-str-item{border-right:none !important;border-bottom:1px solid var(--line);padding:14px 16px}
-  .r-str-item:last-child{border-bottom:none}
-  .r-str-result{flex-direction:column;gap:10px;text-align:center}
-  .r-str-verdict{font-size:18px}
-  .r-str-explain{font-size:13px}
-  
-  /* Yongshen — stack */
-  .r-yj-grid,#rpt-yongshen{display:grid !important;grid-template-columns:1fr !important;gap:8px !important}
-  .r-yj-card{display:flex;align-items:center;gap:12px;padding:12px 14px !important}
-  .r-yj-label{margin-bottom:0 !important;min-width:50px}
-  .r-yj-chars{flex-wrap:wrap}
-  .r-yj-char{font-size:20px !important;width:36px !important;height:36px !important}
-  
-  /* Personality element ID */
-  .r-elem-id{gap:10px}
-  .r-elem-icon{width:40px !important;height:40px !important;font-size:20px !important}
-  .r-elem-id-name{font-size:14px !important}
-  
-  /* Quote */
-  .r-pq{padding:8px 0 8px 14px;margin-bottom:14px}
-  .r-pq-text{font-size:13px !important}
-  
-  /* Health grid */
-  .r-health-grid{grid-template-columns:1fr !important}
-  
-  /* Tables — horizontal scroll */
-  .r-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .r-tbl-head,.r-tbl-row{min-width:460px !important}
-  .r-tbl-head{padding:8px 12px !important;font-size:10px !important}
-  .r-tbl-row{padding:10px 12px !important;font-size:12px !important}
-  .r-a-note{font-size:11px !important;line-height:1.5 !important}
-  
-  /* Liunian detail */
-  .r-ly-detail{padding:16px !important}
-  .r-ly-h{font-size:15px !important}
-  .r-ly-body{font-size:13px !important}
-  
-  /* Warnings */
-  .r-warn{padding:14px 16px !important}
-  .r-warn-title{font-size:12px !important}
-  .r-warn-body{font-size:12px !important}
-  
-  /* Recommendations */
-  .r-rec-grid{grid-template-columns:1fr !important}
-  .r-rec-card{padding:14px !important}
-  
-  /* General prose */
-  .r-prose{font-size:13px !important;line-height:1.8 !important}
-  .r-sec{padding:28px 16px 0 !important}
-  .r-h{font-size:20px !important}
-  .r-sub{font-size:12px !important}
-  .r-num{font-size:9px !important}
-  .r-hr{margin:24px 16px 0 !important}
-  
-  /* Unlock overlay */
-  .rpt-unlock{margin:20px 16px !important;padding:28px 16px !important}
-  .rpt-unlock-title{font-size:15px !important}
-  .rpt-unlock-sub{font-size:12px !important}
-  .rpt-unlock-row{flex-direction:column !important;max-width:100% !important}
-  .rpt-unlock-input{width:100% !important}
-  .rpt-unlock-btn{width:100% !important;padding:12px !important}
-  
-  /* Disclaimer */
-  .r-disclaimer{padding:16px !important;font-size:11px !important}
-  .r-footer{padding:24px 16px !important}
-}
-
-@media(max-width:420px){
-  .rpt-info-card{grid-template-columns:1fr !important}
-  .rpt-f{border-right:none !important;border-bottom:1px solid var(--line)}
-  .rpt-f:last-child{border-bottom:none}
-  .r-pillar-gz{font-size:22px !important}
-  .r-wx-char{font-size:16px !important}
-  .r-yj-char{font-size:16px !important;width:30px !important;height:30px !important}
-  .r-tbl-head,.r-tbl-row{min-width:380px !important}
-  .r-h{font-size:18px !important}
-}
-
-
-/* ═══ Mobile Nav: Hamburger ═══ */
-.nav-burger{display:none;width:36px;height:36px;border:none;background:none;cursor:pointer;padding:6px;position:relative;z-index:101}
+.rpt-tab .tab-lock{display:inline-block;margin-left:4px;opacity:.35;vertical-align:middle}
+.rpt-tab .tab-lock svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
+.rpt-tab-content{display:none}.rpt-tab-content.on{display:block}
+/* Hamburger */
+.nav-burger{display:none;width:36px;height:36px;border:none;background:none;cursor:pointer;padding:6px;z-index:101}
 .nav-burger span{display:block;width:20px;height:1.5px;background:var(--t1);margin:4px auto;transition:all .3s}
 .nav-burger.open span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
 .nav-burger.open span:nth-child(2){opacity:0}
@@ -1362,21 +1231,21 @@ body{font-size:15px;line-height:1.75}
   .nav-links .nl{padding:10px 0;font-size:12px;text-align:left;border-bottom:1px solid var(--line)}
   .nav-links .nl:last-child{border-bottom:none}
   nav{position:relative}
-  .nav-right{gap:8px !important}
   .nav-bag{display:none !important}
-}
-
-
-/* ═══ Compact Report Header ═══ */
-@media(max-width:768px){
+  .rpt-tabs{margin:0 16px;border-radius:8px}
+  .rpt-tab{padding:14px 10px;font-size:12px}
   .rpt-info-card{grid-template-columns:1fr 1fr !important}
-  .rpt-f{padding:6px 10px}
   .rpt-hdr{padding:24px 16px 16px}
   .rpt-hdr-t{font-size:20px !important;margin-bottom:8px !important}
-  .rpt-hdr-ey{font-size:8px !important;margin-bottom:8px !important}
-}
-@media(min-width:769px){
-  .rpt-info-card{grid-template-columns:repeat(3,1fr) !important}
+  #rpt-pillars,.r-pillar-grid{grid-template-columns:1fr 1fr !important;gap:6px !important}
+  .r-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .r-tbl-head,.r-tbl-row{min-width:460px !important}
+  .r-str-grid{grid-template-columns:1fr !important}
+  .r-str-item{border-right:none !important;border-bottom:1px solid var(--line)}
+  .r-health-grid{grid-template-columns:1fr !important}
+  .r-rec-grid{grid-template-columns:1fr !important}
+  .r-sec{padding:28px 16px 0 !important}
+  .r-h{font-size:20px !important}
 }
 
 </style>
@@ -1394,7 +1263,7 @@ body{font-size:15px;line-height:1.75}
     <span class="nl" id="n-shop" onclick="navGo('shop',this)">选购</span>
     <span class="nl" id="n-about" onclick="navGo('about',this)">关于 KES</span>
   </div>
-  <div class="nav-right" style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
+  <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
     <div class="lang-row">
       <button class="lb on" onclick="window.location='index.html'">中文</button>
       <button class="lb" onclick="window.location='en.html'">EN</button>
@@ -1635,14 +1504,14 @@ body{font-size:15px;line-height:1.75}
         <div class="pc-e-dot" style="background:var(--shui)"></div>
         
       </div>
-      <div class="pc-body"><div class="pc-el">水 · 服饰 · 女</div><div class="pc-name">藏蓝简约连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 520</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">水</div><div class="pc-name">藏蓝简约连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 520</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('香槟色宽松外套')" style="cursor:pointer" data-e="jin">
       <div class="pc-img" style="background:#f0ead4">
         <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#e4d8b0" stroke="#ccbe88" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#daccA0"/></svg>
         <div class="pc-e-dot" style="background:var(--jin)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">金 · 服饰 · 中性</div><div class="pc-name">香槟色宽松外套</div><div class="pc-foot"><div class="pc-price">¥ 680</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">金</div><div class="pc-name">香槟色宽松外套</div><div class="pc-foot"><div class="pc-price">¥ 680</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('墨黑皮质手包')" style="cursor:pointer" data-e="shui">
       <div class="pc-img" style="background:#e0e8f0">
@@ -1650,42 +1519,42 @@ body{font-size:15px;line-height:1.75}
         <div class="pc-e-dot" style="background:var(--shui)"></div>
         
       </div>
-      <div class="pc-body"><div class="pc-el">水 · 服饰 · 女</div><div class="pc-name">墨黑皮质手包</div><div class="pc-foot"><div class="pc-price">¥ 390</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">水　包袋</div><div class="pc-name">墨黑皮质手包</div><div class="pc-foot"><div class="pc-price">¥ 390</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('金属链条叠戴项链')" style="cursor:pointer" data-e="jin">
       <div class="pc-img" style="background:#f4f0e4">
         <svg width="86" height="86" viewBox="0 0 86 86"><ellipse cx="43" cy="54" rx="27" ry="15" fill="none" stroke="#b89828" stroke-width="2.5"/><ellipse cx="43" cy="30" rx="19" ry="11" fill="none" stroke="#b89828" stroke-width="2.5"/><circle cx="43" cy="43" r="3.5" fill="#a08828"/></svg>
         <div class="pc-e-dot" style="background:var(--jin)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">金 · 服饰 · 中性</div><div class="pc-name">金属链条叠戴项链</div><div class="pc-foot"><div class="pc-price">¥ 280</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">金　首饰</div><div class="pc-name">金属链条叠戴项链</div><div class="pc-foot"><div class="pc-price">¥ 280</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('鼠尾草色亚麻衬衫')" style="cursor:pointer" data-e="mu">
       <div class="pc-img" style="background:#e0ecd8">
         <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#bcd4b8" stroke="#98b890" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#aec8a8"/></svg>
         <div class="pc-e-dot" style="background:var(--mu)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">木 · 服饰 · 中性</div><div class="pc-name">鼠尾草色亚麻衬衫</div><div class="pc-foot"><div class="pc-price">¥ 380</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">木</div><div class="pc-name">鼠尾草色亚麻衬衫</div><div class="pc-foot"><div class="pc-price">¥ 380</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('砖红中长连衣裙')" style="cursor:pointer" data-e="huo">
       <div class="pc-img" style="background:#f0e0d8">
         <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#c86050" stroke="#a84030" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#b85040"/></svg>
         <div class="pc-e-dot" style="background:var(--huo)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">火 · 服饰 · 女</div><div class="pc-name">砖红中长连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">火</div><div class="pc-name">砖红中长连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('驼色阔腿裤')" style="cursor:pointer" data-e="tu">
       <div class="pc-img" style="background:#f0e8d8">
         <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#c8a870" stroke="#a88850" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#b89060"/></svg>
         <div class="pc-e-dot" style="background:var(--tu)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">土 · 服饰 · 中性</div><div class="pc-name">驼色阔腿裤</div><div class="pc-foot"><div class="pc-price">¥ 490</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">土</div><div class="pc-name">驼色阔腿裤</div><div class="pc-foot"><div class="pc-price">¥ 490</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('象牙色结构感托特包')" style="cursor:pointer" data-e="jin">
       <div class="pc-img" style="background:#f8f4ec">
         <svg width="88" height="88" viewBox="0 0 88 88"><rect x="14" y="30" width="60" height="38" rx="18" fill="#e8e0c0" stroke="#d0c898" stroke-width="1"/><rect x="22" y="12" width="44" height="24" rx="11" fill="#f0e8c8" stroke="#d8d0a8" stroke-width="1"/><circle cx="44" cy="24" r="4" fill="#c8a830" opacity=".6"/></svg>
         <div class="pc-e-dot" style="background:var(--jin)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">金 · 服饰 · 中性</div><div class="pc-name">象牙色结构感托特包</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">金　包袋</div><div class="pc-name">象牙色结构感托特包</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
   </div>
 
@@ -1733,11 +1602,9 @@ body{font-size:15px;line-height:1.75}
 
   <div class="rpt-tabs" id="rpt-tabs" style="display:none">
     <button class="rpt-tab on" onclick="switchRptTab('basic',this)">基本分析</button>
-    <button class="rpt-tab" onclick="switchRptTab('advanced',this)">大运流年分析 <span class="tab-lock" id="tab-lock-icon"><svg viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:middle;margin-left:5px;opacity:.35;stroke:currentColor;fill:none;stroke-width:1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></span></button>
+    <button class="rpt-tab" onclick="switchRptTab('advanced',this)">大运流年分析 <span class="tab-lock" id="tab-lock-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></span></button>
   </div>
   <div id="rpt-tab-basic" class="rpt-tab-content on">
-
-
 
 
   <!-- 01 四柱 -->
@@ -1817,78 +1684,23 @@ body{font-size:15px;line-height:1.75}
   <div class="r-hr"></div></div>
 
   
-
-      <div class="rpt-unlock-title">解锁大运流年分析</div>
-      <div class="rpt-unlock-sub">包含：十年大运总览、逐年运势、流月分析、<br>重要提醒与综合建议</div>
-      <div class="rpt-unlock-row">
-        <input class="rpt-unlock-input" id="unlockCode" placeholder="输入解锁码" maxlength="10">
-        <button class="rpt-unlock-btn" onclick="tryUnlockCode()">解锁</button>
-      </div>
-      <div class="rpt-unlock-err" id="unlockErr">无效的解锁码</div>
-      <div class="rpt-unlock-or">—— 或 ——</div>
-      <button class="rpt-unlock-pay" onclick="handlePayment()">购买完整报告 ¥29.9</button>
-    </div>
-  </div><!-- end basic -->
+  </div><!-- end rpt-tab-basic -->
 
   <div id="rpt-tab-advanced" class="rpt-tab-content">
-
-
-    
-          <!-- Code unlock -->
-      <div style="display:flex;gap:6px;margin-bottom:16px">
-        <input class="rpt-unlock-input" id="unlockCode" placeholder="输入解锁码" maxlength="10" style="max-width:200px;border-radius:6px;padding:9px 12px;font-size:12px">
-        <button class="rpt-unlock-btn" onclick="tryUnlockCode()" style="border-radius:6px;padding:9px 16px;font-size:11px">解锁</button>
-      </div>
-      <div class="rpt-unlock-err" id="unlockErr">无效的解锁码</div>
-      
-      <!-- Divider -->
-      <div style="display:flex;align-items:center;gap:12px;margin:20px 0">
-        <div style="flex:1;height:1px;background:var(--line)"></div>
-        <span style="font-size:10px;color:var(--t4)">或 购买解锁</span>
-        <div style="flex:1;height:1px;background:var(--line)"></div>
-      </div>
-      
-      <!-- Stripe Pricing Table -->
-      <div id="stripe-container"></div>
-    </div>
-
-      <div style="display:flex;gap:6px;margin-bottom:16px">
-        <input class="rpt-unlock-input" id="unlockCode" placeholder="输入解锁码" maxlength="10" style="max-width:200px;border-radius:6px;padding:9px 12px;font-size:12px">
-        <button class="rpt-unlock-btn" onclick="tryUnlockCode()" style="border-radius:6px;padding:9px 16px;font-size:11px">解锁</button>
-      </div>
-      <div class="rpt-unlock-err" id="unlockErr">无效的解锁码</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="flex:1;height:1px;background:var(--line)"></div>
-        <span style="font-size:10px;color:var(--t4)">或</span>
-        <div style="flex:1;height:1px;background:var(--line)"></div>
-      </div>
-      <button class="rpt-unlock-pay" onclick="handlePayment()" style="margin-top:16px;padding:10px 28px;font-size:11px">购买完整报告 ¥29.9</button>
-    </div>
-
-      <div class="rpt-unlock-title">解锁完整运势分析</div>
-      <div class="rpt-unlock-sub">包含十年大运总览、逐年运势、流月分析、<br>重要提醒与综合建议</div>
-      <div class="rpt-unlock-row">
-        <input class="rpt-unlock-input" id="unlockCode" placeholder="输入解锁码" maxlength="10">
-        <button class="rpt-unlock-btn" onclick="tryUnlockCode()">解锁</button>
-      </div>
-      <div class="rpt-unlock-err" id="unlockErr">无效的解锁码</div>
-      <div class="rpt-unlock-or">—— 或 ——</div>
-      <button class="rpt-unlock-pay" onclick="handlePayment()">购买完整报告 ¥29.9</button>
-    </div>
-        <div id="rpt-unlock" style="padding:24px 20px;border-bottom:1px solid var(--line)">
-      <div style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:14px">解锁完整运势分析</div>
+    <div id="rpt-unlock" style="padding:28px 20px;border-bottom:1px solid var(--line)">
+      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:10px">解锁完整运势分析</div>
       <div style="font-size:12px;color:var(--t3);margin-bottom:16px;line-height:1.7">包含十年大运总览、逐年运势、流月分析、重要提醒与综合建议</div>
-      <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
         <input id="unlockCode" placeholder="输入解锁码" maxlength="10" style="padding:9px 12px;border:1px solid var(--line);border-radius:6px;font-size:12px;text-align:center;width:160px;letter-spacing:.1em;text-transform:uppercase;outline:none;font-family:inherit;background:var(--bg,#f4f2ee)">
         <button onclick="tryUnlockCode()" style="padding:9px 16px;background:var(--t1);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">解锁</button>
       </div>
-      <div id="unlockErr" style="font-size:11px;color:var(--huo,#a84848);margin-top:-8px;margin-bottom:8px;display:none">无效的解锁码</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="flex:1;height:1px;background:var(--line)"></div><span style="font-size:10px;color:var(--t4)">或</span><div style="flex:1;height:1px;background:var(--line)"></div></div>
-      <div id="stripe-container"></div>
+      <div id="unlockErr" style="font-size:11px;color:var(--huo,#a84848);margin-bottom:8px;display:none">无效的解锁码</div>
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0"><div style="flex:1;height:1px;background:var(--line)"></div><span style="font-size:10px;color:var(--t4)">或</span><div style="flex:1;height:1px;background:var(--line)"></div></div>
+      <button onclick="handlePayment()" style="padding:10px 28px;background:var(--t1);color:#fff;border:none;border-radius:100px;font-size:11px;font-weight:500;letter-spacing:.1em;cursor:pointer;font-family:inherit">购买完整报告 ¥29.9</button>
     </div>
+    <div id="rpt-advanced-content" style="display:none">
 
-<div id="rpt-advanced-content" style="display:none">
-<!-- 13 大运总览（含逐年） -->
+  <!-- 13 大运总览（含逐年） -->
   <div class="r-sec"><div class="r-num">13</div><div class="r-h">大运总览</div><div class="r-sub" id="rpt-dayun-sub"></div>
     <div class="r-dy-scroll" id="rpt-dayun-scroll"></div>
     <div class="r-dy-summary" id="rpt-dayun-detail" style="margin-top:16px"></div>
@@ -1956,14 +1768,14 @@ body{font-size:15px;line-height:1.75}
         <div class="sgc-dot" style="background:var(--shui)"></div>
         
       </div>
-      <div class="sgc-body"><div class="sgc-el">水 · 服饰 · 女</div><div class="sgc-name" onclick="openPDP('藏蓝简约连衣裙')" style="cursor:pointer">藏蓝简约连衣裙</div><div class="sgc-foot"><div class="sgc-price">¥ 520</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">水</div><div class="sgc-name" onclick="openPDP('藏蓝简约连衣裙')" style="cursor:pointer">藏蓝简约连衣裙</div><div class="sgc-foot"><div class="sgc-price">¥ 520</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="jin">
       <div class="sgc-img" style="background:#f0ead4">
         <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#e4d8b0" stroke="#ccbe88" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#daccA0"/></svg>
         <div class="sgc-dot" style="background:var(--jin)"></div>
       </div>
-      <div class="sgc-body"><div class="sgc-el">金 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('香槟色宽松外套')" style="cursor:pointer">香槟色宽松外套</div><div class="sgc-foot"><div class="sgc-price">¥ 680</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">金</div><div class="sgc-name" onclick="openPDP('香槟色宽松外套')" style="cursor:pointer">香槟色宽松外套</div><div class="sgc-foot"><div class="sgc-price">¥ 680</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="shui">
       <div class="sgc-img" style="background:#e0e8f0">
@@ -1971,7 +1783,7 @@ body{font-size:15px;line-height:1.75}
         <div class="sgc-dot" style="background:var(--shui)"></div>
         
       </div>
-      <div class="sgc-body"><div class="sgc-el">水 · 服饰 · 女</div><div class="sgc-name" onclick="openPDP('墨黑皮质手包')" style="cursor:pointer">墨黑皮质手包</div><div class="sgc-foot"><div class="sgc-price">¥ 390</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">水　包袋</div><div class="sgc-name" onclick="openPDP('墨黑皮质手包')" style="cursor:pointer">墨黑皮质手包</div><div class="sgc-foot"><div class="sgc-price">¥ 390</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="jin">
       <div class="sgc-img" style="background:#f4f0e4">
@@ -1979,28 +1791,28 @@ body{font-size:15px;line-height:1.75}
         <div class="sgc-dot" style="background:var(--jin)"></div>
         
       </div>
-      <div class="sgc-body"><div class="sgc-el">金 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('金属链条叠戴项链')" style="cursor:pointer">金属链条叠戴项链</div><div class="sgc-foot"><div class="sgc-price">¥ 280</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">金　首饰</div><div class="sgc-name" onclick="openPDP('金属链条叠戴项链')" style="cursor:pointer">金属链条叠戴项链</div><div class="sgc-foot"><div class="sgc-price">¥ 280</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="mu">
       <div class="sgc-img" style="background:#e0ecd8">
         <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#bcd4b8" stroke="#98b890" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#aec8a8"/></svg>
         <div class="sgc-dot" style="background:var(--mu)"></div>
       </div>
-      <div class="sgc-body"><div class="sgc-el">木 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('鼠尾草色亚麻衬衫')" style="cursor:pointer">鼠尾草色亚麻衬衫</div><div class="sgc-foot"><div class="sgc-price">¥ 380</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">木</div><div class="sgc-name" onclick="openPDP('鼠尾草色亚麻衬衫')" style="cursor:pointer">鼠尾草色亚麻衬衫</div><div class="sgc-foot"><div class="sgc-price">¥ 380</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="huo">
       <div class="sgc-img" style="background:#f0e0d8">
         <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#c86050" stroke="#a84030" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#b85040"/></svg>
         <div class="sgc-dot" style="background:var(--huo)"></div>
       </div>
-      <div class="sgc-body"><div class="sgc-el">火 · 服饰 · 女</div><div class="sgc-name" onclick="openPDP('砖红中长连衣裙')" style="cursor:pointer">砖红中长连衣裙</div><div class="sgc-foot"><div class="sgc-price">¥ 560</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">火</div><div class="sgc-name" onclick="openPDP('砖红中长连衣裙')" style="cursor:pointer">砖红中长连衣裙</div><div class="sgc-foot"><div class="sgc-price">¥ 560</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="tu">
       <div class="sgc-img" style="background:#f0e8d8">
         <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#c8a870" stroke="#a88850" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#b89060"/></svg>
         <div class="sgc-dot" style="background:var(--tu)"></div>
       </div>
-      <div class="sgc-body"><div class="sgc-el">土 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('驼色阔腿裤')" style="cursor:pointer">驼色阔腿裤</div><div class="sgc-foot"><div class="sgc-price">¥ 490</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">土</div><div class="sgc-name" onclick="openPDP('驼色阔腿裤')" style="cursor:pointer">驼色阔腿裤</div><div class="sgc-foot"><div class="sgc-price">¥ 490</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="jin">
       <div class="sgc-img" style="background:#f8f4ec">
@@ -2008,7 +1820,7 @@ body{font-size:15px;line-height:1.75}
         <div class="sgc-dot" style="background:var(--jin)"></div>
         
       </div>
-      <div class="sgc-body"><div class="sgc-el">金 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('象牙色结构感托特包')" style="cursor:pointer">象牙色结构感托特包</div><div class="sgc-foot"><div class="sgc-price">¥ 560</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">金　包袋</div><div class="sgc-name" onclick="openPDP('象牙色结构感托特包')" style="cursor:pointer">象牙色结构感托特包</div><div class="sgc-foot"><div class="sgc-price">¥ 560</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
   </div>
 
@@ -2924,14 +2736,12 @@ function pickSize(el){
 <script src="kes-shop.js"></script>
 <script src="kes-report.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script async src="https://js.stripe.com/v3/pricing-table.js"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="kes-config.js"></script>
 <script src="kes-auth.js"></script>
 </body>
 </html>
-
-    </div><!-- end advanced-content -->
-  </div><!-- end advanced -->
+    </div><!-- end rpt-advanced-content -->
+  </div><!-- end rpt-tab-advanced -->
 
 
