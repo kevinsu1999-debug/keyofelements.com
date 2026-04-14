@@ -21,12 +21,19 @@ function ecb(b){return '<span class="e-'+WX_C[B_WX[b]]+'">'+b+'</span>'}
 function L(zh,en){return isEn?en:zh}
 
 function dots(score){
-  if(score===undefined||score===null)return '<span style="letter-spacing:2px;color:var(--t3)">●●●○○</span>';
+  if(score===undefined||score===null)return '<span style="font-size:8px;letter-spacing:1px;color:var(--t3)">●●●○○</span>';
   var n=score>=3?5:score>=1.5?4:score>=-0.5?3:score>=-2?2:1;
-  var s='';for(var i=0;i<5;i++)s+=(i<n?'●':'○');
-  var c=n>=4?'var(--mu)':n>=3?'var(--t2)':n>=2?'var(--jin)':'var(--huo)';
-  return '<span style="letter-spacing:2px;color:'+c+'">'+s+'</span>';
+  var s='';for(var i=0;i<5;i++)s+=(i<n?'<span style="color:var(--t1)">●</span>':'<span style="color:var(--line,#ddd)">○</span>');
+  return '<span style="font-size:8px;letter-spacing:1px">'+s+'</span>';
 }
+function fmtDate(d){
+  if(!isEn||!d)return d;
+  var m=d.match(/(\d{2})月(\d{2})日/);
+  if(!m)return d;
+  var months=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(m[1])]+ ' '+m[2];
+}
+
 
 async function submitReading(){
   var y=+$('birthYear').value,m=+$('birthMonth').value,d=+$('birthDay').value;
@@ -176,7 +183,7 @@ function R14(ln,months){
     var h='<div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden"><div class="r-tbl" style="border:none"><div class="r-tbl-head" style="grid-template-columns:'+cols+'">'+hdr+'</div>';
     months.forEach(function(m){
       var msc=m.good?3:1;
-      var dt=m.start_date||'';
+      var dt=fmtDate(m.start_date||'');
       var txt=isEn?(m.text_en||m.text||''):(m.text||'');
       if(isEn){
         h+='<div class="r-tbl-row" style="grid-template-columns:'+cols+'"><div>'+dt+'</div><div>'+ec(m.stem)+ecb(m.branch)+'</div><div>'+dots(msc)+'</div><div class="r-a-note">'+txt+'</div></div>';
