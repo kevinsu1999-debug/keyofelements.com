@@ -169,7 +169,7 @@ async function handleAuth(){
     };
     closeLogin();
     updateUserUI();
-    if(!kesUser.paid) promptPayment();
+    // Don't auto-popup payment - user will see unlock area in report tab
   }
 }
 
@@ -251,8 +251,18 @@ async function handlePayment(){
     unlockReport();
     return;
   }
-  // If Stripe is configured, redirect to Stripe Checkout
-  if(KES_CONFIG.STRIPE_PUBLISHABLE_KEY && KES_CONFIG.STRIPE_PUBLISHABLE_KEY !== 'YOUR_STRIPE_PUBLISHABLE_KEY_HERE'){
+  // Use Stripe Payment Link (simplest, most reliable)
+  if(KES_CONFIG.STRIPE_PAYMENT_LINK){
+    var url = KES_CONFIG.STRIPE_PAYMENT_LINK;
+    // Append client_reference_id and prefilled_email
+    var sep = url.includes('?') ? '&' : '?';
+    url += sep + 'prefilled_email=' + encodeURIComponent(kesUser.email);
+    url += '&client_reference_id=' + encodeURIComponent(kesUser.id || kesUser.email);
+    window.location.href = url;
+    return;
+  }
+  // Fallback: Stripe Checkout with Price ID
+  if(KES_CONFIG.STRIPE_PRICE_ID && KES_CONFIG.STRIPE_PUBLISHABLE_KEY){
     try {
       var stripe = Stripe(KES_CONFIG.STRIPE_PUBLISHABLE_KEY);
       var { error } = await stripe.redirectToCheckout({
@@ -260,19 +270,16 @@ async function handlePayment(){
         mode: 'payment',
         successUrl: window.location.origin + window.location.pathname + '?payment=success',
         cancelUrl: window.location.origin + window.location.pathname + '?payment=cancel',
-        customerEmail: kesUser ? kesUser.email : undefined
+        customerEmail: kesUser.email
       });
       if(error) alert(error.message);
     } catch(e){
       console.error('Stripe error:', e);
-      alert(isZh ? '支付系统暂不可用，请稍后重试' : 'Payment system unavailable, please try again later');
+      alert(isZh ? '支付系统暂不可用' : 'Payment system unavailable');
     }
     return;
   }
-
-  // Fallback: no Stripe configured, simulate payment
-  await markAsPaid();
-  alert(isZh ? '支付成功！完整报告已解锁。' : 'Payment successful! Full report unlocked.');
+  alert(isZh ? '支付系统配置中，请稍后再试' : 'Payment system is being configured');
 }
 
 async function markAsPaid(){
@@ -342,7 +349,7 @@ function updateUserUI(){
     acctLink.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 13c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> ' + displayName;
   }
   if(kesUser && kesUser.paid) unlockReport();
-  setTimeout(renderStripePricing, 200);
+  setTimeout(checkPaidAndUnlock, 200);
 }
 
 /* ── Disclaimer ── */
@@ -356,33 +363,15 @@ if(sessionStorage.getItem('kes_disc')==='1'){
 }
 
 
-/* ── Render Stripe Pricing Table ── */
-function renderStripePricing(){
-  var container = document.getElementById('stripe-container');
-  if(!container) return;
-  // If already paid, hide the whole unlock area
+/* ── Check paid status and auto-unlock ── */
+function checkPaidAndUnlock(){
   if(kesUser && kesUser.paid){
-    var unlock = document.getElementById('rpt-unlock');
-    if(unlock) unlock.style.display = 'none';
-    return;
+    if(typeof doUnlockAdvanced === 'function') doUnlockAdvanced();
   }
-  if(!KES_CONFIG.STRIPE_PRICING_TABLE_ID || KES_CONFIG.STRIPE_PRICING_TABLE_ID === 'YOUR_STRIPE_PRICING_TABLE_ID') {
-    // Fallback: simple button
-    container.innerHTML = '<button style="padding:12px 32px;background:var(--t1,#1a1814);color:#fff;border:none;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.1em;cursor:pointer;font-family:inherit" onclick="handlePayment()">' + (isZh ? '购买完整报告 ' + KES_CONFIG.REPORT_PRICE : 'Purchase full report ' + KES_CONFIG.REPORT_PRICE_EN) + '</button>';
-    return;
-  }
-  var table = document.createElement('stripe-pricing-table');
-  table.setAttribute('pricing-table-id', KES_CONFIG.STRIPE_PRICING_TABLE_ID);
-  table.setAttribute('publishable-key', KES_CONFIG.STRIPE_PUBLISHABLE_KEY);
-  if(kesUser && kesUser.email){
-    table.setAttribute('customer-email', kesUser.email);
-  }
-  container.innerHTML = '';
-  container.appendChild(table);
 }
 
 /* ── Init ── */
 initAuth();
 
 // Render Stripe pricing when page loads
-document.addEventListener("DOMContentLoaded", function(){ setTimeout(renderStripePricing, 500); });
+document.addEventListener("DOMContentLoaded", function(){ setTimeout(checkPaidAndUnlock, 500); });

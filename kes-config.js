@@ -13,7 +13,14 @@ var KES_CONFIG = {
   // Stripe
   STRIPE_PUBLISHABLE_KEY: 'pk_live_51TL0bI5tISGwngzcgh9EWYF7cFlJdUatfbAvCDQ4HnuLVBJgaSKYdERtxFLuve0fjLcewdgBlQdO3CM7YKcEL3ME00qsZ1iDd3',
   STRIPE_PRICING_TABLE_ID: 'prctbl_1TL0nU5tISGwngzcss0E2RA1',
-  STRIPE_PRICE_ID: '',  // not needed with pricing table
+  STRIPE_PRICE_ID: '',
+
+  // Stripe Payment Link — 在Stripe Dashboard创建
+  // Dashboard → Products → Payment Links → Create → 设置Success URL为:
+  //   https://keyofelements.com/index.html?payment=success (中文)
+  //   https://keyofelements.com/en.html?payment=success (英文)
+  // 然后把链接粘贴到这里
+  STRIPE_PAYMENT_LINK: 'https://buy.stripe.com/9B6dR27778ye0NZfxm5c400',
 
   // 报告价格（仅展示用）
   REPORT_PRICE: '¥29.9',

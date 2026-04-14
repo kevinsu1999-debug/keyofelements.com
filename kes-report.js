@@ -84,7 +84,7 @@ function renderReport(d){
   /* If already unlocked, show advanced content */
   if(_rptUnlocked) doUnlockAdvanced();
   /* Render Stripe pricing in unlock area */
-  if(typeof renderStripePricing==='function') setTimeout(renderStripePricing, 300);
+  if(typeof checkPaidAndUnlock==='function') setTimeout(checkPaidAndUnlock, 300);
 }
 
 /* 01 Four Pillars — EN: no ten-god labels, only Chinese chars + position labels */
@@ -280,7 +280,7 @@ function doUnlockAdvanced(){
   if(unlock) unlock.style.display = 'none';
   if(content) content.style.display = '';
   if(lockIcon) lockIcon.innerHTML = '';
-  try { sessionStorage.setItem('kes_unlocked','1'); } catch(e){}
+  try { sessionStorage.setItem('kes_code_unlocked','1'); } catch(e){}
 }
 
 function toggleNav(){
@@ -290,7 +290,8 @@ function toggleNav(){
   if(links)links.classList.toggle('open');
 }
 
-// Check if already unlocked (session)
+// Check if already unlocked (session) — only for code unlocks, NOT payment
+// Payment unlock is checked via kesUser.paid in kes-auth.js
 try {
-  if(sessionStorage.getItem('kes_unlocked')==='1') _rptUnlocked = true;
+  if(sessionStorage.getItem('kes_code_unlocked')==='1') _rptUnlocked = true;
 } catch(e){}
