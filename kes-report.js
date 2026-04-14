@@ -34,6 +34,13 @@ function fmtDate(d){
   return months[parseInt(m[1])]+ ' '+m[2];
 }
 
+function fmtBirth(d){
+  var m=d.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+  if(!m)return d;
+  var months=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(m[2])]+' '+m[3]+', '+m[1];
+}
+
 
 async function submitReading(){
   var y=+$('birthYear').value,m=+$('birthMonth').value,d=+$('birthDay').value;
@@ -61,7 +68,7 @@ function renderReport(d){
   var wxZh=isEn?({'Wood':'木','Fire':'火','Earth':'土','Metal':'金','Water':'水'}[wx]||wx):wx;
   var c=WX_C[wxZh]||'tu';
   H('rpt-gender','<b>'+d.meta.gender_label+'</b>');
-  T('rpt-birth',d.meta.birth+(isEn?'':' '+d.meta.birth_hour_branch+'时'));
+  T('rpt-birth',(isEn?fmtBirth(d.meta.birth):d.meta.birth+' '+d.meta.birth_hour_branch+'时'));
   H('rpt-daymaster','<b class="e-'+c+'">'+ds+' '+wx+'</b>');
   T('rpt-birthplace',d.meta.birth_city||'—');
   T('rpt-residence',d.meta.residence_city||(isEn?'Not specified':'—'));

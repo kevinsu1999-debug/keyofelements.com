@@ -1065,8 +1065,8 @@ body{font-size:15px;line-height:1.75}
 .r-tbl{border:1px solid var(--line);border-radius:var(--r);overflow:hidden}.r-tbl-head{display:grid;padding:10px 16px;background:var(--bg2);font-size:var(--fs-xs);letter-spacing:.06em;color:var(--t3);border-bottom:1px solid var(--line)}.r-tbl-row{display:grid;padding:12px 16px;border-bottom:1px solid var(--line);font-size:var(--fs-sm);align-items:center}.r-tbl-row:last-child{border-bottom:none}.r-tbl-row.now{background:rgba(134,150,167,.04)}.r-tbl-row.r-tbl-cur{background:rgba(134,150,167,.06);border-left:3px solid var(--a)}.r-tbl-3{grid-template-columns:52px 52px 1fr}.r-a-year{font-size:var(--fs-sm);color:var(--t2)}.r-tbl-row.now .r-a-year{color:var(--t1);font-weight:600}.r-a-gz{font-size:var(--fs-sm);font-weight:700}.r-a-body{display:flex;align-items:center;gap:8px}.r-a-stars{font-size:var(--fs-sm);flex-shrink:0;letter-spacing:1px}.r-a-note{font-size:var(--fs-sm);color:var(--t2);line-height:1.6}.r-a-note b{color:var(--t1);font-weight:600}
 /* liunian detail */
 .r-ly-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;margin-bottom:20px}.r-ly-h{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:4px}.r-ly-sub{font-size:var(--fs-sm);color:var(--t3);margin-bottom:16px}.r-ly-body{font-size:var(--fs);color:var(--t2);line-height:1.9}.r-ly-body p{margin-bottom:12px}.r-ly-body b{color:var(--t1);font-weight:600}
-/* warnings - clean white style */
-.r-warn{border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;background:var(--card)}.r-warn::before{display:none}.r-warn-title{font-size:var(--fs-sm);font-weight:600;color:var(--t1);margin-bottom:6px}.r-warn-body{font-size:var(--fs-sm);color:var(--t2);line-height:1.8}.r-warn-body b{color:var(--t1);font-weight:600}
+/* warnings */
+.r-warn{border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden}.r-warn::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px}.r-warn.w-red::before{background:var(--huo)}.r-warn.w-red{border-color:var(--huo-l);background:var(--huo-bg)}.r-warn.w-gold::before{background:var(--jin)}.r-warn.w-gold{border-color:var(--jin-l);background:var(--jin-bg)}.r-warn.w-blue::before{background:var(--shui)}.r-warn.w-blue{border-color:var(--shui-l);background:var(--shui-bg)}.r-warn-title{font-size:var(--fs-sm);font-weight:600;color:var(--t1);margin-bottom:6px}.r-warn-body{font-size:var(--fs-sm);color:var(--t2);line-height:1.8}.r-warn-body b{color:var(--t1);font-weight:600}
 /* recommendations */
 .r-rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.r-rec-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}.r-rec-card.full{grid-column:1/-1}.r-rec-num{font-size:var(--fs-xs);color:var(--t4);letter-spacing:.1em;margin-bottom:8px}.r-rec-title{font-size:var(--fs);font-weight:600;color:var(--t1);line-height:1.5}.r-rec-body{font-size:var(--fs-sm);color:var(--t2);line-height:1.8}.r-rec-body b{color:var(--t1);font-weight:600}.r-rec-list{margin-top:6px;padding-left:0;list-style:none}.r-rec-list li{font-size:var(--fs-sm);color:var(--t2);line-height:1.8;padding-left:14px;position:relative}.r-rec-list li::before{content:'·';position:absolute;left:0;color:var(--t4);font-weight:700}.r-rec-swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}.r-rec-swatch{border-radius:8px;padding:10px 12px;border:1px solid var(--line)}.r-rec-sw-label{font-size:var(--fs-xs);letter-spacing:.08em;font-weight:600;margin-bottom:8px}.r-rec-sw-dots{display:flex;gap:5px;margin-bottom:6px}.r-rec-sw-dot{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,.06)}.r-rec-sw-names{font-size:var(--fs-xs);color:var(--t3)}.r-rec-tag{display:inline-block;margin-top:10px;padding:5px 14px;background:var(--bg2);border-radius:100px;font-size:var(--fs-sm);color:var(--t2)}.r-rec-tag b{font-weight:600;color:var(--t1)}
 /* ziwei */
@@ -1463,14 +1463,14 @@ body{font-size:15px;line-height:1.75}
         <div class="pc-e-dot" style="background:var(--shui)"></div>
         
       </div>
-      <div class="pc-body"><div class="pc-el">水</div><div class="pc-name">藏蓝简约连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 520</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">水 · 服饰 · 女</div><div class="pc-name">藏蓝简约连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 520</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('香槟色宽松外套')" style="cursor:pointer" data-e="jin">
       <div class="pc-img" style="background:#f0ead4">
         <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#e4d8b0" stroke="#ccbe88" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#daccA0"/></svg>
         <div class="pc-e-dot" style="background:var(--jin)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">金</div><div class="pc-name">香槟色宽松外套</div><div class="pc-foot"><div class="pc-price">¥ 680</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">金 · 服饰 · 中性</div><div class="pc-name">香槟色宽松外套</div><div class="pc-foot"><div class="pc-price">¥ 680</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('墨黑皮质手包')" style="cursor:pointer" data-e="shui">
       <div class="pc-img" style="background:#e0e8f0">
@@ -1478,42 +1478,42 @@ body{font-size:15px;line-height:1.75}
         <div class="pc-e-dot" style="background:var(--shui)"></div>
         
       </div>
-      <div class="pc-body"><div class="pc-el">水　包袋</div><div class="pc-name">墨黑皮质手包</div><div class="pc-foot"><div class="pc-price">¥ 390</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">水 · 服饰 · 女</div><div class="pc-name">墨黑皮质手包</div><div class="pc-foot"><div class="pc-price">¥ 390</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('金属链条叠戴项链')" style="cursor:pointer" data-e="jin">
       <div class="pc-img" style="background:#f4f0e4">
         <svg width="86" height="86" viewBox="0 0 86 86"><ellipse cx="43" cy="54" rx="27" ry="15" fill="none" stroke="#b89828" stroke-width="2.5"/><ellipse cx="43" cy="30" rx="19" ry="11" fill="none" stroke="#b89828" stroke-width="2.5"/><circle cx="43" cy="43" r="3.5" fill="#a08828"/></svg>
         <div class="pc-e-dot" style="background:var(--jin)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">金　首饰</div><div class="pc-name">金属链条叠戴项链</div><div class="pc-foot"><div class="pc-price">¥ 280</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">金 · 服饰 · 中性</div><div class="pc-name">金属链条叠戴项链</div><div class="pc-foot"><div class="pc-price">¥ 280</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('鼠尾草色亚麻衬衫')" style="cursor:pointer" data-e="mu">
       <div class="pc-img" style="background:#e0ecd8">
         <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#bcd4b8" stroke="#98b890" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#aec8a8"/></svg>
         <div class="pc-e-dot" style="background:var(--mu)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">木</div><div class="pc-name">鼠尾草色亚麻衬衫</div><div class="pc-foot"><div class="pc-price">¥ 380</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">木 · 服饰 · 中性</div><div class="pc-name">鼠尾草色亚麻衬衫</div><div class="pc-foot"><div class="pc-price">¥ 380</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('砖红中长连衣裙')" style="cursor:pointer" data-e="huo">
       <div class="pc-img" style="background:#f0e0d8">
         <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#c86050" stroke="#a84030" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#b85040"/></svg>
         <div class="pc-e-dot" style="background:var(--huo)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">火</div><div class="pc-name">砖红中长连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">火 · 服饰 · 女</div><div class="pc-name">砖红中长连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('驼色阔腿裤')" style="cursor:pointer" data-e="tu">
       <div class="pc-img" style="background:#f0e8d8">
         <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#c8a870" stroke="#a88850" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#b89060"/></svg>
         <div class="pc-e-dot" style="background:var(--tu)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">土</div><div class="pc-name">驼色阔腿裤</div><div class="pc-foot"><div class="pc-price">¥ 490</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">土 · 服饰 · 中性</div><div class="pc-name">驼色阔腿裤</div><div class="pc-foot"><div class="pc-price">¥ 490</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
     <div class="pc" onclick="openPDP('象牙色结构感托特包')" style="cursor:pointer" data-e="jin">
       <div class="pc-img" style="background:#f8f4ec">
         <svg width="88" height="88" viewBox="0 0 88 88"><rect x="14" y="30" width="60" height="38" rx="18" fill="#e8e0c0" stroke="#d0c898" stroke-width="1"/><rect x="22" y="12" width="44" height="24" rx="11" fill="#f0e8c8" stroke="#d8d0a8" stroke-width="1"/><circle cx="44" cy="24" r="4" fill="#c8a830" opacity=".6"/></svg>
         <div class="pc-e-dot" style="background:var(--jin)"></div>
       </div>
-      <div class="pc-body"><div class="pc-el">金　包袋</div><div class="pc-name">象牙色结构感托特包</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
+      <div class="pc-body"><div class="pc-el">金 · 服饰 · 中性</div><div class="pc-name">象牙色结构感托特包</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
     </div>
   </div>
 
@@ -1655,7 +1655,14 @@ body{font-size:15px;line-height:1.75}
 
   <!-- 16 综合建议 -->
   <div class="r-sec"><div class="r-num">16</div><div class="r-h">综合建议</div><div class="r-sub">基于命局与现居地的实操方向</div>
-    <div id="rpt-recs"></div>
+    <div class="r-rec-grid" id="rpt-recs">
+      <div class="r-rec-card"><div class="r-rec-num">财运方向</div><div class="r-rec-body" id="rpt-rec-wealth"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">感情建议</div><div class="r-rec-body" id="rpt-rec-love"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">行业推荐</div><div class="r-rec-body" id="rpt-rec-industry"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">宜居方位</div><div class="r-rec-body" id="rpt-rec-location"></div></div>
+      <div class="r-rec-card full"><div class="r-rec-num">幸运颜色</div><div class="r-rec-body" id="rpt-rec-color"></div></div>
+      <div class="r-rec-card"><div class="r-rec-num">养生重点</div><div class="r-rec-body" id="rpt-rec-health"></div></div>
+    </div>
   </div>
 
   <div class="r-disclaimer">
@@ -1696,14 +1703,14 @@ body{font-size:15px;line-height:1.75}
         <div class="sgc-dot" style="background:var(--shui)"></div>
         
       </div>
-      <div class="sgc-body"><div class="sgc-el">水</div><div class="sgc-name" onclick="openPDP('藏蓝简约连衣裙')" style="cursor:pointer">藏蓝简约连衣裙</div><div class="sgc-foot"><div class="sgc-price">¥ 520</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">水 · 服饰 · 女</div><div class="sgc-name" onclick="openPDP('藏蓝简约连衣裙')" style="cursor:pointer">藏蓝简约连衣裙</div><div class="sgc-foot"><div class="sgc-price">¥ 520</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="jin">
       <div class="sgc-img" style="background:#f0ead4">
         <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#e4d8b0" stroke="#ccbe88" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#daccA0"/></svg>
         <div class="sgc-dot" style="background:var(--jin)"></div>
       </div>
-      <div class="sgc-body"><div class="sgc-el">金</div><div class="sgc-name" onclick="openPDP('香槟色宽松外套')" style="cursor:pointer">香槟色宽松外套</div><div class="sgc-foot"><div class="sgc-price">¥ 680</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">金 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('香槟色宽松外套')" style="cursor:pointer">香槟色宽松外套</div><div class="sgc-foot"><div class="sgc-price">¥ 680</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="shui">
       <div class="sgc-img" style="background:#e0e8f0">
@@ -1711,7 +1718,7 @@ body{font-size:15px;line-height:1.75}
         <div class="sgc-dot" style="background:var(--shui)"></div>
         
       </div>
-      <div class="sgc-body"><div class="sgc-el">水　包袋</div><div class="sgc-name" onclick="openPDP('墨黑皮质手包')" style="cursor:pointer">墨黑皮质手包</div><div class="sgc-foot"><div class="sgc-price">¥ 390</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">水 · 服饰 · 女</div><div class="sgc-name" onclick="openPDP('墨黑皮质手包')" style="cursor:pointer">墨黑皮质手包</div><div class="sgc-foot"><div class="sgc-price">¥ 390</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="jin">
       <div class="sgc-img" style="background:#f4f0e4">
@@ -1719,28 +1726,28 @@ body{font-size:15px;line-height:1.75}
         <div class="sgc-dot" style="background:var(--jin)"></div>
         
       </div>
-      <div class="sgc-body"><div class="sgc-el">金　首饰</div><div class="sgc-name" onclick="openPDP('金属链条叠戴项链')" style="cursor:pointer">金属链条叠戴项链</div><div class="sgc-foot"><div class="sgc-price">¥ 280</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">金 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('金属链条叠戴项链')" style="cursor:pointer">金属链条叠戴项链</div><div class="sgc-foot"><div class="sgc-price">¥ 280</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="mu">
       <div class="sgc-img" style="background:#e0ecd8">
         <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#bcd4b8" stroke="#98b890" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#aec8a8"/></svg>
         <div class="sgc-dot" style="background:var(--mu)"></div>
       </div>
-      <div class="sgc-body"><div class="sgc-el">木</div><div class="sgc-name" onclick="openPDP('鼠尾草色亚麻衬衫')" style="cursor:pointer">鼠尾草色亚麻衬衫</div><div class="sgc-foot"><div class="sgc-price">¥ 380</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">木 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('鼠尾草色亚麻衬衫')" style="cursor:pointer">鼠尾草色亚麻衬衫</div><div class="sgc-foot"><div class="sgc-price">¥ 380</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="huo">
       <div class="sgc-img" style="background:#f0e0d8">
         <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#c86050" stroke="#a84030" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#b85040"/></svg>
         <div class="sgc-dot" style="background:var(--huo)"></div>
       </div>
-      <div class="sgc-body"><div class="sgc-el">火</div><div class="sgc-name" onclick="openPDP('砖红中长连衣裙')" style="cursor:pointer">砖红中长连衣裙</div><div class="sgc-foot"><div class="sgc-price">¥ 560</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">火 · 服饰 · 女</div><div class="sgc-name" onclick="openPDP('砖红中长连衣裙')" style="cursor:pointer">砖红中长连衣裙</div><div class="sgc-foot"><div class="sgc-price">¥ 560</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="tu">
       <div class="sgc-img" style="background:#f0e8d8">
         <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#c8a870" stroke="#a88850" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#b89060"/></svg>
         <div class="sgc-dot" style="background:var(--tu)"></div>
       </div>
-      <div class="sgc-body"><div class="sgc-el">土</div><div class="sgc-name" onclick="openPDP('驼色阔腿裤')" style="cursor:pointer">驼色阔腿裤</div><div class="sgc-foot"><div class="sgc-price">¥ 490</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">土 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('驼色阔腿裤')" style="cursor:pointer">驼色阔腿裤</div><div class="sgc-foot"><div class="sgc-price">¥ 490</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
     <div class="sgc" data-e="jin">
       <div class="sgc-img" style="background:#f8f4ec">
@@ -1748,7 +1755,7 @@ body{font-size:15px;line-height:1.75}
         <div class="sgc-dot" style="background:var(--jin)"></div>
         
       </div>
-      <div class="sgc-body"><div class="sgc-el">金　包袋</div><div class="sgc-name" onclick="openPDP('象牙色结构感托特包')" style="cursor:pointer">象牙色结构感托特包</div><div class="sgc-foot"><div class="sgc-price">¥ 560</div><div class="sgc-add">加入购物袋</div></div></div>
+      <div class="sgc-body"><div class="sgc-el">金 · 服饰 · 中性</div><div class="sgc-name" onclick="openPDP('象牙色结构感托特包')" style="cursor:pointer">象牙色结构感托特包</div><div class="sgc-foot"><div class="sgc-price">¥ 560</div><div class="sgc-add">加入购物袋</div></div></div>
     </div>
   </div>
 
