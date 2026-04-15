@@ -1000,24 +1000,21 @@ body{font-size:15px;line-height:1.75}
 .sh-chip-rows{display:flex;flex-direction:column;gap:8px;width:100%;max-width:760px}
 .sh-chip-rows .sh-chips{display:grid !important;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;justify-content:start !important}
 .sh-chip-rows .sh-chip{width:auto;min-width:0;padding:0 8px !important}
-/* Element row holds 6 element chips + 2 yin/yang chips → 8 total. Yin/Yang
-   span 3 cols each on desktop so the 2nd row fills full width cleanly. */
-.sh-chip-rows #shop-chips .sh-chip[data-dim="yy"]{grid-column:span 3}
-@media(max-width:768px){
-  .sh-chip-rows #shop-chips .sh-chip[data-dim="yy"]{grid-column:span 1}
-}
-/* Yin/Yang colors — black/white themed, but selected state avoids pure #000/#fff
-   so the contrast is softer and visually anchored to the brand cream. */
+/* Yin/Yang as persistent color markers — 阴 always black, 阳 always white.
+   Same size as element chips (inherit default 1-col grid). Selected state keeps
+   the color identity and adds a contrasting ring instead of inverting, so the
+   marker meaning doesn't flip. Ring colors stay off-black / off-cream to avoid
+   pure #000 / #fff. */
 .sh-chip.yy-yin{background:#1a1a1a !important;color:#f4f2ee !important;border-color:#1a1a1a !important}
 .sh-chip.yy-yin span{color:#f4f2ee !important;font-family:'Noto Serif SC',serif}
 .sh-chip.yy-yin:hover{background:#2a2a2a !important;border-color:#2a2a2a !important}
-.sh-chip.yy-yin.on{background:#f4f2ee !important;color:#1a1a1a !important;border-color:#1a1a1a !important;box-shadow:inset 0 0 0 1px #1a1a1a}
-.sh-chip.yy-yin.on span{color:#1a1a1a !important}
+.sh-chip.yy-yin.on{background:#1a1a1a !important;color:#f4f2ee !important;border-color:#f4f2ee !important;box-shadow:inset 0 0 0 2px #f4f2ee,0 0 0 1px #1a1a1a}
+.sh-chip.yy-yin.on span{color:#f4f2ee !important}
 .sh-chip.yy-yang{background:#f4f2ee !important;color:#1a1a1a !important;border-color:#1a1a1a !important}
 .sh-chip.yy-yang span{color:#1a1a1a !important;font-family:'Noto Serif SC',serif}
 .sh-chip.yy-yang:hover{background:#fff !important;border-color:#1a1a1a !important}
-.sh-chip.yy-yang.on{background:#2a2a2a !important;color:#f4f2ee !important;border-color:#2a2a2a !important;box-shadow:inset 0 0 0 1px #f4f2ee}
-.sh-chip.yy-yang.on span{color:#f4f2ee !important}
+.sh-chip.yy-yang.on{background:#f4f2ee !important;color:#1a1a1a !important;border-color:#1a1a1a !important;box-shadow:inset 0 0 0 2px #1a1a1a}
+.sh-chip.yy-yang.on span{color:#1a1a1a !important}
 @media(max-width:640px){
   .sh-chip-rows .sh-chips{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sh-chip-bar-top{flex-direction:column;align-items:flex-start;gap:8px;text-align:left}
