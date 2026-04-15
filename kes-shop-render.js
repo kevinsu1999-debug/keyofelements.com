@@ -7,11 +7,68 @@
 var _shopProducts = null;   // in-memory cache from /api/products
 var _shopLoading = false;
 var _currentPDP = null;     // product being shown in PDP
+var _filterElement = 'all'; // 'all' | 'shui' | 'jin' | 'mu' | 'huo' | 'tu'
+var _filterCategory = 'all';// 'all' | 'clothing' | 'accessory' | 'life' | 'service' | 'other'
+var _shuffleOrder = null;   // cached random ordering for current session
 
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', function(){
+  injectCategoryChips();
+  resetFilterChipState();
+  // Override the global shopFilter (originally defined in index.html for hardcoded products).
+  // We replace with a re-render-based filter that supports both element + category dimensions.
+  window.shopFilter = function(e, btn){
+    _filterElement = e;
+    document.querySelectorAll('#shop-chips .sh-chip').forEach(function(b){ b.classList.remove('on'); });
+    if(btn) btn.classList.add('on');
+    renderShopGrid();
+  };
+  window.shopFilterCat = function(c, btn){
+    _filterCategory = c;
+    document.querySelectorAll('#shop-chips-cat .sh-chip').forEach(function(b){ b.classList.remove('on'); });
+    if(btn) btn.classList.add('on');
+    renderShopGrid();
+  };
   loadShopProducts();
 });
+
+/* Inject a second chip row for category filter, right under the element chips. */
+function injectCategoryChips(){
+  var elemChips = document.getElementById('shop-chips');
+  if(!elemChips) return;
+  // Avoid double injection
+  if(document.getElementById('shop-chips-cat')) return;
+  var isZh = document.documentElement.lang === 'zh';
+  var CATS = isZh
+    ? [['all','全部'],['clothing','服饰'],['accessory','配饰'],['life','生活'],['service','服务'],['other','其他']]
+    : [['all','All'],['clothing','Clothing'],['accessory','Accessory'],['life','Life'],['service','Service'],['other','Other']];
+  var row = document.createElement('div');
+  row.className = 'sh-chips';
+  row.id = 'shop-chips-cat';
+  row.style.marginTop = '8px';
+  row.innerHTML = CATS.map(function(c, i){
+    return '<button class="sh-chip'+(i===0?' on':'')+'" onclick="shopFilterCat(\''+c[0]+'\',this)">'+c[1]+'</button>';
+  }).join('');
+  elemChips.parentNode.insertBefore(row, elemChips.nextSibling);
+}
+
+/* Force the "All" element chip to be active by default (was hardcoded as 水/water). */
+function resetFilterChipState(){
+  var chips = document.querySelectorAll('#shop-chips .sh-chip');
+  chips.forEach(function(b){ b.classList.remove('on'); });
+  // First chip in the row is the "All / 全部" button per existing HTML
+  var allChip = chips[0];
+  if(allChip) allChip.classList.add('on');
+}
+
+/* Fisher-Yates shuffle (in place) */
+function shuffleArr(a){
+  for(var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
 
 async function loadShopProducts(){
   if(_shopLoading) return;
@@ -42,12 +99,39 @@ function renderShopGrid(){
     return;
   }
 
-  // Sort by metadata.sort_order asc, then by created desc (already sorted server-side alphabetically).
-  var sorted = _shopProducts.slice().sort(function(a, b){
-    var sa = parseInt((a.metadata||{}).sort_order || a.sort_order || '99');
-    var sb = parseInt((b.metadata||{}).sort_order || b.sort_order || '99');
-    return sa - sb;
+  // ── Filter: by element AND by category ──
+  var filtered = _shopProducts.filter(function(p){
+    var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[p.element] || '';
+    var elemOk = (_filterElement === 'all') || (elemClass === _filterElement);
+    var catOk  = (_filterCategory === 'all') || ((p.category || '') === _filterCategory);
+    return elemOk && catOk;
   });
+
+  // ── Sort ──
+  // Default (both filters 'all'): random order, cached for the session so
+  // re-renders don't reshuffle while the user is browsing.
+  // Any specific filter applied: alphabetical by display name.
+  var sorted;
+  if(_filterElement === 'all' && _filterCategory === 'all'){
+    if(!_shuffleOrder || _shuffleOrder.length !== _shopProducts.length){
+      _shuffleOrder = _shopProducts.map(function(p){ return p.id; });
+      shuffleArr(_shuffleOrder);
+    }
+    var idxOf = {};
+    _shuffleOrder.forEach(function(id, i){ idxOf[id] = i; });
+    sorted = filtered.slice().sort(function(a,b){ return (idxOf[a.id]||0) - (idxOf[b.id]||0); });
+  } else {
+    sorted = filtered.slice().sort(function(a,b){
+      var na = String(isZh ? (a.name_zh || a.name) : a.name).toLowerCase();
+      var nb = String(isZh ? (b.name_zh || b.name) : b.name).toLowerCase();
+      return na.localeCompare(nb);
+    });
+  }
+
+  if(!sorted.length){
+    grid.innerHTML = '<div class="shop-empty" style="grid-column:1/-1;padding:60px 20px;text-align:center;color:var(--t3)"><div style="font-size:13px">'+(isZh?'当前筛选下没有商品':'No products match the current filter')+'</div></div>';
+    return;
+  }
 
   grid.innerHTML = sorted.map(function(p){
     var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[p.element] || 'shui';
@@ -93,15 +177,6 @@ function renderShopGrid(){
       '</div>' +
     '</div>';
   }).join('');
-
-  // Re-apply the active filter chip (default is "shui" per existing markup)
-  setTimeout(function(){
-    var activeChip = document.querySelector('#shop-chips .sh-chip.on');
-    if(activeChip){
-      var m = (activeChip.getAttribute('onclick')||'').match(/shopFilter\(['"]([^'"]+)['"]/);
-      if(m && typeof shopFilter === 'function') shopFilter(m[1], activeChip);
-    }
-  }, 0);
 }
 
 /* ── PDP (product detail panel) ── */
@@ -122,7 +197,9 @@ function openPDPFromProduct(id){
   if(elE) elE.innerHTML = '<span class="'+elemClass+'">'+(p.element||'')+'</span>';
   if(nmE) nmE.textContent = displayName;
   if(prE) prE.textContent = p.price_display || '';
-  if(dsE) dsE.textContent = p.description || '';
+  // Pick description by language: ZH site → description_zh (fallback EN), EN site → description (fallback ZH)
+  var displayDesc = isZh ? (p.description_zh || p.description || '') : (p.description || p.description_zh || '');
+  if(dsE) dsE.textContent = displayDesc;
 
   // Main image (if PDP has an image slot)
   var pdpImg = document.getElementById('pdp-img');

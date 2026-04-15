@@ -48,6 +48,7 @@ module.exports = async (req, res) => {
         id: p.id,
         name: p.name,
         description: p.description || '',
+        description_zh: meta.description_zh || '',
         images: p.images || [],
         // 从 Stripe metadata 读取五行属性等自定义字段
         element: meta.element || '',              // 五行: 金/木/水/火/土

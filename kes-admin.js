@@ -281,7 +281,8 @@ function renderProductForm(){
       formField('name','Name (EN)', '<input id="pfName" value="'+escapeAttr(p.name||'')+'">') +
       formField('name_zh','Name (ZH)', '<input id="pfNameZh" value="'+escapeAttr(m.name_zh||'')+'">') +
     '</div>' +
-    formField('description','Description', '<textarea id="pfDesc" rows="3">'+escapeHtml(p.description||'')+'</textarea>') +
+    formField('description','Description (EN)', '<textarea id="pfDesc" rows="3" placeholder="English description shown on /en site">'+escapeHtml(p.description||'')+'</textarea>') +
+    formField('description_zh','Description (ZH) / 中文描述', '<textarea id="pfDescZh" rows="3" placeholder="中文描述，展示在中文站">'+escapeHtml(m.description_zh||'')+'</textarea>') +
     '<div class="form-grid2">' +
       formField('price','Price (major unit, e.g. 29.90)', '<input id="pfPrice" type="number" step="0.01" value="'+escapeAttr(priceMajor)+'">') +
       formField('currency','Currency', '<select id="pfCur">'+
@@ -393,6 +394,7 @@ async function saveProduct(){
   var name = document.getElementById('pfName').value.trim();
   var nameZh = document.getElementById('pfNameZh').value.trim();
   var desc = document.getElementById('pfDesc').value.trim();
+  var descZh = document.getElementById('pfDescZh').value.trim();
   var priceMajor = parseFloat(document.getElementById('pfPrice').value);
   var cur = document.getElementById('pfCur').value;
   var elem = document.getElementById('pfElem').value;
@@ -416,6 +418,7 @@ async function saveProduct(){
   var unit_amount = Math.round(priceMajor * 100);
   var metadata = {};
   if(nameZh) metadata.name_zh = nameZh;
+  if(descZh) metadata.description_zh = descZh;
   if(elem) { metadata.element = elem; metadata.element_class = {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[elem]||''; }
   if(cat) metadata.category = cat;
   if(gender) metadata.gender = gender;
