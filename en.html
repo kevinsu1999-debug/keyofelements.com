@@ -2843,11 +2843,12 @@ function pickSize(el){
 <script src="kes-shop.js"></script>
 <script src="kes-shop-render.js"></script>
 <script src="kes-report.js"></script>
-<script src="kes-hero.js"></script>
-<script src="kes-content.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="kes-config.js"></script>
+<!-- NOTE: kes-hero + kes-content must load AFTER kes-config.js -->
+<script src="kes-hero.js"></script>
+<script src="kes-content.js"></script>
 <script src="kes-auth.js"></script>
 </body>
 </html>
