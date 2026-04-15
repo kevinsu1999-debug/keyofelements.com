@@ -142,7 +142,7 @@ function loadPanel(tab){
   else if(tab === 'orders') loadOrders();
 }
 
-/* ── Page Images: editorial slots 1..4 + 4 page banners ── */
+/* ── Page Images: sectioned sub-directories ── */
 function loadPageImages(){
   var host = document.getElementById('pageImgGrid');
   if(!host) return;
@@ -150,39 +150,61 @@ function loadPageImages(){
   var pubBase = sbBase + '/storage/v1/object/public/page-images/';
   var v = '?v=' + Math.floor(Date.now()/60000);
 
-  var editorialSlots = [
-    {slot:1, filename:'home_1.jpg', label:'Editorial · 水 Water', ratio:'4/5'},
-    {slot:2, filename:'home_2.jpg', label:'Editorial · 金 Metal', ratio:'4/5'},
-    {slot:3, filename:'home_3.jpg', label:'Editorial · 木 Wood',  ratio:'4/5'},
-    {slot:4, filename:'home_4.jpg', label:'Editorial · 火 Fire',  ratio:'4/5'}
-  ];
-  var bannerSlots = [
-    {slot:'banner_home',  filename:'banner_home.jpg',  label:'Homepage Banner',  ratio:'16/9'},
-    {slot:'banner_shop',  filename:'banner_shop.jpg',  label:'Shop Page Banner', ratio:'16/9'},
-    {slot:'banner_learn', filename:'banner_learn.jpg', label:'Learn Page Banner',ratio:'16/9'},
-    {slot:'banner_about', filename:'banner_about.jpg', label:'About Page Banner',ratio:'16/9'}
+  var SECTIONS = [
+    {
+      title: 'Homepage Editorial',
+      note: 'The four-image grid under "Live with what resonates". Portrait 4:5 works best.',
+      cols: 4,       // 4 cards per row, small previews
+      ratio: '4/5',
+      slots: [
+        {slot:1, filename:'home_1.jpg', label:'Slot 1 · Water 水'},
+        {slot:2, filename:'home_2.jpg', label:'Slot 2 · Metal 金'},
+        {slot:3, filename:'home_3.jpg', label:'Slot 3 · Wood  木'},
+        {slot:4, filename:'home_4.jpg', label:'Slot 4 · Fire  火'}
+      ]
+    },
+    {
+      title: 'Page Banners',
+      note: 'Wide 16:9 banner at the top of each page. Stays hidden until uploaded.',
+      cols: 4,
+      ratio: '16/9',
+      slots: [
+        {slot:'banner_home',  filename:'banner_home.jpg',  label:'Homepage'},
+        {slot:'banner_shop',  filename:'banner_shop.jpg',  label:'Shop page'},
+        {slot:'banner_learn', filename:'banner_learn.jpg', label:'Learn page'},
+        {slot:'banner_about', filename:'banner_about.jpg', label:'About page'}
+      ]
+    }
   ];
 
-  function renderSlot(s){
+  function renderSlot(s, ratio){
     var url = pubBase + s.filename + v;
     var slotAttr = typeof s.slot === 'number' ? s.slot : "'"+s.slot+"'";
     var safeId = String(s.slot).replace(/[^a-z0-9_]/gi,'_');
-    return '<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">' +
-      '<div style="font-size:11px;letter-spacing:.14em;color:var(--t3);text-transform:uppercase">'+s.label+'</div>' +
-      '<div style="aspect-ratio:'+s.ratio+';background:var(--bg2);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative">' +
+    return '<div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">' +
+      '<div style="font-size:10px;letter-spacing:.1em;color:var(--t3);text-transform:uppercase">'+s.label+'</div>' +
+      '<div style="aspect-ratio:'+ratio+';background:var(--bg2);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative">' +
         '<img id="pgimg-'+safeId+'" src="'+url+'" alt="" onload="this.style.opacity=1" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s">' +
-        '<div style="display:none;align-items:center;justify-content:center;color:var(--t3);font-size:12px;text-align:center;padding:20px">No image yet<br><span style="font-size:10px;color:var(--t4)">Upload below</span></div>' +
+        '<div style="display:none;align-items:center;justify-content:center;color:var(--t4);font-size:10px;text-align:center;padding:10px">empty</div>' +
       '</div>' +
       '<input type="file" id="pgfile-'+safeId+'" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadPageImage('+slotAttr+', this)">' +
-      '<button class="btn-sec" onclick="document.getElementById(\'pgfile-'+safeId+'\').click()" style="align-self:flex-start">Upload / Replace</button>' +
+      '<button class="btn-sec" style="font-size:10px;padding:6px 12px;align-self:flex-start" onclick="document.getElementById(\'pgfile-'+safeId+'\').click()">Upload</button>' +
     '</div>';
   }
 
-  host.innerHTML =
-    '<div style="grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--t2);text-transform:uppercase;font-weight:600;padding:4px 0">Editorial (homepage 2×2 grid)</div>' +
-    editorialSlots.map(renderSlot).join('') +
-    '<div style="grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--t2);text-transform:uppercase;font-weight:600;padding:16px 0 4px;border-top:1px solid var(--line);margin-top:8px">Page banners (wide 16:9)</div>' +
-    bannerSlots.map(renderSlot).join('');
+  host.innerHTML = SECTIONS.map(function(sec){
+    return '<div style="margin-bottom:28px">' +
+      '<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:4px;flex-wrap:wrap">' +
+        '<h3 style="font-family:\'Cormorant Garamond\',serif;font-size:20px;font-weight:400;color:var(--t1)">'+sec.title+'</h3>' +
+        '<div style="font-size:11px;color:var(--t3);flex:1;min-width:200px">'+sec.note+'</div>' +
+      '</div>' +
+      '<div style="height:1px;background:var(--line);margin:8px 0 16px"></div>' +
+      '<div style="display:grid;grid-template-columns:repeat('+sec.cols+',minmax(0,1fr));gap:12px">' +
+        sec.slots.map(function(s){ return renderSlot(s, sec.ratio); }).join('') +
+      '</div>' +
+    '</div>';
+  }).join('') +
+  '<style>@media(max-width:720px){#pageImgGrid [style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,minmax(0,1fr)) !important}}</style>';
 }
 
 /* ── Editable site text registry ──
@@ -237,9 +259,9 @@ async function loadSiteText(){
               textField(k.key,'en','English (EN)', en, k.lines) +
             '</div>' +
             '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px">' +
-              '<span id="stmsg-'+escAttr(k.key)+'" style="font-size:11px;color:var(--t3);align-self:center"></span>' +
-              '<button class="btn-sec" onclick="saveSiteText(\''+escAttr(k.key)+'\')">Save</button>' +
-              (byKey[k.key] ? '<button class="btn-sec" style="color:var(--huo);border-color:rgba(168,72,72,.3)" onclick="resetSiteText(\''+escAttr(k.key)+'\')">Reset to default</button>' : '') +
+              '<span id="stmsg-'+escapeAttr(k.key)+'" style="font-size:11px;color:var(--t3);align-self:center"></span>' +
+              '<button class="btn-sec" onclick="saveSiteText(\''+escapeAttr(k.key)+'\')">Save</button>' +
+              (byKey[k.key] ? '<button class="btn-sec" style="color:var(--huo);border-color:rgba(168,72,72,.3)" onclick="resetSiteText(\''+escapeAttr(k.key)+'\')">Reset to default</button>' : '') +
             '</div>' +
           '</div>';
         }).join('') +
@@ -251,11 +273,11 @@ async function loadSiteText(){
 }
 
 function textField(key, lang, label, value, lines){
-  var id = 'st-'+escAttr(key)+'-'+lang;
+  var id = 'st-'+escapeAttr(key)+'-'+lang;
   var style = 'background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;width:100%;resize:vertical;line-height:1.6;color:var(--t1);outline:none';
   if(lines <= 1){
     return '<div><label style="font-size:10px;letter-spacing:.12em;color:var(--t3);display:block;margin-bottom:4px">'+label+'</label>' +
-      '<input id="'+id+'" value="'+escAttr(value)+'" style="'+style+'"></div>';
+      '<input id="'+id+'" value="'+escapeAttr(value)+'" style="'+style+'"></div>';
   }
   return '<div><label style="font-size:10px;letter-spacing:.12em;color:var(--t3);display:block;margin-bottom:4px">'+label+'</label>' +
     '<textarea id="'+id+'" rows="'+lines+'" style="'+style+'">'+escapeHtml(value)+'</textarea></div>';
