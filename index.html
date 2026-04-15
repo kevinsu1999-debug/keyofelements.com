@@ -272,9 +272,10 @@ nav > *{position:relative;z-index:1}
 ══════════════════════════════════════ */
 .product-block{border-bottom:1px solid var(--line)}
 /* ── Page banner slot (hidden until admin uploads an image) ── */
-.page-banner{display:none;width:100%;overflow:hidden;border-bottom:1px solid var(--line)}
+.page-banner{display:none;width:100%;aspect-ratio:3/1;overflow:hidden;border-bottom:1px solid var(--line)}
 .page-banner[data-banner-loaded]{display:block}
-.page-banner img{width:100%;height:auto;display:block}
+.page-banner img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+@media(max-width:700px){.page-banner{aspect-ratio:16/9}}
 
 /* Homepage Philosophy hero image — placeholder visible by default; swapped for photo when admin uploads */
 .phi-hero-img{background:#ddd8cf;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
