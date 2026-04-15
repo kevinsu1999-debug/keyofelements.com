@@ -197,7 +197,9 @@ async function loadProducts(){
       var name = (p.metadata.name_zh ? p.metadata.name_zh + ' / ' : '') + p.name;
       var elem = p.metadata.element || '—';
       var price = (p.price_amount/100).toFixed(2) + ' ' + (p.price_currency||'').toUpperCase();
-      var status = p.active ? '<span class="pill pill-active">Active</span>' : '<span class="pill pill-archived">Archived</span>';
+      var hiddenFlag = (p.metadata && p.metadata.hidden === 'true');
+      var status = (p.active ? '<span class="pill pill-active">Active</span>' : '<span class="pill pill-archived">Archived</span>') +
+                   (hiddenFlag ? ' <span class="pill" style="background:rgba(134,150,167,.12);color:var(--a-d);border:1px solid rgba(134,150,167,.3);margin-left:4px">Hidden</span>' : '');
       return '<div class="t-row" style="grid-template-columns:'+cols+'" onclick="openProductModal(\''+p.id+'\')">' +
         '<div class="t-cell">'+thumb+'</div>' +
         '<div class="t-cell" style="flex-direction:column;align-items:flex-start;gap:2px;overflow:hidden">' +
@@ -303,6 +305,16 @@ function renderProductForm(){
     '</div>' +
     formField('sort','Sort order (lower shows first)', '<input id="pfSort" type="number" value="'+escapeAttr(m.sort_order||'99')+'">') +
     '<div class="form-row">' +
+      '<label>Visibility / \u5c55\u793a\u4f4d\u7f6e</label>' +
+      '<div style="display:flex;gap:14px;align-items:center;padding:8px 0">' +
+        '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t1);cursor:pointer;text-transform:none;letter-spacing:0">' +
+          '<input type="checkbox" id="pfShopVisible" '+(m.hidden==='true'?'':'checked')+' style="width:16px;height:16px;accent-color:var(--t1);cursor:pointer">' +
+          '<span>Show in public shop / \u5728\u5e97\u94fa\u4e2d\u5c55\u793a</span>' +
+        '</label>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--t3);margin-top:-4px">\u53d6\u6d88\u52fe\u9009\u540e\u4ea7\u54c1\u5728 Stripe \u4ecd\u7136\u5b58\u5728\u3001\u53ef\u88ab\u652f\u4ed8\u94fe\u63a5\u4f7f\u7528\uff0c\u4f46\u4e0d\u51fa\u73b0\u5728\u516c\u5f00 shop \u9875\u3002\u9002\u5408\u62a5\u544a\u89e3\u9501\u4e4b\u7c7b\u670d\u52a1\u578b\u4ea7\u54c1\u3002</div>' +
+    '</div>' +
+    '<div class="form-row">' +
       '<label>Product Images</label>' +
       '<div class="img-drop" id="imgDrop">Drag images here or click to browse<br><span style="font-size:10px">PNG / JPG / WebP · max 5 MB each</span></div>' +
       '<input type="file" id="imgInput" accept="image/*" multiple style="display:none">' +
@@ -401,6 +413,7 @@ async function saveProduct(){
   var cat = document.getElementById('pfCat').value;
   var gender = document.getElementById('pfGender').value;
   var sort = document.getElementById('pfSort').value;
+  var shopVisible = !!document.getElementById('pfShopVisible').checked;
 
   // Normalize staged sizes — drop blanks, dedupe by name
   var cleanSizes = [];
@@ -428,6 +441,9 @@ async function saveProduct(){
     metadata.sizes = cleanSizes.map(function(s){ return s.size; }).join(',');
   }
   if(sort) metadata.sort_order = String(sort);
+  // Visibility flag — when unchecked, mark hidden so /api/products excludes it from public shop.
+  // Admin endpoint always returns all products regardless of this flag.
+  metadata.hidden = shopVisible ? 'false' : 'true';
   // Preserve image paths list for bookkeeping
   var paths = _stagedImages.map(function(x){ return x.path || ''; }).filter(Boolean).join(',');
   if(paths) metadata.image_paths = paths;

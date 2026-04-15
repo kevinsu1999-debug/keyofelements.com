@@ -17,8 +17,12 @@ module.exports = async (req, res) => {
       expand: ['data.default_price']
     });
 
+    // 公开店铺：过滤掉 metadata.hidden === 'true' 的产品（如报告解锁这种服务型产品）。
+    // 后台 /api/admin/products 仍然会返回全部，方便管理。
+    const visible = products.data.filter(p => (p.metadata || {}).hidden !== 'true');
+
     // 格式化返回
-    const items = products.data.map(p => {
+    const items = visible.map(p => {
       const price = p.default_price;
       const meta = p.metadata || {};
 
