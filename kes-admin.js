@@ -255,24 +255,60 @@ function loadPageImages(){
 }
 
 /* ── Editable site text registry ──
- * Each entry defines a key plus helper UX (label, section, # of lines).
- * Keep keys dot-namespaced: `<page>.<section>.<field>`.
- * Frontend <element data-text="{key}"> elements get their content replaced. */
+ * `defaultZh/defaultEn` is the hardcoded value shipped in index.html / en.html.
+ * It pre-fills the editor so admin can tweak rather than retype from scratch.
+ * Saving an empty value = no override (page falls back to HTML default).
+ */
 var SITE_TEXT_KEYS = [
-  { section:'Homepage · Editorial', key:'home.editorial.eyebrow', label:'Eyebrow / kicker', lines:1 },
-  { section:'Homepage · Editorial', key:'home.editorial.title',   label:'Main title (use a blank line for each display line)', lines:4 },
-  { section:'Homepage · Editorial', key:'home.editorial.sub',     label:'Subtitle', lines:1 },
-  { section:'Homepage · Editorial', key:'home.editorial.cta',     label:'CTA button text', lines:1 },
-  { section:'Homepage · Philosophy', key:'home.philosophy.q1', label:'Quote 1 (hero quote)', lines:3 },
-  { section:'Homepage · Philosophy', key:'home.philosophy.q2', label:'Quote 2', lines:3 },
-  { section:'Homepage · Philosophy', key:'home.philosophy.q3', label:'Quote 3', lines:3 },
-  { section:'Homepage · Philosophy', key:'home.philosophy.q4', label:'Quote 4', lines:3 },
-  { section:'Shop Page', key:'shop.title', label:'Shop hero title', lines:2 },
-  { section:'Shop Page', key:'shop.sub',   label:'Shop hero subtitle', lines:2 },
-  { section:'About Page', key:'about.title', label:'About page title', lines:2 },
-  { section:'About Page', key:'about.body',  label:'About page body', lines:6 },
-  { section:'Learn Page', key:'learn.title', label:'Learn page title', lines:2 },
-  { section:'Learn Page', key:'learn.body',  label:'Learn page intro body', lines:6 },
+  // Homepage editorial
+  { key:'home.editorial.eyebrow', page:'home', area:'editorial', label:'Eyebrow',
+    defaultZh:'本　季　系　列', defaultEn:'This Season', lines:1 },
+  { key:'home.editorial.title', page:'home', area:'editorial', label:'Main title',
+    defaultZh:'选择与你\n同频的\n生活方式',
+    defaultEn:'Live with\nwhat\nresonates', lines:4 },
+  { key:'home.editorial.sub', page:'home', area:'editorial', label:'Subtitle',
+    defaultZh:'以色养命　以衣载元',
+    defaultEn:'Spring · 2026 Edition', lines:1 },
+  { key:'home.editorial.cta', page:'home', area:'editorial', label:'CTA button text',
+    defaultZh:'查看全部商品',
+    defaultEn:'Shop the collection', lines:1 },
+  // Homepage philosophy rotation (5 element quotes)
+  { key:'home.philosophy.q1', page:'home', area:'philosophy', label:'Quote · Water 水',
+    defaultZh:'天下莫柔弱于水，而攻坚强者莫之能胜。',
+    defaultEn:'Nothing is softer than water, yet nothing overcomes the hard and strong better.', lines:3 },
+  { key:'home.philosophy.q2', page:'home', area:'philosophy', label:'Quote · Metal 金',
+    defaultZh:'义者，宜也。当为则为，无所计较。',
+    defaultEn:'Righteousness is to do what is right — without calculation.', lines:3 },
+  { key:'home.philosophy.q3', page:'home', area:'philosophy', label:'Quote · Wood 木',
+    defaultZh:'仁者，爱人。推己及人，兼济天下。',
+    defaultEn:'Benevolence is to love others — extend yourself to serve the world.', lines:3 },
+  { key:'home.philosophy.q4', page:'home', area:'philosophy', label:'Quote · Fire 火',
+    defaultZh:'礼者，理也。进退有度，方圆有节。',
+    defaultEn:'Propriety is order — measure in retreat and advance, rhythm in principle.', lines:3 },
+  { key:'home.philosophy.q5', page:'home', area:'philosophy', label:'Quote · Earth 土',
+    defaultZh:'信者，诚也。表里如一，言出必践。',
+    defaultEn:'Faithfulness is sincerity — inside matches outside; words bind to deeds.', lines:3 },
+  // Shop hero
+  { key:'shop.title', page:'shop', area:'hero', label:'Shop title',
+    defaultZh:'穿上与你\n命格同频的颜色。',
+    defaultEn:'Live with\nWhat Resonates.', lines:2 },
+  { key:'shop.sub', page:'shop', area:'hero', label:'Shop subtitle',
+    defaultZh:'以色养命，以衣载元。每件 KES 单品都标注了五行属性，精准对应你的命格。',
+    defaultEn:'Every piece carries an elemental signature. Once you know yours, the right one finds you.', lines:3 },
+  // Learn page
+  { key:'learn.title', page:'learn', area:'hero', label:'Learn title',
+    defaultZh:'古老的东方哲学体系',
+    defaultEn:'Ancient Eastern Philosophy', lines:2 },
+  { key:'learn.body', page:'learn', area:'hero', label:'Learn intro',
+    defaultZh:'两千余年来，东方哲学以阴阳五行描述万物运行的规律。读懂这套语言，是解读自己命盘的第一步。',
+    defaultEn:'For over 2,000 years, Eastern philosophy has described the movement of all things through Yin-Yang and the Five Elements. Understanding this language is the first step to reading your own chart.', lines:5 },
+  // About page
+  { key:'about.title', page:'about', area:'hero', label:'About title',
+    defaultZh:'关于 KES',
+    defaultEn:'About KES', lines:2 },
+  { key:'about.body', page:'about', area:'hero', label:'About body',
+    defaultZh:'',
+    defaultEn:'', lines:6 },
 ];
 
 async function loadSiteText(){
@@ -284,50 +320,198 @@ async function loadSiteText(){
     var byKey = {};
     (d.texts || []).forEach(function(t){ byKey[t.key] = t; });
 
-    // Group keys by section
-    var sections = {};
-    SITE_TEXT_KEYS.forEach(function(k){
-      (sections[k.section] = sections[k.section] || []).push(k);
+    // Merge stored values onto the defaults registry (for pre-fill + preview)
+    var entries = SITE_TEXT_KEYS.map(function(k){
+      var row = byKey[k.key] || {};
+      return {
+        key: k.key, page: k.page, area: k.area, label: k.label, lines: k.lines,
+        defaultZh: k.defaultZh || '', defaultEn: k.defaultEn || '',
+        customZh: row.zh != null && row.zh !== '' ? row.zh : null,
+        customEn: row.en != null && row.en !== '' ? row.en : null,
+        hasCustom: !!(row.zh || row.en),
+      };
     });
 
-    host.className = '';
-    host.innerHTML = Object.keys(sections).map(function(sec){
-      return '<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px">' +
-        '<div style="font-size:11px;letter-spacing:.14em;color:var(--t2);text-transform:uppercase;font-weight:600;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+sec+'</div>' +
-        sections[sec].map(function(k){
-          var t = byKey[k.key] || {};
-          var zh = (t.zh != null ? t.zh : '');
-          var en = (t.en != null ? t.en : '');
-          return '<div style="margin-bottom:18px">' +
-            '<div style="font-size:12px;color:var(--t1);margin-bottom:4px;font-weight:500">'+escapeHtml(k.label)+'</div>' +
-            '<div style="font-size:10px;color:var(--t4);font-family:monospace;margin-bottom:8px">'+k.key+'</div>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
-              textField(k.key,'zh','中文 (ZH)', zh, k.lines) +
-              textField(k.key,'en','English (EN)', en, k.lines) +
-            '</div>' +
-            '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px">' +
-              '<span id="stmsg-'+escapeAttr(k.key)+'" style="font-size:11px;color:var(--t3);align-self:center"></span>' +
-              '<button class="btn-sec" onclick="saveSiteText(\''+escapeAttr(k.key)+'\')">Save</button>' +
-              (byKey[k.key] ? '<button class="btn-sec" style="color:var(--huo);border-color:rgba(168,72,72,.3)" onclick="resetSiteText(\''+escapeAttr(k.key)+'\')">Reset to default</button>' : '') +
-            '</div>' +
-          '</div>';
-        }).join('') +
+    var byPage = { home: [], shop: [], learn: [], about: [] };
+    entries.forEach(function(e){ (byPage[e.page] || []).push(e); });
+
+    var css =
+      '<style>' +
+      '.st-help{font-size:11px;color:var(--t3);line-height:1.7;margin-bottom:20px;padding:14px 16px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--a)}' +
+      '.st-pages{display:flex;flex-direction:column;gap:22px;max-width:1200px}' +
+      '.st-page{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}' +
+      '.st-page-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:18px 24px;border-bottom:1px solid var(--line);background:var(--bg2)}' +
+      '.st-page-head h3{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:400;color:var(--t1)}' +
+      '.st-page-head .st-page-url{font-size:10px;color:var(--t4);font-family:monospace}' +
+      '.st-page-body{display:grid;grid-template-columns:320px 1fr;gap:0}' +
+      '@media(max-width:820px){.st-page-body{grid-template-columns:1fr}}' +
+      '.st-mock{padding:20px;background:var(--bg);border-right:1px solid var(--line);position:sticky;top:0;align-self:start}' +
+      '@media(max-width:820px){.st-mock{border-right:none;border-bottom:1px solid var(--line);position:relative}}' +
+      '.st-mock-frame{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}' +
+      '.st-mock-nav{font-size:9px;letter-spacing:.3em;color:var(--t4);text-align:center;padding:6px;border:1px dashed var(--line);border-radius:4px}' +
+      '.st-t{padding:6px 8px;cursor:pointer;border-radius:4px;transition:background .15s;border:1px solid transparent}' +
+      '.st-t:hover{background:var(--bg2);border-color:var(--line)}' +
+      '.st-t.focus{background:rgba(134,150,167,.1);border-color:var(--a)}' +
+      '.st-t-ey{font-size:9px;letter-spacing:.32em;color:var(--a);text-transform:uppercase}' +
+      '.st-t-title{font-family:"Cormorant Garamond",serif;font-size:22px;line-height:1.15;color:var(--t1);font-weight:400;white-space:pre-line}' +
+      '.st-t-sub{font-size:10px;letter-spacing:.2em;color:var(--t3);text-transform:uppercase}' +
+      '.st-t-cta{font-size:10px;letter-spacing:.14em;color:var(--t1);text-transform:uppercase;border-bottom:1px solid var(--t1);width:fit-content;padding-bottom:2px}' +
+      '.st-t-body{font-size:11px;line-height:1.65;color:var(--t2);white-space:pre-line}' +
+      '.st-t-quote{font-style:italic;font-size:11px;color:var(--t2);line-height:1.55;padding:6px 10px;border-left:2px solid var(--line2)}' +
+      '.st-t-empty{font-style:italic;color:var(--t4)}' +
+      '.st-divider{height:1px;background:var(--bg3);margin:6px 0}' +
+      '.st-editors{padding:20px 24px}' +
+      '.st-entry{padding:14px 0;border-bottom:1px solid var(--bg3)}' +
+      '.st-entry:last-child{border-bottom:none}' +
+      '.st-entry.focus .st-entry-head{color:var(--a-d)}' +
+      '.st-entry-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px;cursor:pointer}' +
+      '.st-entry-label{font-size:12px;font-weight:500;color:var(--t1)}' +
+      '.st-entry-key{font-size:10px;font-family:monospace;color:var(--t4)}' +
+      '.st-entry-pills{display:flex;gap:6px;align-items:center}' +
+      '.st-pill{font-size:9px;padding:2px 8px;border-radius:100px;letter-spacing:.08em;text-transform:uppercase}' +
+      '.st-pill-custom{background:rgba(82,138,98,.12);color:var(--mu);border:1px solid rgba(82,138,98,.25)}' +
+      '.st-pill-default{background:var(--bg3);color:var(--t3);border:1px solid var(--line)}' +
+      '.st-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}' +
+      '@media(max-width:640px){.st-fields{grid-template-columns:1fr}}' +
+      '.st-field label{font-size:10px;letter-spacing:.12em;color:var(--t3);display:block;margin-bottom:4px}' +
+      '.st-field input,.st-field textarea{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:9px 11px;font-size:13px;font-family:inherit;width:100%;resize:vertical;line-height:1.55;color:var(--t1);outline:none;transition:border-color .15s}' +
+      '.st-field input:focus,.st-field textarea:focus{border-color:var(--a)}' +
+      '.st-row-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;align-items:center}' +
+      '.st-msg{font-size:11px;color:var(--t3);flex:1}' +
+      '.st-msg.ok{color:var(--mu)}' +
+      '.st-msg.err{color:var(--huo)}' +
+      '.st-reset{color:var(--huo) !important;border-color:rgba(168,72,72,.3) !important}' +
+      '</style>';
+
+    // Per-page mockup rendering ————————————————————————————————————————
+    function mockText(e, type){
+      // display the current live value (custom or default) in ZH for the preview
+      // (admin typically speaks ZH; EN previews would double the real estate)
+      var val = e.customZh != null ? e.customZh : e.defaultZh;
+      var html = val ? escapeHtml(val) : '<span class="st-t-empty">(empty)</span>';
+      return '<div class="st-t st-t-'+type+'" id="preview-'+escapeAttr(e.key)+'" onclick="focusSiteTextEntry(\''+escapeAttr(e.key)+'\')">' +
+        html + '</div>';
+    }
+
+    function homeMock(){
+      var get = function(k){ return entries.find(function(e){return e.key===k;}); };
+      return '<div class="st-mock-frame">' +
+        '<div class="st-mock-nav">KES · · ·</div>' +
+        // Philosophy rotator preview (stacks a small quote sample)
+        '<div style="padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg2)">' +
+          '<div style="font-size:9px;color:var(--t4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">Rotating quotes →</div>' +
+          ['home.philosophy.q1','home.philosophy.q2','home.philosophy.q3','home.philosophy.q4','home.philosophy.q5'].map(function(k){
+            var e = get(k); if(!e) return '';
+            var val = e.customZh != null ? e.customZh : e.defaultZh;
+            var short = val ? (val.length > 26 ? val.slice(0,26)+'…' : val) : '(empty)';
+            return '<div class="st-t st-t-quote" onclick="focusSiteTextEntry(\''+e.key+'\')" style="margin:4px 0">'+escapeHtml(short)+'</div>';
+          }).join('') +
+        '</div>' +
+        '<div class="st-divider"></div>' +
+        // Editorial block
+        mockText(get('home.editorial.eyebrow'), 'ey') +
+        mockText(get('home.editorial.title'),   'title') +
+        mockText(get('home.editorial.sub'),     'sub') +
+        mockText(get('home.editorial.cta'),     'cta') +
       '</div>';
-    }).join('');
+    }
+
+    function heroMock(e_title, e_sub, e_body){
+      return '<div class="st-mock-frame">' +
+        '<div class="st-mock-nav">KES · · ·</div>' +
+        (e_title ? mockText(e_title, 'title') : '') +
+        (e_sub   ? mockText(e_sub,   'sub')   : '') +
+        (e_body  ? mockText(e_body,  'body')  : '') +
+      '</div>';
+    }
+
+    function entryBlock(e){
+      var zhVal = e.customZh != null ? e.customZh : e.defaultZh;
+      var enVal = e.customEn != null ? e.customEn : e.defaultEn;
+      var customBadge = e.hasCustom
+        ? '<span class="st-pill st-pill-custom">custom</span>'
+        : '<span class="st-pill st-pill-default">default</span>';
+      var lines = e.lines || 1;
+      var fieldZh = lines <= 1
+        ? '<input id="st-'+escapeAttr(e.key)+'-zh" value="'+escapeAttr(zhVal)+'" oninput="syncSiteTextPreview(\''+escapeAttr(e.key)+'\')">'
+        : '<textarea id="st-'+escapeAttr(e.key)+'-zh" rows="'+lines+'" oninput="syncSiteTextPreview(\''+escapeAttr(e.key)+'\')">'+escapeHtml(zhVal)+'</textarea>';
+      var fieldEn = lines <= 1
+        ? '<input id="st-'+escapeAttr(e.key)+'-en" value="'+escapeAttr(enVal)+'">'
+        : '<textarea id="st-'+escapeAttr(e.key)+'-en" rows="'+lines+'">'+escapeHtml(enVal)+'</textarea>';
+      return '<div class="st-entry" id="entry-'+escapeAttr(e.key)+'">' +
+        '<div class="st-entry-head" onclick="focusSiteTextEntry(\''+escapeAttr(e.key)+'\')">' +
+          '<div><div class="st-entry-label">'+escapeHtml(e.label)+'</div>' +
+            '<div class="st-entry-key">'+e.key+'</div></div>' +
+          '<div class="st-entry-pills">'+customBadge+'</div>' +
+        '</div>' +
+        '<div class="st-fields">' +
+          '<div class="st-field"><label>中文 (ZH)</label>'+fieldZh+'</div>' +
+          '<div class="st-field"><label>English (EN)</label>'+fieldEn+'</div>' +
+        '</div>' +
+        '<div class="st-row-actions">' +
+          '<span id="stmsg-'+escapeAttr(e.key)+'" class="st-msg"></span>' +
+          (e.hasCustom ? '<button class="btn-sec st-reset" onclick="resetSiteText(\''+escapeAttr(e.key)+'\')">Reset</button>' : '') +
+          '<button class="btn-sec" onclick="saveSiteText(\''+escapeAttr(e.key)+'\')">Save</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function pageCard(title, url, mockupHtml, pageKey){
+      return '<div class="st-page">' +
+        '<div class="st-page-head"><h3>'+title+'</h3><div class="st-page-url">'+url+'</div></div>' +
+        '<div class="st-page-body">' +
+          '<div class="st-mock">'+mockupHtml+'</div>' +
+          '<div class="st-editors">' +
+            byPage[pageKey].map(entryBlock).join('') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    var getE = function(k){ return entries.find(function(e){return e.key===k;}); };
+
+    host.className = '';
+    host.innerHTML = css +
+      '<div class="st-help">Click any text in the mockup on the left to jump to its editor on the right. ' +
+        'Each field is pre-filled with the current live value (custom or hardcoded default). ' +
+        'Type to edit, then hit Save. Saving an empty value reverts to the default.</div>' +
+      '<div class="st-pages">' +
+        pageCard('Homepage',  'keyofelements.com/',        homeMock(), 'home') +
+        pageCard('Shop page', 'keyofelements.com/?page=shop',
+                 heroMock(getE('shop.title'), getE('shop.sub')), 'shop') +
+        pageCard('Learn page','keyofelements.com/?page=learn',
+                 heroMock(getE('learn.title'), null, getE('learn.body')), 'learn') +
+        pageCard('About page','keyofelements.com/?page=about',
+                 heroMock(getE('about.title'), null, getE('about.body')), 'about') +
+      '</div>';
+
   }catch(e){
     host.innerHTML = '<div class="empty">Failed: '+escapeHtml(e.message)+'</div>';
   }
 }
 
-function textField(key, lang, label, value, lines){
-  var id = 'st-'+escapeAttr(key)+'-'+lang;
-  var style = 'background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;width:100%;resize:vertical;line-height:1.6;color:var(--t1);outline:none';
-  if(lines <= 1){
-    return '<div><label style="font-size:10px;letter-spacing:.12em;color:var(--t3);display:block;margin-bottom:4px">'+label+'</label>' +
-      '<input id="'+id+'" value="'+escapeAttr(value)+'" style="'+style+'"></div>';
+function focusSiteTextEntry(key){
+  document.querySelectorAll('.st-entry.focus').forEach(function(el){ el.classList.remove('focus'); });
+  document.querySelectorAll('.st-t.focus').forEach(function(el){ el.classList.remove('focus'); });
+  var entry = document.getElementById('entry-'+key);
+  var preview = document.getElementById('preview-'+key);
+  if(entry){
+    entry.classList.add('focus');
+    entry.scrollIntoView({behavior:'smooth', block:'center'});
+    var first = entry.querySelector('input, textarea');
+    if(first) first.focus();
   }
-  return '<div><label style="font-size:10px;letter-spacing:.12em;color:var(--t3);display:block;margin-bottom:4px">'+label+'</label>' +
-    '<textarea id="'+id+'" rows="'+lines+'" style="'+style+'">'+escapeHtml(value)+'</textarea></div>';
+  if(preview) preview.classList.add('focus');
+}
+
+function syncSiteTextPreview(key){
+  // Update the left-side preview live as admin types (ZH only — matches preview)
+  var preview = document.getElementById('preview-'+key);
+  if(!preview) return;
+  var field = document.getElementById('st-'+key+'-zh');
+  if(!field) return;
+  var val = field.value;
+  preview.innerHTML = val ? escapeHtml(val) : '<span class="st-t-empty">(empty)</span>';
 }
 
 async function saveSiteText(key){
@@ -336,9 +520,11 @@ async function saveSiteText(key){
   var msg = document.getElementById('stmsg-'+key);
   try{
     await api('/api/admin/site-text', {method:'PUT', body:{key, zh, en}});
-    if(msg){ msg.textContent = 'Saved'; msg.style.color = 'var(--mu)'; setTimeout(function(){ if(msg) msg.textContent = ''; }, 2500); }
+    if(msg){ msg.textContent = 'Saved · refresh any page to see it live'; msg.className = 'st-msg ok'; setTimeout(function(){ if(msg){ msg.textContent = ''; msg.className = 'st-msg'; } }, 3000); }
+    // Reload after a beat so "default → custom" pill flips correctly
+    setTimeout(loadSiteText, 1200);
   }catch(e){
-    if(msg){ msg.textContent = 'Error: '+e.message; msg.style.color = 'var(--huo)'; }
+    if(msg){ msg.textContent = 'Error: '+e.message; msg.className = 'st-msg err'; }
   }
 }
 
