@@ -136,8 +136,61 @@ function switchTab(tab){
 function loadPanel(tab){
   if(tab === 'stats') loadStats();
   else if(tab === 'products') loadProducts();
+  else if(tab === 'pages') loadPageImages();
   else if(tab === 'users') loadUsers();
   else if(tab === 'orders') loadOrders();
+}
+
+/* ── Page Images (homepage hero slots 1..4) ── */
+function loadPageImages(){
+  var host = document.getElementById('pageImgGrid');
+  if(!host) return;
+  var sbBase = (window.KES_CONFIG && KES_CONFIG.SUPABASE_URL) ? KES_CONFIG.SUPABASE_URL.replace(/\/$/,'') : '';
+  var pubBase = sbBase + '/storage/v1/object/public/page-images/';
+  var v = '?v=' + Math.floor(Date.now()/60000);
+  var slots = [
+    {n:1, label:'Slot 1 · 水 Water'},
+    {n:2, label:'Slot 2 · 金 Metal'},
+    {n:3, label:'Slot 3 · 木 Wood'},
+    {n:4, label:'Slot 4 · 火 Fire'}
+  ];
+  host.innerHTML = slots.map(function(s){
+    var url = pubBase + 'home_'+s.n+'.jpg' + v;
+    return '<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">' +
+      '<div style="font-size:11px;letter-spacing:.14em;color:var(--t3);text-transform:uppercase">'+s.label+'</div>' +
+      '<div style="aspect-ratio:4/5;background:var(--bg2);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative">' +
+        '<img id="pgimg-'+s.n+'" src="'+url+'" alt="Slot '+s.n+'" onload="this.style.opacity=1" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s">' +
+        '<div style="display:none;align-items:center;justify-content:center;color:var(--t3);font-size:12px;text-align:center;padding:20px">No image yet<br><span style="font-size:10px;color:var(--t4)">Upload below</span></div>' +
+      '</div>' +
+      '<input type="file" id="pgfile-'+s.n+'" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadPageImage('+s.n+', this)">' +
+      '<button class="btn-sec" onclick="document.getElementById(\'pgfile-'+s.n+'\').click()" style="align-self:flex-start">Upload / Replace</button>' +
+    '</div>';
+  }).join('');
+}
+
+async function uploadPageImage(slot, input){
+  var f = input.files && input.files[0];
+  if(!f) return;
+  if(f.size > 5*1024*1024){ toast('Too large (max 5 MB)', 'err'); input.value=''; return; }
+  var btn = input.nextElementSibling;
+  if(btn){ btn.disabled = true; btn.textContent = 'Uploading…'; }
+  try{
+    var sig = await api('/api/admin/page-image', {method:'POST', body:{slot:slot, contentType:f.type}});
+    var up = await fetch(sig.uploadUrl, {
+      method: 'PUT',
+      headers: {'Content-Type': f.type, 'x-upsert': 'true'},
+      body: f
+    });
+    if(!up.ok) throw new Error('Upload HTTP '+up.status);
+    toast('Slot '+slot+' updated');
+    // Re-render after a beat so the bust query string includes the new write
+    setTimeout(loadPageImages, 600);
+  }catch(e){
+    toast('Upload failed: '+e.message, 'err');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Upload / Replace'; }
+    input.value = '';
+  }
 }
 
 /* ── Stats ── */

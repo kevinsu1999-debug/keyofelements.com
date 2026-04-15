@@ -271,8 +271,27 @@ nav > *{position:relative;z-index:1}
    BLOCK 3 — PRODUCTS
 ══════════════════════════════════════ */
 .product-block{border-bottom:1px solid var(--line)}
+/* ── Editorial 4-image feature ── */
+.ed-header{padding:clamp(64px,9vh,120px) clamp(32px,5vw,72px) clamp(40px,5vh,64px);text-align:center;max-width:880px;margin:0 auto}
+.ed-eyebrow{font-size:9px;letter-spacing:.5em;color:var(--a);display:inline-flex;align-items:center;gap:14px;margin-bottom:24px}
+.ed-eyebrow::before,.ed-eyebrow::after{content:'';width:24px;height:1px;background:var(--a)}
+.ed-title{font-family:'Cormorant Garamond',serif;font-size:clamp(40px,6vw,72px);font-weight:300;line-height:1.1;color:var(--t1);margin-bottom:20px;letter-spacing:-.005em}
+.ed-title em{font-style:italic;color:var(--a-d);font-weight:300}
+.ed-sub{font-family:'Inter',sans-serif;font-size:12px;letter-spacing:.18em;color:var(--t3);text-transform:uppercase}
+.ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ed-cell{position:relative;display:block;aspect-ratio:4/5;overflow:hidden;background:var(--bg2);text-decoration:none;color:inherit}
+.ed-cell img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .9s cubic-bezier(.25,.1,.25,1)}
+.ed-cell:hover img{transform:scale(1.03)}
+.ed-cell .ed-overlay{position:absolute;left:0;right:0;bottom:0;padding:24px 28px;display:flex;align-items:flex-end;justify-content:space-between;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 60%);color:#fff;transition:opacity .3s}
+.ed-cell:not([data-loaded]) .ed-overlay{opacity:0}
+.ed-cell .ed-cap{font-size:11px;letter-spacing:.32em;text-transform:uppercase;font-weight:500;text-shadow:0 1px 4px rgba(0,0,0,.3)}
+.ed-cell .ed-arrow{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;transition:transform .3s}
+.ed-cell:hover .ed-arrow{transform:translateX(6px)}
+.ed-cell:not([data-loaded]) img{visibility:hidden}
+.ed-cell:not([data-loaded])::before{content:attr(data-slot);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(96px,15vw,180px);color:rgba(0,0,0,.08);font-weight:300;pointer-events:none}
+@media(max-width:760px){.ed-grid{grid-template-columns:1fr}.ed-cell{aspect-ratio:1/1}}
 
-/* editorial header */
+/* editorial header (legacy, no longer in DOM but kept for safety) */
 .pb-header{
   border-bottom:1px solid var(--line);
   padding:clamp(48px,6vh,80px) clamp(32px,5vw,72px) clamp(32px,4vh,56px);
@@ -933,31 +952,29 @@ body{font-size:15px;line-height:1.75}
 .sh-right{background:var(--bg2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:40px}
 .sh-bg-char{position:absolute;font-family:'Noto Serif SC',serif;font-size:280px;font-weight:900;color:rgba(134,150,167,.07);line-height:1;user-select:none}
 .sh-chips{display:flex;flex-wrap:wrap;gap:6px;position:relative;z-index:1;justify-content:center}
-/* Unified chip base — same height/padding for ALL chips (element, category, "all") */
-.sh-chip{height:36px;padding:0 18px;border-radius:100px;font-size:11px;letter-spacing:.06em;border:1px solid var(--line2);color:var(--t2);cursor:pointer;transition:all .18s;background:var(--card);font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px;line-height:1;box-sizing:border-box}
+/* Unified chip base — identical 36px height across element + category rows. */
+.sh-chip{height:36px !important;min-height:36px !important;padding:0 18px !important;border-radius:100px;font-size:11px;letter-spacing:.06em;border:1px solid var(--line2);color:var(--t1);cursor:pointer;transition:background .18s,color .18s,border-color .18s;background:#fff;font-family:inherit;display:inline-flex !important;align-items:center !important;justify-content:center;gap:5px;line-height:1;box-sizing:border-box;white-space:nowrap}
 .sh-chip span{font-family:'Noto Serif SC',serif;font-size:14px;font-weight:700;line-height:1}
-.sh-chip:hover{border-color:var(--t1);color:var(--t1)}
-/* Default-state "All" chip + category chips: dark when selected */
-.sh-chip.on{background:var(--t1);color:#fff;border-color:var(--t1)}
-.sh-chip.on span{color:#fff}
-/* Element-colored chips (water/metal/wood/fire/earth):
-   default = colored fill + white text; selected = inverted (white fill + colored text). */
-.sh-chip.shui-chip{background:var(--shui);color:#fff;border-color:var(--shui)}
-.sh-chip.jin-chip {background:var(--jin); color:#fff;border-color:var(--jin)}
-.sh-chip.mu-chip  {background:var(--mu);  color:#fff;border-color:var(--mu)}
-.sh-chip.huo-chip {background:var(--huo); color:#fff;border-color:var(--huo)}
-.sh-chip.tu-chip  {background:var(--tu);  color:#fff;border-color:var(--tu)}
+.sh-chip:hover{border-color:var(--t1)}
+/* Selected-state for plain chips (the "All" buttons + category chips): inverted dark. */
+.sh-chip.on{background:var(--t1) !important;color:#fff !important;border-color:var(--t1) !important}
+.sh-chip.on span{color:#fff !important}
+/* Element-colored chips: default = colored fill + white text; selected = inverted (white fill + colored text + same-color border). */
+.sh-chip.shui-chip{background:var(--shui) !important;color:#fff !important;border-color:var(--shui) !important}
+.sh-chip.jin-chip {background:var(--jin)  !important;color:#fff !important;border-color:var(--jin)  !important}
+.sh-chip.mu-chip  {background:var(--mu)   !important;color:#fff !important;border-color:var(--mu)   !important}
+.sh-chip.huo-chip {background:var(--huo)  !important;color:#fff !important;border-color:var(--huo)  !important}
+.sh-chip.tu-chip  {background:var(--tu)   !important;color:#fff !important;border-color:var(--tu)   !important}
 .sh-chip.shui-chip span,
 .sh-chip.jin-chip  span,
 .sh-chip.mu-chip   span,
 .sh-chip.huo-chip  span,
 .sh-chip.tu-chip   span{color:#fff !important}
-/* Inverted state when selected */
-.sh-chip.shui-chip.on{background:#fff;color:var(--shui);border-color:var(--shui)}
-.sh-chip.jin-chip.on {background:#fff;color:var(--jin); border-color:var(--jin)}
-.sh-chip.mu-chip.on  {background:#fff;color:var(--mu);  border-color:var(--mu)}
-.sh-chip.huo-chip.on {background:#fff;color:var(--huo); border-color:var(--huo)}
-.sh-chip.tu-chip.on  {background:#fff;color:var(--tu);  border-color:var(--tu)}
+.sh-chip.shui-chip.on{background:#fff !important;color:var(--shui) !important;border-color:var(--shui) !important}
+.sh-chip.jin-chip.on {background:#fff !important;color:var(--jin)  !important;border-color:var(--jin)  !important}
+.sh-chip.mu-chip.on  {background:#fff !important;color:var(--mu)   !important;border-color:var(--mu)   !important}
+.sh-chip.huo-chip.on {background:#fff !important;color:var(--huo)  !important;border-color:var(--huo)  !important}
+.sh-chip.tu-chip.on  {background:#fff !important;color:var(--tu)   !important;border-color:var(--tu)   !important}
 .sh-chip.shui-chip.on span{color:var(--shui) !important}
 .sh-chip.jin-chip.on  span{color:var(--jin)  !important}
 .sh-chip.mu-chip.on   span{color:var(--mu)   !important}
@@ -1517,92 +1534,35 @@ body{font-size:15px;line-height:1.75}
 
 </div><!-- end reading block -->
 
-<!-- ══ BLOCK 3: PRODUCTS ══ -->
+<!-- ══ BLOCK 3: EDITORIAL 4-IMAGE FEATURE ══ -->
 <div class="product-block">
 
-  <div class="pb-header">
-    <div class="pb-header-top">
-      <div class="pbh-left">
-        <div class="pbh-kicker reveal">本季系列</div>
-        <h2 class="pbh-title reveal" style="transition-delay:.1s">
-          穿上与你<br>命格同频的颜色。
-        </h2>
-        <div class="pbh-cn reveal" style="transition-delay:.12s">以色养命，以衣载元</div>
-      </div>
-      <div class="pbh-right reveal" style="transition-delay:.15s">
-        <div class="pbh-chips">
-          <button class="pbh-chip on" onclick="filterProd('all',this)">全部</button>
-          <button class="pbh-chip chip-shui" onclick="filterProd('shui',this)"><span class="shui">水</span></button>
-          <button class="pbh-chip chip-jin" onclick="filterProd('jin',this)"><span class="jin">金</span></button>
-          <button class="pbh-chip chip-mu" onclick="filterProd('mu',this)"><span class="mu">木</span></button>
-          <button class="pbh-chip chip-huo" onclick="filterProd('huo',this)"><span class="huo">火</span></button>
-          <button class="pbh-chip chip-tu" onclick="filterProd('tu',this)"><span class="tu">土</span></button>
-        </div>
-      </div>
-    </div>
-    <p class="pbh-desc reveal" style="transition-delay:.2s">每件 KES 单品都标注了五行属性，精准对应你的命格。一旦你知道自己的用神，合适的单品自然出现。</p>
+  <div class="ed-header">
+    <div class="ed-eyebrow reveal">本　季　系　列</div>
+    <h2 class="ed-title reveal" style="transition-delay:.1s">
+      穿上与你<br><em>命格</em>同频的颜色
+    </h2>
+    <p class="ed-sub reveal" style="transition-delay:.2s">以色养命，以衣载元 ・ Color is intent.</p>
   </div>
 
   <!-- product grid -->
-  <div class="pb-grid-wrap" id="pb-grid">
-    <div class="pc" onclick="openPDP('藏蓝简约连衣裙')" style="cursor:pointer" data-e="shui">
-      <div class="pc-img" style="background:#dde5ee">
-        <svg width="90" height="118" viewBox="0 0 90 118"><path d="M15 15 L75 15 L83 106 L7 106 Z" fill="#2a4878" stroke="#1a3868" stroke-width="1"/><path d="M15 15 Q45 7 75 15" fill="#1a3868"/></svg>
-        <div class="pc-e-dot" style="background:var(--shui)"></div>
-        
-      </div>
-      <div class="pc-body"><div class="pc-el">水</div><div class="pc-name">藏蓝简约连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 520</div><div class="pc-add">加入购物袋</div></div></div>
-    </div>
-    <div class="pc" onclick="openPDP('香槟色宽松外套')" style="cursor:pointer" data-e="jin">
-      <div class="pc-img" style="background:#f0ead4">
-        <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#e4d8b0" stroke="#ccbe88" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#daccA0"/></svg>
-        <div class="pc-e-dot" style="background:var(--jin)"></div>
-      </div>
-      <div class="pc-body"><div class="pc-el">金</div><div class="pc-name">香槟色宽松外套</div><div class="pc-foot"><div class="pc-price">¥ 680</div><div class="pc-add">加入购物袋</div></div></div>
-    </div>
-    <div class="pc" onclick="openPDP('墨黑皮质手包')" style="cursor:pointer" data-e="shui">
-      <div class="pc-img" style="background:#e0e8f0">
-        <svg width="90" height="98" viewBox="0 0 90 98"><rect x="10" y="10" width="70" height="74" rx="6" fill="#1a2535"/><rect x="18" y="20" width="54" height="2" rx="1" fill="#3a5a7a" opacity=".6"/><rect x="10" y="10" width="70" height="22" rx="6" fill="#243448"/></svg>
-        <div class="pc-e-dot" style="background:var(--shui)"></div>
-        
-      </div>
-      <div class="pc-body"><div class="pc-el">水　包袋</div><div class="pc-name">墨黑皮质手包</div><div class="pc-foot"><div class="pc-price">¥ 390</div><div class="pc-add">加入购物袋</div></div></div>
-    </div>
-    <div class="pc" onclick="openPDP('金属链条叠戴项链')" style="cursor:pointer" data-e="jin">
-      <div class="pc-img" style="background:#f4f0e4">
-        <svg width="86" height="86" viewBox="0 0 86 86"><ellipse cx="43" cy="54" rx="27" ry="15" fill="none" stroke="#b89828" stroke-width="2.5"/><ellipse cx="43" cy="30" rx="19" ry="11" fill="none" stroke="#b89828" stroke-width="2.5"/><circle cx="43" cy="43" r="3.5" fill="#a08828"/></svg>
-        <div class="pc-e-dot" style="background:var(--jin)"></div>
-      </div>
-      <div class="pc-body"><div class="pc-el">金　首饰</div><div class="pc-name">金属链条叠戴项链</div><div class="pc-foot"><div class="pc-price">¥ 280</div><div class="pc-add">加入购物袋</div></div></div>
-    </div>
-    <div class="pc" onclick="openPDP('鼠尾草色亚麻衬衫')" style="cursor:pointer" data-e="mu">
-      <div class="pc-img" style="background:#e0ecd8">
-        <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#bcd4b8" stroke="#98b890" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#aec8a8"/></svg>
-        <div class="pc-e-dot" style="background:var(--mu)"></div>
-      </div>
-      <div class="pc-body"><div class="pc-el">木</div><div class="pc-name">鼠尾草色亚麻衬衫</div><div class="pc-foot"><div class="pc-price">¥ 380</div><div class="pc-add">加入购物袋</div></div></div>
-    </div>
-    <div class="pc" onclick="openPDP('砖红中长连衣裙')" style="cursor:pointer" data-e="huo">
-      <div class="pc-img" style="background:#f0e0d8">
-        <svg width="90" height="118" viewBox="0 0 90 118"><rect x="10" y="13" width="70" height="96" rx="5" fill="#c86050" stroke="#a84030" stroke-width="1"/><path d="M10 13 Q45 4 80 13" fill="#b85040"/></svg>
-        <div class="pc-e-dot" style="background:var(--huo)"></div>
-      </div>
-      <div class="pc-body"><div class="pc-el">火</div><div class="pc-name">砖红中长连衣裙</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
-    </div>
-    <div class="pc" onclick="openPDP('驼色阔腿裤')" style="cursor:pointer" data-e="tu">
-      <div class="pc-img" style="background:#f0e8d8">
-        <svg width="96" height="118" viewBox="0 0 96 118"><rect x="10" y="14" width="76" height="96" rx="6" fill="#c8a870" stroke="#a88850" stroke-width="1"/><path d="M10 14 Q48 4 86 14" fill="#b89060"/></svg>
-        <div class="pc-e-dot" style="background:var(--tu)"></div>
-      </div>
-      <div class="pc-body"><div class="pc-el">土</div><div class="pc-name">驼色阔腿裤</div><div class="pc-foot"><div class="pc-price">¥ 490</div><div class="pc-add">加入购物袋</div></div></div>
-    </div>
-    <div class="pc" onclick="openPDP('象牙色结构感托特包')" style="cursor:pointer" data-e="jin">
-      <div class="pc-img" style="background:#f8f4ec">
-        <svg width="88" height="88" viewBox="0 0 88 88"><rect x="14" y="30" width="60" height="38" rx="18" fill="#e8e0c0" stroke="#d0c898" stroke-width="1"/><rect x="22" y="12" width="44" height="24" rx="11" fill="#f0e8c8" stroke="#d8d0a8" stroke-width="1"/><circle cx="44" cy="24" r="4" fill="#c8a830" opacity=".6"/></svg>
-        <div class="pc-e-dot" style="background:var(--jin)"></div>
-      </div>
-      <div class="pc-body"><div class="pc-el">金　包袋</div><div class="pc-name">象牙色结构感托特包</div><div class="pc-foot"><div class="pc-price">¥ 560</div><div class="pc-add">加入购物袋</div></div></div>
-    </div>
+  <div class="ed-grid" id="ed-grid">
+    <a class="ed-cell reveal" data-slot="1" href="/?page=shop" onclick="goPage('shop');return false">
+      <img id="home-hero-1" alt="" loading="lazy">
+      <div class="ed-overlay"><div class="ed-cap">水 · WATER</div><div class="ed-arrow">→</div></div>
+    </a>
+    <a class="ed-cell reveal" data-slot="2" href="/?page=shop" onclick="goPage('shop');return false" style="transition-delay:.05s">
+      <img id="home-hero-2" alt="" loading="lazy">
+      <div class="ed-overlay"><div class="ed-cap">金 · METAL</div><div class="ed-arrow">→</div></div>
+    </a>
+    <a class="ed-cell reveal" data-slot="3" href="/?page=shop" onclick="goPage('shop');return false" style="transition-delay:.1s">
+      <img id="home-hero-3" alt="" loading="lazy">
+      <div class="ed-overlay"><div class="ed-cap">木 · WOOD</div><div class="ed-arrow">→</div></div>
+    </a>
+    <a class="ed-cell reveal" data-slot="4" href="/?page=shop" onclick="goPage('shop');return false" style="transition-delay:.15s">
+      <img id="home-hero-4" alt="" loading="lazy">
+      <div class="ed-overlay"><div class="ed-cap">火 · FIRE</div><div class="ed-arrow">→</div></div>
+    </a>
   </div>
 
   <div class="pb-reading-cta">
@@ -2743,6 +2703,7 @@ function pickSize(el){
 <script src="kes-shop.js"></script>
 <script src="kes-shop-render.js"></script>
 <script src="kes-report.js"></script>
+<script src="kes-hero.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="kes-config.js"></script>
