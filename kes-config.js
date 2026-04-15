@@ -27,5 +27,8 @@ var KES_CONFIG = {
   REPORT_PRICE_EN: '$4.99',
 
   // 邀请码
-  VALID_CODES: ['KESVIP']
+  VALID_CODES: ['KESVIP'],
+
+  // Terms & Privacy 版本号 — 每次更新条款时 bump，会触发已登录用户重新同意
+  CURRENT_TERMS_VERSION: 'tos-2026-04'
 };

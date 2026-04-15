@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/cn", "destination": "/index.html" },
-    { "source": "/en", "destination": "/en.html" }
+    { "source": "/en", "destination": "/en.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/account", "destination": "/account.html" }
   ]
 }

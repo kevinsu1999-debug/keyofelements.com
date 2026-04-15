@@ -59,6 +59,22 @@ async function submitReading(){
     if(!res.ok)throw new Error(await res.text());
     var data=await res.json();
     renderReport(data);goPage('report');
+    // Fire-and-forget: persist reading if user is logged in
+    try{
+      var sbClient = (typeof getSupabase==='function') ? getSupabase() : null;
+      if(sbClient){
+        sbClient.auth.getSession().then(function(r){
+          var tok = r && r.data && r.data.session ? r.data.session.access_token : null;
+          if(tok){
+            fetch('/api/save-reading', {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({access_token: tok, report: data})
+            }).catch(function(err){ console.warn('save-reading failed:', err); });
+          }
+        }).catch(function(){});
+      }
+    }catch(e){ /* ignore */ }
   }catch(e){console.error(e);alert(L('排盘出错：','Error: ')+e.message)}
   finally{btn.textContent=orig;btn.disabled=false}
 }

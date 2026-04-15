@@ -24,11 +24,17 @@ async function initAuth(){
   try {
     var { data } = await sb.auth.getSession();
     if(data && data.session){
+      var md = data.session.user.user_metadata || {};
       kesUser = {
         id: data.session.user.id,
         email: data.session.user.email,
-        name: (data.session.user.user_metadata || {}).name || data.session.user.email.split('@')[0],
-        paid: (data.session.user.user_metadata || {}).paid || false
+        name: md.name || data.session.user.email.split('@')[0],
+        paid: md.paid || false,
+        avatar_url: md.avatar_url || '',
+        locale: md.locale || '',
+        marketing_opt_in: !!md.marketing_opt_in,
+        terms_version: md.terms_version || '',
+        access_token: data.session.access_token
       };
     }
   } catch(e){ console.error('Auth init error:', e); }
@@ -347,9 +353,39 @@ function updateUserUI(){
   if(kesUser && acctLink){
     var displayName = kesUser.name || (isZh ? '我的账户' : 'Account');
     acctLink.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 13c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> ' + displayName;
+    acctLink.onclick = function(e){ e.preventDefault(); location.href = '/account'; };
+    acctLink.style.cursor = 'pointer';
   }
   if(kesUser && kesUser.paid) unlockReport();
   setTimeout(checkPaidAndUnlock, 200);
+  setTimeout(maybeShowTermsConsent, 400);
+}
+
+/* ── Terms re-consent prompt ── */
+function maybeShowTermsConsent(){
+  if(!kesUser) return;
+  var current = (window.KES_CONFIG && KES_CONFIG.CURRENT_TERMS_VERSION) || '';
+  if(!current) return;
+  if(kesUser.terms_version === current) return;
+  var modal = document.getElementById('termsConsentModal');
+  if(modal) modal.classList.add('open');
+}
+
+async function acceptCurrentTerms(){
+  var current = (window.KES_CONFIG && KES_CONFIG.CURRENT_TERMS_VERSION) || '';
+  if(!current || !kesUser || !kesUser.access_token) return;
+  try{
+    var res = await fetch('/api/account/terms-accept', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+kesUser.access_token},
+      body: JSON.stringify({version: current})
+    });
+    if(res.ok){
+      kesUser.terms_version = current;
+      var modal = document.getElementById('termsConsentModal');
+      if(modal) modal.classList.remove('open');
+    }
+  }catch(e){ console.warn('terms accept failed:', e); }
 }
 
 /* ── Disclaimer ── */
