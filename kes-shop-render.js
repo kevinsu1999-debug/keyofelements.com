@@ -9,11 +9,13 @@ var _shopLoading = false;
 var _currentPDP = null;     // product being shown in PDP
 var _filterElement = 'all'; // 'all' | 'shui' | 'jin' | 'mu' | 'huo' | 'tu'
 var _filterCategory = 'all';// 'all' | 'clothing' | 'accessory' | 'life' | 'service' | 'other'
+var _filterYinYang = 'all'; // 'all' | 'yin' | 'yang'
 var _shuffleOrder = null;   // cached random ordering for current session
 
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', function(){
   injectCategoryChips();
+  injectYinYangChips();
   resetFilterChipState();
   // Override the global shopFilter (originally defined in index.html for hardcoded products).
   // We replace with a re-render-based filter that supports both element + category dimensions.
@@ -26,6 +28,12 @@ document.addEventListener('DOMContentLoaded', function(){
   window.shopFilterCat = function(c, btn){
     _filterCategory = c;
     document.querySelectorAll('#shop-chips-cat .sh-chip').forEach(function(b){ b.classList.remove('on'); });
+    if(btn) btn.classList.add('on');
+    renderShopGrid();
+  };
+  window.shopFilterYY = function(y, btn){
+    _filterYinYang = y;
+    document.querySelectorAll('#shop-chips-yy .sh-chip').forEach(function(b){ b.classList.remove('on'); });
     if(btn) btn.classList.add('on');
     renderShopGrid();
   };
@@ -51,6 +59,27 @@ function injectCategoryChips(){
   // Insert as a sibling after #shop-chips. Parent (.sh-chip-rows) is a column
   // flex so the new row stacks below the element row with proper gap.
   elemChips.parentNode.insertBefore(row, elemChips.nextSibling);
+}
+
+/* Inject a third chip row for Yin/Yang filter, below the category chips. */
+function injectYinYangChips(){
+  var elemChips = document.getElementById('shop-chips');
+  if(!elemChips) return;
+  if(document.getElementById('shop-chips-yy')) return;
+  var isZh = document.documentElement.lang === 'zh';
+  var YYS = isZh
+    ? [['all','全部'],['yin','阴'],['yang','阳']]
+    : [['all','All'],['yin','Yin'],['yang','Yang']];
+  var row = document.createElement('div');
+  row.className = 'sh-chips';
+  row.id = 'shop-chips-yy';
+  row.innerHTML = YYS.map(function(c, i){
+    return '<button class="sh-chip yy-'+c[0]+(i===0?' on':'')+'" onclick="shopFilterYY(\''+c[0]+'\',this)">'+c[1]+'</button>';
+  }).join('');
+  // Insert AFTER the category row so order is: element / category / yinyang.
+  // Find the category row if present, else fallback to element row's next sibling.
+  var anchor = document.getElementById('shop-chips-cat') || elemChips;
+  anchor.parentNode.insertBefore(row, anchor.nextSibling);
 }
 
 /* Force the "All" element chip to be active by default (was hardcoded as 水/water). */
@@ -100,20 +129,21 @@ function renderShopGrid(){
     return;
   }
 
-  // ── Filter: by element AND by category ──
+  // ── Filter: by element AND category AND yin/yang ──
   var filtered = _shopProducts.filter(function(p){
     var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[p.element] || '';
     var elemOk = (_filterElement === 'all') || (elemClass === _filterElement);
     var catOk  = (_filterCategory === 'all') || ((p.category || '') === _filterCategory);
-    return elemOk && catOk;
+    var yyOk   = (_filterYinYang === 'all') || ((p.yinyang || '') === _filterYinYang);
+    return elemOk && catOk && yyOk;
   });
 
   // ── Sort ──
-  // Default (both filters 'all'): random order, cached for the session so
+  // Default (all filters 'all'): random order, cached for the session so
   // re-renders don't reshuffle while the user is browsing.
   // Any specific filter applied: alphabetical by display name.
   var sorted;
-  if(_filterElement === 'all' && _filterCategory === 'all'){
+  if(_filterElement === 'all' && _filterCategory === 'all' && _filterYinYang === 'all'){
     if(!_shuffleOrder || _shuffleOrder.length !== _shopProducts.length){
       _shuffleOrder = _shopProducts.map(function(p){ return p.id; });
       shuffleArr(_shuffleOrder);

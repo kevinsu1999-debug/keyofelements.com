@@ -232,6 +232,7 @@ async function loadStats(){
 var ELEMENTS = [['','(none)'],['水','Water'],['木','Wood'],['火','Fire'],['土','Earth'],['金','Metal']];
 var CATEGORIES = [['','(none)'],['clothing','Clothing / 服饰'],['accessory','Accessory / 配饰'],['life','Life / 生活'],['service','Service / 服务'],['other','Other']];
 var GENDERS = [['','Neutral'],['male','Male / 男'],['female','Female / 女'],['unisex','Unisex']];
+var YINYANG = [['','(none)'],['yin','阴 / Yin'],['yang','阳 / Yang']];
 
 async function loadProducts(){
   var host = document.getElementById('prodHost');
@@ -349,7 +350,10 @@ function renderProductForm(){
       formField('element','Element / 五行', '<select id="pfElem">'+ELEMENTS.map(function(e){return '<option value="'+e[0]+'"'+(m.element===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
       formField('category','Category / 分类', '<select id="pfCat">'+CATEGORIES.map(function(e){return '<option value="'+e[0]+'"'+(m.category===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
     '</div>' +
-    formField('gender','Gender', '<select id="pfGender">'+GENDERS.map(function(e){return '<option value="'+e[0]+'"'+(m.gender===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
+    '<div class="form-grid2">' +
+      formField('gender','Gender', '<select id="pfGender">'+GENDERS.map(function(e){return '<option value="'+e[0]+'"'+(m.gender===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
+      formField('yinyang','Yin/Yang / 阴阳', '<select id="pfYinYang">'+YINYANG.map(function(e){return '<option value="'+e[0]+'"'+(m.yinyang===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
+    '</div>' +
     '<div class="form-row">' +
       '<label>Sizes &amp; Stock</label>' +
       '<div style="font-size:10px;color:var(--t3);margin-bottom:8px">每行一个尺码；数量 = 当前可售库存。手动调整（每成一单回来 -1）。</div>' +
@@ -358,14 +362,14 @@ function renderProductForm(){
     '</div>' +
     formField('sort','Sort order (lower shows first)', '<input id="pfSort" type="number" value="'+escapeAttr(m.sort_order||'99')+'">') +
     '<div class="form-row">' +
-      '<label>Visibility / \u5c55\u793a\u4f4d\u7f6e</label>' +
+      '<label>Available in Shop / \u5728 Shop \u4e2d\u4e0a\u67b6</label>' +
       '<div style="display:flex;gap:14px;align-items:center;padding:8px 0">' +
         '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t1);cursor:pointer;text-transform:none;letter-spacing:0">' +
           '<input type="checkbox" id="pfShopVisible" '+(m.hidden==='true'?'':'checked')+' style="width:16px;height:16px;accent-color:var(--t1);cursor:pointer">' +
-          '<span>Show in public shop / \u5728\u5e97\u94fa\u4e2d\u5c55\u793a</span>' +
+          '<span>Available in Shop / \u5728 Shop \u9875\u9762\u53ef\u8d2d\u4e70</span>' +
         '</label>' +
       '</div>' +
-      '<div style="font-size:11px;color:var(--t3);margin-top:-4px">\u53d6\u6d88\u52fe\u9009\u540e\u4ea7\u54c1\u5728 Stripe \u4ecd\u7136\u5b58\u5728\u3001\u53ef\u88ab\u652f\u4ed8\u94fe\u63a5\u4f7f\u7528\uff0c\u4f46\u4e0d\u51fa\u73b0\u5728\u516c\u5f00 shop \u9875\u3002\u9002\u5408\u62a5\u544a\u89e3\u9501\u4e4b\u7c7b\u670d\u52a1\u578b\u4ea7\u54c1\u3002</div>' +
+      '<div style="font-size:11px;color:var(--t3);margin-top:-4px">\u53d6\u6d88\u52fe\u9009\u540e\u4ea7\u54c1\u4ece\u516c\u5f00 shop \u9875\u4e0b\u67b6\uff08Stripe \u4ecd\u4fdd\u7559\u4ea7\u54c1\u4e0e\u652f\u4ed8\u94fe\u63a5\uff09\u3002\u9002\u5408\u4e34\u65f6\u4e0b\u67b6\u3001\u62a5\u544a\u89e3\u9501\u7b49\u670d\u52a1\u578b\u4ea7\u54c1\u3002</div>' +
     '</div>' +
     '<div class="form-row">' +
       '<label>Product Images</label>' +
@@ -465,6 +469,7 @@ async function saveProduct(){
   var elem = document.getElementById('pfElem').value;
   var cat = document.getElementById('pfCat').value;
   var gender = document.getElementById('pfGender').value;
+  var yinyang = document.getElementById('pfYinYang').value;
   var sort = document.getElementById('pfSort').value;
   var shopVisible = !!document.getElementById('pfShopVisible').checked;
 
@@ -488,6 +493,7 @@ async function saveProduct(){
   if(elem) { metadata.element = elem; metadata.element_class = {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[elem]||''; }
   if(cat) metadata.category = cat;
   if(gender) metadata.gender = gender;
+  if(yinyang) metadata.yinyang = yinyang;
   if(cleanSizes.length){
     metadata.sizes_json = JSON.stringify(cleanSizes);
     // Also write legacy `sizes` comma list for backward compat with existing shop code

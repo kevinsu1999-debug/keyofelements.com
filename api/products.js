@@ -61,6 +61,7 @@ module.exports = async (req, res) => {
         category: meta.category || '',            // 分类: clothing/accessory/service
         name_zh: meta.name_zh || p.name,          // 中文名
         gender: meta.gender || '',
+        yinyang: meta.yinyang || '',              // 阴阳: yin/yang/''
         sizes: meta.sizes || '',                  // legacy comma string (for back-compat)
         sizes_array: sizesArray,                  // [{size, qty}, ...]
         total_stock: totalStock,
