@@ -1048,19 +1048,18 @@ body{font-size:15px;line-height:1.75}
 .sh-chip.tu-chip.on   span{color:var(--tu)   !important}
 
 /* ── Chip bar layout: label + CTA on top; two stacked chip rows below ── */
-.sh-chip-bar{display:flex;flex-direction:column;gap:18px;align-items:center}
+/* Left-aligned to match the hero heading above (no horizontal centering). */
+.sh-chip-bar{display:flex;flex-direction:column;gap:18px;align-items:flex-start;width:100%}
 .sh-chip-bar-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;width:100%;max-width:760px}
 .sh-chip-label{font-size:9px;letter-spacing:.35em;color:var(--a)}
 .sh-chip-cta{font-size:11px;color:var(--a-d);cursor:pointer;letter-spacing:.04em}
 .sh-chip-cta:hover{color:var(--t1)}
 .sh-chip-rows{display:flex;flex-direction:column;gap:8px;width:100%;max-width:760px}
-/* Each chip row uses a 6-column grid so chips line up across both rows */
-.sh-chip-rows .sh-chips{display:grid !important;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;justify-content:stretch !important}
-/* Override base chip padding: let grid set width, content centers inside */
+.sh-chip-rows .sh-chips{display:grid !important;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;justify-content:start !important}
 .sh-chip-rows .sh-chip{width:auto;min-width:0;padding:0 8px !important}
 @media(max-width:640px){
   .sh-chip-rows .sh-chips{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .sh-chip-bar-top{flex-direction:column;gap:8px;text-align:center}
+  .sh-chip-bar-top{flex-direction:column;align-items:flex-start;gap:8px;text-align:left}
 }
 /* (legacy .shui-chip.on / .jin-chip.on rules removed — superseded by .sh-chip.{elem}-chip.on above) */
 .shop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
