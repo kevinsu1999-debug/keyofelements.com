@@ -260,13 +260,13 @@ nav > *{position:relative;z-index:1}
 ══════════════════════════════════════ */
 .product-block{border-bottom:1px solid var(--line)}
 /* ── Page banner slot (hidden until admin uploads an image) ── */
-.page-banner{display:none;width:100%;max-height:420px;overflow:hidden;border-bottom:1px solid var(--line)}
+.page-banner{display:none;width:100%;overflow:hidden;border-bottom:1px solid var(--line);background:var(--bg2)}
 .page-banner[data-banner-loaded]{display:block}
-.page-banner img{width:100%;height:100%;object-fit:cover;display:block;aspect-ratio:16/6}
-@media(max-width:700px){.page-banner img{aspect-ratio:16/9}}
+.page-banner img{width:100%;height:auto;max-height:80vh;object-fit:contain;display:block;margin:0 auto}
+
 /* Homepage Philosophy hero image — placeholder visible by default; swapped for photo when admin uploads */
 .phi-hero-img{background:#ddd8cf;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.phi-hero-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.phi-hero-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
 .phi-hero-img[data-banner-loaded] img{display:block}
 .phi-hero-img[data-banner-loaded] .phi-hero-img-empty{display:none}
 .phi-hero-img-empty{position:relative;z-index:1;text-align:center;color:var(--t4)}
