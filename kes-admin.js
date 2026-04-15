@@ -219,8 +219,6 @@ function loadPageImages(){
     '<div class="pg-mock-head"><h3>Homepage</h3><div class="pg-mock-url">keyofelements.com/</div></div>' +
     '<div class="pg-frame">' +
       '<div class="pg-nav">KES · · ·</div>' +
-      // Homepage top banner (optional, visible only when uploaded)
-      hotspot('banner_home','banner_home.jpg','Top banner · wide','pg-banner-hot') +
       // Philosophy hero split: left = text block, right = lifestyle image
       '<div class="pg-phi-split">' +
         '<div class="pg-phi-text">' +

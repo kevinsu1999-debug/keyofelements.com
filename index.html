@@ -171,7 +171,7 @@ nav > *{position:relative;z-index:1}
 /* ══════════════════════════════════════
    BLOCK 2 — READING FORM
 ══════════════════════════════════════ */
-.reading-block{
+.reading-block{scroll-margin-top:80px;
   display:grid;grid-template-columns:1fr 1fr;
   min-height:100vh;
   border-bottom:1px solid var(--line);
@@ -1485,6 +1485,16 @@ body{font-size:15px;line-height:1.75}
 </style>
 </head>
 <body>
+<script>
+/* Force top-of-page on load. Without this, browsers (esp. mobile Safari)
+   sometimes restore scroll to the last position, and layout shifts from
+   async image loads / reveal animations can leave the page mid-scrolled. */
+if('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.addEventListener('load', function(){ if(!location.hash) window.scrollTo(0, 0); });
+// Belt-and-suspenders: re-pin after late layout shifts (image decode etc.).
+setTimeout(function(){ if(!location.hash && window.scrollY === 0) return; if(!location.hash) window.scrollTo(0, 0); }, 400);
+</script>
+
 
 <nav>
   <div class="logo" onclick="goPage('home')">
@@ -1512,11 +1522,6 @@ body{font-size:15px;line-height:1.75}
 
 <!-- ════ HOME ════ -->
 <div class="page on" id="p-home">
-
-<div class="page-banner" data-banner-wrap>
-  <img data-banner="home" alt="">
-</div>
-
 <!-- ══ BLOCK 1: PHILOSOPHY ══ -->
 <div class="philosophy">
 
@@ -1527,7 +1532,7 @@ body{font-size:15px;line-height:1.75}
       <div class="phi-kicker">命 元 之 钥</div>
       <h1 class="phi-h1" style="margin-bottom:20px">生活，<br>始于自知。</h1>
       <div style="font-size:15px;color:var(--t2);line-height:2;max-width:400px;margin-bottom:32px">古人说，知人者智，自知者明。<br>了解自己，选择与自己同频的元素、生活方式、与未来。</div>
-      <div><button style="background:var(--t1);color:#fff;border:none;border-radius:100px;padding:14px 36px;font-size:12px;font-weight:600;letter-spacing:.1em;cursor:pointer;font-family:inherit" onclick="document.querySelector('.form-wrap').scrollIntoView({behavior:'smooth'})">解读我的命格 →</button></div>
+      <div><button style="background:var(--t1);color:#fff;border:none;border-radius:100px;padding:14px 36px;font-size:12px;font-weight:600;letter-spacing:.1em;cursor:pointer;font-family:inherit" onclick="document.querySelector('.reading-block').scrollIntoView({behavior:'smooth'})">解读我的命格 →</button></div>
     </div>
     <!-- Right: lifestyle image — falls back to placeholder when admin hasn't uploaded -->
     <div class="phi-hero-img" data-banner-wrap>
@@ -1950,7 +1955,7 @@ body{font-size:15px;line-height:1.75}
     <div class="sh-chip-bar">
       <div class="sh-chip-bar-top">
         <div class="sh-chip-label">按五行筛选</div>
-        <div class="sh-chip-cta" onclick="navGo('home',document.getElementById('n-home'));setTimeout(()=>document.querySelector('.form-wrap').scrollIntoView({behavior:'smooth'}),100)">
+        <div class="sh-chip-cta" onclick="navGo('home',document.getElementById('n-home'));setTimeout(()=>document.querySelector('.reading-block').scrollIntoView({behavior:'smooth'}),100)">
           还不知道你的命格？立即解读 →
         </div>
       </div>
@@ -2507,7 +2512,7 @@ function pickSize(el){
 
     <div class="acct-empty-hint">
       <div class="aeh-text">想为家人也生成一份命盘吗？</div>
-      <button class="btn-dark" style="font-size:11px;padding:10px 22px" onclick="navGo('home',document.getElementById('n-home'));setTimeout(()=>document.querySelector('.form-wrap').scrollIntoView({behavior:'smooth'}),100)">新建解读 →</button>
+      <button class="btn-dark" style="font-size:11px;padding:10px 22px" onclick="navGo('home',document.getElementById('n-home'));setTimeout(()=>document.querySelector('.reading-block').scrollIntoView({behavior:'smooth'}),100)">新建解读 →</button>
     </div>
   </div>
 </div>
