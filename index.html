@@ -1046,6 +1046,22 @@ body{font-size:15px;line-height:1.75}
 .sh-chip.mu-chip.on   span{color:var(--mu)   !important}
 .sh-chip.huo-chip.on  span{color:var(--huo)  !important}
 .sh-chip.tu-chip.on   span{color:var(--tu)   !important}
+
+/* ── Chip bar layout: label + CTA on top; two stacked chip rows below ── */
+.sh-chip-bar{display:flex;flex-direction:column;gap:18px;align-items:center}
+.sh-chip-bar-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;width:100%;max-width:760px}
+.sh-chip-label{font-size:9px;letter-spacing:.35em;color:var(--a)}
+.sh-chip-cta{font-size:11px;color:var(--a-d);cursor:pointer;letter-spacing:.04em}
+.sh-chip-cta:hover{color:var(--t1)}
+.sh-chip-rows{display:flex;flex-direction:column;gap:8px;width:100%;max-width:760px}
+/* Each chip row uses a 6-column grid so chips line up across both rows */
+.sh-chip-rows .sh-chips{display:grid !important;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;justify-content:stretch !important}
+/* Override base chip padding: let grid set width, content centers inside */
+.sh-chip-rows .sh-chip{width:auto;min-width:0;padding:0 8px !important}
+@media(max-width:640px){
+  .sh-chip-rows .sh-chips{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sh-chip-bar-top{flex-direction:column;gap:8px;text-align:center}
+}
 /* (legacy .shui-chip.on / .jin-chip.on rules removed — superseded by .sh-chip.{elem}-chip.on above) */
 .shop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
 @media(max-width:900px){.shop-grid{grid-template-columns:repeat(2,1fr)}}
@@ -1838,18 +1854,23 @@ body{font-size:15px;line-height:1.75}
     <div class="phi-kicker">本 季 系 列</div>
     <h1 class="phi-h1" style="margin-bottom:12px">穿上与你<br>命格同频的颜色。</h1>
     <div class="phi-h1-sub-cn" style="margin-bottom:24px">以色养命，以衣载元。每件 KES 单品都标注了五行属性，精准对应你的命格。</div>
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div style="font-size:9px;letter-spacing:.35em;color:var(--a)">按五行筛选</div>
-      <div class="sh-chips" id="shop-chips">
-        <button class="sh-chip" onclick="shopFilter('all',this)" style="color:var(--t2);border-color:var(--line2)">全部</button>
-        <button class="sh-chip shui-chip on" onclick="shopFilter('shui',this)"><span class="shui">水</span></button>
-        <button class="sh-chip jin-chip" onclick="shopFilter('jin',this)"><span class="jin">金</span></button>
-        <button class="sh-chip mu-chip" onclick="shopFilter('mu',this)"><span class="mu">木</span></button>
-        <button class="sh-chip huo-chip" onclick="shopFilter('huo',this)"><span class="huo">火</span></button>
-        <button class="sh-chip tu-chip" onclick="shopFilter('tu',this)"><span class="tu">土</span></button>
+    <div class="sh-chip-bar">
+      <div class="sh-chip-bar-top">
+        <div class="sh-chip-label">按五行筛选</div>
+        <div class="sh-chip-cta" onclick="navGo('home',document.getElementById('n-home'));setTimeout(()=>document.querySelector('.form-wrap').scrollIntoView({behavior:'smooth'}),100)">
+          还不知道你的命格？立即解读 →
+        </div>
       </div>
-      <div style="font-size:11px;color:var(--a-d);cursor:pointer" onclick="navGo('home',document.getElementById('n-home'));setTimeout(()=>document.querySelector('.form-wrap').scrollIntoView({behavior:'smooth'}),100)">
-        还不知道你的命格？立即解读 →
+      <div class="sh-chip-rows">
+        <div class="sh-chips" id="shop-chips">
+          <button class="sh-chip" onclick="shopFilter('all',this)">全部</button>
+          <button class="sh-chip shui-chip" onclick="shopFilter('shui',this)"><span class="shui">水</span></button>
+          <button class="sh-chip jin-chip" onclick="shopFilter('jin',this)"><span class="jin">金</span></button>
+          <button class="sh-chip mu-chip" onclick="shopFilter('mu',this)"><span class="mu">木</span></button>
+          <button class="sh-chip huo-chip" onclick="shopFilter('huo',this)"><span class="huo">火</span></button>
+          <button class="sh-chip tu-chip" onclick="shopFilter('tu',this)"><span class="tu">土</span></button>
+        </div>
+        <!-- category chips will be injected here by kes-shop-render.js -->
       </div>
     </div>
   </div>

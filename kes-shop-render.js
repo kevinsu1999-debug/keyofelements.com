@@ -45,10 +45,11 @@ function injectCategoryChips(){
   var row = document.createElement('div');
   row.className = 'sh-chips';
   row.id = 'shop-chips-cat';
-  row.style.marginTop = '8px';
   row.innerHTML = CATS.map(function(c, i){
     return '<button class="sh-chip'+(i===0?' on':'')+'" onclick="shopFilterCat(\''+c[0]+'\',this)">'+c[1]+'</button>';
   }).join('');
+  // Insert as a sibling after #shop-chips. Parent (.sh-chip-rows) is a column
+  // flex so the new row stacks below the element row with proper gap.
   elemChips.parentNode.insertBefore(row, elemChips.nextSibling);
 }
 
