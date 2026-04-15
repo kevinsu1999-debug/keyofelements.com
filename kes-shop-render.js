@@ -15,13 +15,14 @@ var _shuffleOrder = null;   // cached random ordering for current session
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', function(){
   injectCategoryChips();
-  injectYinYangChips();
+  appendYinYangToElementRow();
   resetFilterChipState();
   // Override the global shopFilter (originally defined in index.html for hardcoded products).
-  // We replace with a re-render-based filter that supports both element + category dimensions.
+  // Element + Yin/Yang live in the same row but are independent filter dimensions
+  // — scoped by data-dim so clicking one doesn't deselect the other.
   window.shopFilter = function(e, btn){
     _filterElement = e;
-    document.querySelectorAll('#shop-chips .sh-chip').forEach(function(b){ b.classList.remove('on'); });
+    document.querySelectorAll('#shop-chips .sh-chip[data-dim="elem"]').forEach(function(b){ b.classList.remove('on'); });
     if(btn) btn.classList.add('on');
     renderShopGrid();
   };
@@ -31,10 +32,17 @@ document.addEventListener('DOMContentLoaded', function(){
     if(btn) btn.classList.add('on');
     renderShopGrid();
   };
+  // Click-to-toggle behavior for Yin/Yang: clicking an already-active chip clears
+  // the filter. Clicking the other switches. There is no explicit "All" chip.
   window.shopFilterYY = function(y, btn){
-    _filterYinYang = y;
-    document.querySelectorAll('#shop-chips-yy .sh-chip').forEach(function(b){ b.classList.remove('on'); });
-    if(btn) btn.classList.add('on');
+    if(_filterYinYang === y){
+      _filterYinYang = 'all';
+      if(btn) btn.classList.remove('on');
+    } else {
+      _filterYinYang = y;
+      document.querySelectorAll('#shop-chips .sh-chip[data-dim="yy"]').forEach(function(b){ b.classList.remove('on'); });
+      if(btn) btn.classList.add('on');
+    }
     renderShopGrid();
   };
   loadShopProducts();
@@ -61,25 +69,34 @@ function injectCategoryChips(){
   elemChips.parentNode.insertBefore(row, elemChips.nextSibling);
 }
 
-/* Inject a third chip row for Yin/Yang filter, below the category chips. */
-function injectYinYangChips(){
+/* Append 阴/阳 Yin/Yang chips to the end of the element row.
+   They share the row with element chips visually, but are tracked as a separate
+   filter dimension via data-dim="yy". Existing element chips get data-dim="elem"
+   tagged on the fly so the click handlers can scope their "remove on" selector. */
+function appendYinYangToElementRow(){
   var elemChips = document.getElementById('shop-chips');
   if(!elemChips) return;
-  if(document.getElementById('shop-chips-yy')) return;
+  // Tag existing element chips so filter handlers can scope by dimension.
+  elemChips.querySelectorAll('.sh-chip').forEach(function(b){
+    if(!b.dataset.dim) b.dataset.dim = 'elem';
+  });
+  // Avoid double append
+  if(elemChips.querySelector('.yy-yin')) return;
   var isZh = document.documentElement.lang === 'zh';
-  var YYS = isZh
-    ? [['all','全部'],['yin','阴'],['yang','阳']]
-    : [['all','All'],['yin','Yin'],['yang','Yang']];
-  var row = document.createElement('div');
-  row.className = 'sh-chips';
-  row.id = 'shop-chips-yy';
-  row.innerHTML = YYS.map(function(c, i){
-    return '<button class="sh-chip yy-'+c[0]+(i===0?' on':'')+'" onclick="shopFilterYY(\''+c[0]+'\',this)">'+c[1]+'</button>';
-  }).join('');
-  // Insert AFTER the category row so order is: element / category / yinyang.
-  // Find the category row if present, else fallback to element row's next sibling.
-  var anchor = document.getElementById('shop-chips-cat') || elemChips;
-  anchor.parentNode.insertBefore(row, anchor.nextSibling);
+  var yinLabel = isZh ? '阴' : 'Yin';
+  var yangLabel = isZh ? '阳' : 'Yang';
+  var yin = document.createElement('button');
+  yin.className = 'sh-chip yy-yin';
+  yin.dataset.dim = 'yy';
+  yin.setAttribute('onclick', "shopFilterYY('yin',this)");
+  yin.innerHTML = '<span>'+yinLabel+'</span>';
+  var yang = document.createElement('button');
+  yang.className = 'sh-chip yy-yang';
+  yang.dataset.dim = 'yy';
+  yang.setAttribute('onclick', "shopFilterYY('yang',this)");
+  yang.innerHTML = '<span>'+yangLabel+'</span>';
+  elemChips.appendChild(yin);
+  elemChips.appendChild(yang);
 }
 
 /* Force the "All" element chip to be active by default (was hardcoded as 水/water). */
