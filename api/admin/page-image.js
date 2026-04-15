@@ -25,10 +25,10 @@ module.exports = async (req, res) => {
   const n = parseInt(slot);
   if (!isNaN(n) && n >= 1 && n <= 4) {
     path = `home_${n}.jpg`;
-  } else if (typeof slot === 'string' && /^banner_(home|shop|learn|about)$/.test(slot)) {
+  } else if (typeof slot === 'string' && /^(banner_(home|shop|learn|about)|home_hero)$/.test(slot)) {
     path = `${slot}.jpg`;
   } else {
-    return res.status(400).json({ error: 'slot must be 1..4 or banner_(home|shop|learn|about)' });
+    return res.status(400).json({ error: 'slot must be 1..4, banner_(home|shop|learn|about), or home_hero' });
   }
 
   const sb = getSupabaseAdmin();

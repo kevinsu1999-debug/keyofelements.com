@@ -24,10 +24,11 @@ module.exports = async (req, res) => {
 
   const base = (process.env.SUPABASE_URL || '').replace(/\/$/, '') + '/storage/v1/object/public/page-images/';
   const banners = {
-    home:  base + 'banner_home.jpg',
-    shop:  base + 'banner_shop.jpg',
-    learn: base + 'banner_learn.jpg',
-    about: base + 'banner_about.jpg',
+    home:       base + 'banner_home.jpg',
+    shop:       base + 'banner_shop.jpg',
+    learn:      base + 'banner_learn.jpg',
+    about:      base + 'banner_about.jpg',
+    home_hero:  base + 'home_hero.jpg',  // Philosophy block 720x600 lifestyle image
   };
 
   // Cache 60s at edge; stale-while-revalidate up to 10 min so admin edits

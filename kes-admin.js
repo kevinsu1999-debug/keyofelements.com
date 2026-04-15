@@ -193,6 +193,13 @@ function loadPageImages(){
     '.pg-hot-overlay span{color:#fff;font-size:11px;letter-spacing:.1em;padding:6px 14px;border:1px solid rgba(255,255,255,.4);border-radius:100px;text-transform:uppercase}' +
     '.pg-hot:hover .pg-hot-overlay{opacity:1}' +
     '.pg-banner-hot{aspect-ratio:16/5}' +
+    '.pg-phi-split{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;background:var(--card);border:1px solid var(--line);border-radius:4px}' +
+    '.pg-phi-text{display:flex;flex-direction:column;gap:4px;padding:8px 4px;justify-content:center}' +
+    '.pg-phi-kicker{height:4px;width:40%;background:var(--a);opacity:.5;border-radius:2px;margin-bottom:4px}' +
+    '.pg-phi-title{height:10px;width:90%;background:var(--t2);border-radius:2px}' +
+    '.pg-phi-body{height:4px;width:70%;background:var(--bg3);border-radius:2px;margin-top:4px}' +
+    '.pg-phi-btn{font-size:8px;padding:4px 10px;background:var(--t1);color:#fff;border-radius:100px;width:fit-content;margin-top:4px;letter-spacing:.1em}' +
+    '.pg-phi-img-hot{aspect-ratio:6/5}' +
     '.pg-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px;background:var(--card);border:1px solid var(--line);border-radius:4px}' +
     '.pg-edit-grid .pg-hot{aspect-ratio:4/5;min-height:0}' +
     '.pg-edit-split{display:grid;grid-template-columns:1fr 2fr;gap:8px}' +
@@ -214,6 +221,17 @@ function loadPageImages(){
       '<div class="pg-nav">KES · · ·</div>' +
       // Homepage top banner (optional, visible only when uploaded)
       hotspot('banner_home','banner_home.jpg','Top banner · wide','pg-banner-hot') +
+      // Philosophy hero split: left = text block, right = lifestyle image
+      '<div class="pg-phi-split">' +
+        '<div class="pg-phi-text">' +
+          '<div class="pg-phi-kicker"></div>' +
+          '<div class="pg-phi-title"></div>' +
+          '<div class="pg-phi-title"></div>' +
+          '<div class="pg-phi-body"></div>' +
+          '<div class="pg-phi-btn">CTA</div>' +
+        '</div>' +
+        hotspot('home_hero','home_hero.jpg','Philosophy hero · 720×600','pg-phi-img-hot') +
+      '</div>' +
       // Reading form area filler
       '<div class="pg-filler">Reading form (fixed)</div>' +
       // Editorial section: text block + 2x2 grid
