@@ -2769,6 +2769,15 @@ function pickSize(el){
   </div>
 </div>
 
+<!-- Terms re-consent modal (shown when user metadata.terms_version is stale) -->
+<div id="termsConsentModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);align-items:center;justify-content:center" class="">
+  <div style="background:#fff;border-radius:14px;width:min(460px,92vw);padding:32px">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;margin-bottom:10px">服务条款已更新</h3>
+    <p style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:18px">我们更新了 <a href="#" style="color:var(--t1);text-decoration:underline">服务条款</a> 与 <a href="#" style="color:var(--t1);text-decoration:underline">隐私政策</a>。继续使用前请确认你已阅读并同意。</p>
+    <button onclick="acceptCurrentTerms()" style="width:100%;padding:13px;background:var(--t1);color:#fff;border:none;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.1em;cursor:pointer;font-family:inherit">我已阅读并同意</button>
+  </div>
+</div>
+<style>#termsConsentModal.open{display:flex !important}</style>
 <script src="kes-connect.js"></script>
 <script src="kes-city.js"></script>
 <script src="kes-shop.js"></script>
