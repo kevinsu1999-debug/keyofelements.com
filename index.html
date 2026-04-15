@@ -271,25 +271,39 @@ nav > *{position:relative;z-index:1}
    BLOCK 3 — PRODUCTS
 ══════════════════════════════════════ */
 .product-block{border-bottom:1px solid var(--line)}
-/* ── Editorial 4-image feature ── */
-.ed-header{padding:clamp(64px,9vh,120px) clamp(32px,5vw,72px) clamp(40px,5vh,64px);text-align:center;max-width:880px;margin:0 auto}
-.ed-eyebrow{font-size:9px;letter-spacing:.5em;color:var(--a);display:inline-flex;align-items:center;gap:14px;margin-bottom:24px}
-.ed-eyebrow::before,.ed-eyebrow::after{content:'';width:24px;height:1px;background:var(--a)}
-.ed-title{font-family:'Cormorant Garamond',serif;font-size:clamp(40px,6vw,72px);font-weight:300;line-height:1.1;color:var(--t1);margin-bottom:20px;letter-spacing:-.005em}
-.ed-title em{font-style:italic;color:var(--a-d);font-weight:300}
-.ed-sub{font-family:'Inter',sans-serif;font-size:12px;letter-spacing:.18em;color:var(--t3);text-transform:uppercase}
-.ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.ed-cell{position:relative;display:block;aspect-ratio:4/5;overflow:hidden;background:var(--bg2);text-decoration:none;color:inherit}
+/* ── Editorial: left-column text + right 2x2 image grid ── */
+.ed-split{display:grid;grid-template-columns:minmax(280px,38%) 1fr;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ed-side{padding:clamp(48px,6vh,96px) clamp(32px,5vw,64px);display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--line);background:var(--bg)}
+.ed-eyebrow{font-size:9px;letter-spacing:.45em;color:var(--a);display:inline-flex;align-items:center;gap:12px;margin-bottom:28px;text-transform:uppercase}
+.ed-eyebrow::before{content:'';width:24px;height:1px;background:var(--a)}
+.ed-title{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,4.4vw,60px);font-weight:300;line-height:1.1;color:var(--t1);margin-bottom:24px;letter-spacing:-.005em;font-style:normal}
+.ed-title em{font-style:normal;font-weight:400}
+.ed-sub{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.32em;color:var(--t3);text-transform:uppercase;margin-bottom:36px}
+.ed-cta{font-size:11px;letter-spacing:.16em;color:var(--t1);text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;border-bottom:1px solid var(--t1);padding-bottom:6px;width:fit-content;transition:gap .25s}
+.ed-cta:hover{gap:14px}
+.ed-grid-wrap{position:relative;background:var(--line)}
+.ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;height:100%}
+.ed-cell{position:relative;display:block;aspect-ratio:1/1;overflow:hidden;background:var(--bg2);text-decoration:none;color:inherit}
 .ed-cell img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .9s cubic-bezier(.25,.1,.25,1)}
 .ed-cell:hover img{transform:scale(1.03)}
-.ed-cell .ed-overlay{position:absolute;left:0;right:0;bottom:0;padding:24px 28px;display:flex;align-items:flex-end;justify-content:space-between;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 60%);color:#fff;transition:opacity .3s}
+.ed-cell .ed-overlay{position:absolute;left:0;right:0;bottom:0;padding:18px 22px;display:flex;align-items:flex-end;justify-content:space-between;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 60%);color:#fff;transition:opacity .3s}
 .ed-cell:not([data-loaded]) .ed-overlay{opacity:0}
-.ed-cell .ed-cap{font-size:11px;letter-spacing:.32em;text-transform:uppercase;font-weight:500;text-shadow:0 1px 4px rgba(0,0,0,.3)}
-.ed-cell .ed-arrow{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;transition:transform .3s}
+.ed-cell .ed-cap{font-size:10px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;text-shadow:0 1px 4px rgba(0,0,0,.3)}
+.ed-cell .ed-arrow{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;transition:transform .3s}
 .ed-cell:hover .ed-arrow{transform:translateX(6px)}
 .ed-cell:not([data-loaded]) img{visibility:hidden}
-.ed-cell:not([data-loaded])::before{content:attr(data-slot);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(96px,15vw,180px);color:rgba(0,0,0,.08);font-weight:300;pointer-events:none}
-@media(max-width:760px){.ed-grid{grid-template-columns:1fr}.ed-cell{aspect-ratio:1/1}}
+.ed-cell:not([data-loaded])::before{content:attr(data-slot);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(72px,10vw,140px);color:rgba(0,0,0,.08);font-weight:300;pointer-events:none}
+@media(max-width:880px){
+  .ed-split{grid-template-columns:1fr}
+  .ed-side{border-right:none;border-bottom:1px solid var(--line);padding:48px 24px;text-align:left}
+  .ed-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:520px){
+  .ed-grid{grid-template-columns:1fr 1fr}
+  .ed-cell .ed-overlay{padding:12px 14px}
+  .ed-cell .ed-cap{font-size:9px;letter-spacing:.18em}
+  .ed-cell .ed-arrow{font-size:18px}
+}
 
 /* editorial header (legacy, no longer in DOM but kept for safety) */
 .pb-header{
@@ -668,6 +682,58 @@ body{font-size:15px;line-height:1.75}
   .lec-grid{grid-template-columns:repeat(3,1fr)}
   .led-grid{grid-template-columns:1fr}
   .phi-bottom{grid-template-columns:1fr}
+}
+
+/* ── Mobile form polish (≤700px): bigger touch targets, no iOS zoom on focus ── */
+@media(max-width:700px){
+  .form-wrap{padding:20px !important}
+  .f-row{grid-template-columns:1fr 1fr !important;gap:10px}
+  .f-input,.f-select{
+    font-size:16px !important;       /* prevents iOS Safari zoom on focus */
+    padding:13px 14px !important;
+    height:auto;
+    -webkit-appearance:none;appearance:none;
+  }
+  .f-label{font-size:10px;letter-spacing:.1em}
+  .f-btn{padding:16px 24px !important;font-size:13px;margin-top:10px}
+  .gb{padding:13px 20px;font-size:13px;flex:1;text-align:center}
+  .gender-row{display:flex;gap:8px}
+  .city-dropdown{font-size:14px}
+  .city-option{padding:12px 14px}
+}
+/* On very narrow screens, stack year/month/day into 3 cols inside their own row
+   instead of cramming 6 selects across (year/month/day + hour) into 2 columns. */
+@media(max-width:520px){
+  .f-row{grid-template-columns:1fr !important}
+  .form-wrap{padding:18px !important}
+  /* Year/month/day inner grid stays 3 cols since they go together */
+}
+/* Hide the 5-elements decorative strip on small screens — it's just an info stripe,
+   not actionable, and saves vertical space below the form. */
+@media(max-width:520px){
+  .rb-elems{display:none}
+}
+/* Editorial section text on mobile: tighten and align */
+@media(max-width:880px){
+  .ed-title{font-size:clamp(32px,8vw,48px) !important}
+  .ed-eyebrow{margin-bottom:18px}
+  .ed-sub{margin-bottom:24px}
+}
+/* Nav burger menu drawer — better mobile feel */
+@media(max-width:768px){
+  .nav-links.open{
+    position:absolute;top:100%;left:0;right:0;
+    flex-direction:column;align-items:stretch;
+    background:rgba(255,255,255,.98);backdrop-filter:blur(20px);
+    padding:8px 0;border-bottom:1px solid var(--line);
+    box-shadow:0 8px 24px rgba(0,0,0,.06);
+  }
+  .nav-links.open .nl{padding:16px 24px;border-radius:0;font-size:13px}
+}
+/* Reading CTA button on mobile: full width */
+@media(max-width:520px){
+  .pb-reading-cta{flex-direction:column;gap:20px;text-align:center;padding:32px 24px}
+  .pb-reading-cta .btn-dark{width:100%}
 }
 
 
@@ -1537,32 +1603,35 @@ body{font-size:15px;line-height:1.75}
 <!-- ══ BLOCK 3: EDITORIAL 4-IMAGE FEATURE ══ -->
 <div class="product-block">
 
-  <div class="ed-header">
-    <div class="ed-eyebrow reveal">本　季　系　列</div>
-    <h2 class="ed-title reveal" style="transition-delay:.1s">
-      穿上与你<br><em>命格</em>同频的颜色
-    </h2>
-    <p class="ed-sub reveal" style="transition-delay:.2s">以色养命，以衣载元 ・ Color is intent.</p>
-  </div>
-
-  <!-- product grid -->
-  <div class="ed-grid" id="ed-grid">
-    <a class="ed-cell reveal" data-slot="1" href="/?page=shop" onclick="goPage('shop');return false">
-      <img id="home-hero-1" alt="" loading="lazy">
-      <div class="ed-overlay"><div class="ed-cap">水 · WATER</div><div class="ed-arrow">→</div></div>
-    </a>
-    <a class="ed-cell reveal" data-slot="2" href="/?page=shop" onclick="goPage('shop');return false" style="transition-delay:.05s">
-      <img id="home-hero-2" alt="" loading="lazy">
-      <div class="ed-overlay"><div class="ed-cap">金 · METAL</div><div class="ed-arrow">→</div></div>
-    </a>
-    <a class="ed-cell reveal" data-slot="3" href="/?page=shop" onclick="goPage('shop');return false" style="transition-delay:.1s">
-      <img id="home-hero-3" alt="" loading="lazy">
-      <div class="ed-overlay"><div class="ed-cap">木 · WOOD</div><div class="ed-arrow">→</div></div>
-    </a>
-    <a class="ed-cell reveal" data-slot="4" href="/?page=shop" onclick="goPage('shop');return false" style="transition-delay:.15s">
-      <img id="home-hero-4" alt="" loading="lazy">
-      <div class="ed-overlay"><div class="ed-cap">火 · FIRE</div><div class="ed-arrow">→</div></div>
-    </a>
+  <div class="ed-split">
+    <div class="ed-side">
+      <div class="ed-eyebrow reveal">本　季　系　列</div>
+      <h2 class="ed-title reveal" style="transition-delay:.1s">
+        穿上与你<br>命格同频的<br>颜色
+      </h2>
+      <p class="ed-sub reveal" style="transition-delay:.2s">以色养命　以衣载元</p>
+      <a href="#" onclick="goPage('shop');return false" class="ed-cta reveal" style="transition-delay:.25s">查看全部商品 <span style="margin-left:6px">→</span></a>
+    </div>
+    <div class="ed-grid-wrap">
+      <div class="ed-grid" id="ed-grid">
+        <a class="ed-cell reveal" data-slot="1" href="#" onclick="goPage('shop');return false">
+          <img id="home-hero-1" alt="" loading="lazy">
+          <div class="ed-overlay"><div class="ed-cap">水 · WATER</div><div class="ed-arrow">→</div></div>
+        </a>
+        <a class="ed-cell reveal" data-slot="2" href="#" onclick="goPage('shop');return false" style="transition-delay:.05s">
+          <img id="home-hero-2" alt="" loading="lazy">
+          <div class="ed-overlay"><div class="ed-cap">金 · METAL</div><div class="ed-arrow">→</div></div>
+        </a>
+        <a class="ed-cell reveal" data-slot="3" href="#" onclick="goPage('shop');return false" style="transition-delay:.1s">
+          <img id="home-hero-3" alt="" loading="lazy">
+          <div class="ed-overlay"><div class="ed-cap">木 · WOOD</div><div class="ed-arrow">→</div></div>
+        </a>
+        <a class="ed-cell reveal" data-slot="4" href="#" onclick="goPage('shop');return false" style="transition-delay:.15s">
+          <img id="home-hero-4" alt="" loading="lazy">
+          <div class="ed-overlay"><div class="ed-cap">火 · FIRE</div><div class="ed-arrow">→</div></div>
+        </a>
+      </div>
+    </div>
   </div>
 
   <div class="pb-reading-cta">
@@ -2091,23 +2160,27 @@ function filterProd(e,btn){
 }
 
 // cycling quotes with element color
+// NOTE: variables namespaced as `quoteList` / `quoteDots` because plain `dots` and
+// `quotes` would collide with kes-report.js's `function dots(score)` (the rating dots).
 var qIdx=0;
-var quotes=document.querySelectorAll('.rb-quote');
-var dots=document.querySelectorAll('.rqd');
+var quoteList=document.querySelectorAll('.rb-quote');
+var quoteDots=document.querySelectorAll('.rqd');
 function showQ(i,byClick){
-  quotes[qIdx].classList.remove('active');
-  dots[qIdx].classList.remove('on');
+  if(!quoteList || !quoteList.length) return;
+  if(quoteList[qIdx]) quoteList[qIdx].classList.remove('active');
+  if(quoteDots[qIdx]) quoteDots[qIdx].classList.remove('on');
   qIdx=typeof i==='number'?i:0;
-  quotes[qIdx].classList.add('active');
-  dots[qIdx].classList.add('on');
-  var bg=quotes[qIdx].dataset.bg||'#8696a7';
+  if(qIdx >= quoteList.length) qIdx = 0;
+  if(quoteList[qIdx]) quoteList[qIdx].classList.add('active');
+  if(quoteDots[qIdx]) quoteDots[qIdx].classList.add('on');
+  var bg=(quoteList[qIdx] && quoteList[qIdx].dataset.bg)||'#8696a7';
   var colorBg=document.getElementById('rb-bg');
   var blurEl=document.getElementById('rb-yy-blur');
   if(colorBg)colorBg.style.background=bg;
   if(blurEl)blurEl.style.background=bg;
 }
 showQ(0);
-setInterval(()=>showQ((qIdx+1)%quotes.length),5500);
+setInterval(function(){ showQ((qIdx+1)%quoteList.length); },5500);
 
 var CITIES = [
   "Shanghai 上海","Beijing 北京","Guangzhou 广州","Shenzhen 深圳",
