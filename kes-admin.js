@@ -137,35 +137,151 @@ function loadPanel(tab){
   if(tab === 'stats') loadStats();
   else if(tab === 'products') loadProducts();
   else if(tab === 'pages') loadPageImages();
+  else if(tab === 'text') loadSiteText();
   else if(tab === 'users') loadUsers();
   else if(tab === 'orders') loadOrders();
 }
 
-/* ── Page Images (homepage hero slots 1..4) ── */
+/* ── Page Images: editorial slots 1..4 + 4 page banners ── */
 function loadPageImages(){
   var host = document.getElementById('pageImgGrid');
   if(!host) return;
   var sbBase = (window.KES_CONFIG && KES_CONFIG.SUPABASE_URL) ? KES_CONFIG.SUPABASE_URL.replace(/\/$/,'') : '';
   var pubBase = sbBase + '/storage/v1/object/public/page-images/';
   var v = '?v=' + Math.floor(Date.now()/60000);
-  var slots = [
-    {n:1, label:'Slot 1 · 水 Water'},
-    {n:2, label:'Slot 2 · 金 Metal'},
-    {n:3, label:'Slot 3 · 木 Wood'},
-    {n:4, label:'Slot 4 · 火 Fire'}
+
+  var editorialSlots = [
+    {slot:1, filename:'home_1.jpg', label:'Editorial · 水 Water', ratio:'4/5'},
+    {slot:2, filename:'home_2.jpg', label:'Editorial · 金 Metal', ratio:'4/5'},
+    {slot:3, filename:'home_3.jpg', label:'Editorial · 木 Wood',  ratio:'4/5'},
+    {slot:4, filename:'home_4.jpg', label:'Editorial · 火 Fire',  ratio:'4/5'}
   ];
-  host.innerHTML = slots.map(function(s){
-    var url = pubBase + 'home_'+s.n+'.jpg' + v;
+  var bannerSlots = [
+    {slot:'banner_home',  filename:'banner_home.jpg',  label:'Homepage Banner',  ratio:'16/9'},
+    {slot:'banner_shop',  filename:'banner_shop.jpg',  label:'Shop Page Banner', ratio:'16/9'},
+    {slot:'banner_learn', filename:'banner_learn.jpg', label:'Learn Page Banner',ratio:'16/9'},
+    {slot:'banner_about', filename:'banner_about.jpg', label:'About Page Banner',ratio:'16/9'}
+  ];
+
+  function renderSlot(s){
+    var url = pubBase + s.filename + v;
+    var slotAttr = typeof s.slot === 'number' ? s.slot : "'"+s.slot+"'";
+    var safeId = String(s.slot).replace(/[^a-z0-9_]/gi,'_');
     return '<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px">' +
       '<div style="font-size:11px;letter-spacing:.14em;color:var(--t3);text-transform:uppercase">'+s.label+'</div>' +
-      '<div style="aspect-ratio:4/5;background:var(--bg2);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative">' +
-        '<img id="pgimg-'+s.n+'" src="'+url+'" alt="Slot '+s.n+'" onload="this.style.opacity=1" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s">' +
+      '<div style="aspect-ratio:'+s.ratio+';background:var(--bg2);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative">' +
+        '<img id="pgimg-'+safeId+'" src="'+url+'" alt="" onload="this.style.opacity=1" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s">' +
         '<div style="display:none;align-items:center;justify-content:center;color:var(--t3);font-size:12px;text-align:center;padding:20px">No image yet<br><span style="font-size:10px;color:var(--t4)">Upload below</span></div>' +
       '</div>' +
-      '<input type="file" id="pgfile-'+s.n+'" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadPageImage('+s.n+', this)">' +
-      '<button class="btn-sec" onclick="document.getElementById(\'pgfile-'+s.n+'\').click()" style="align-self:flex-start">Upload / Replace</button>' +
+      '<input type="file" id="pgfile-'+safeId+'" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadPageImage('+slotAttr+', this)">' +
+      '<button class="btn-sec" onclick="document.getElementById(\'pgfile-'+safeId+'\').click()" style="align-self:flex-start">Upload / Replace</button>' +
     '</div>';
-  }).join('');
+  }
+
+  host.innerHTML =
+    '<div style="grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--t2);text-transform:uppercase;font-weight:600;padding:4px 0">Editorial (homepage 2×2 grid)</div>' +
+    editorialSlots.map(renderSlot).join('') +
+    '<div style="grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--t2);text-transform:uppercase;font-weight:600;padding:16px 0 4px;border-top:1px solid var(--line);margin-top:8px">Page banners (wide 16:9)</div>' +
+    bannerSlots.map(renderSlot).join('');
+}
+
+/* ── Editable site text registry ──
+ * Each entry defines a key plus helper UX (label, section, # of lines).
+ * Keep keys dot-namespaced: `<page>.<section>.<field>`.
+ * Frontend <element data-text="{key}"> elements get their content replaced. */
+var SITE_TEXT_KEYS = [
+  { section:'Homepage · Editorial', key:'home.editorial.eyebrow', label:'Eyebrow / kicker', lines:1 },
+  { section:'Homepage · Editorial', key:'home.editorial.title',   label:'Main title (use a blank line for each display line)', lines:4 },
+  { section:'Homepage · Editorial', key:'home.editorial.sub',     label:'Subtitle', lines:1 },
+  { section:'Homepage · Editorial', key:'home.editorial.cta',     label:'CTA button text', lines:1 },
+  { section:'Homepage · Philosophy', key:'home.philosophy.q1', label:'Quote 1 (hero quote)', lines:3 },
+  { section:'Homepage · Philosophy', key:'home.philosophy.q2', label:'Quote 2', lines:3 },
+  { section:'Homepage · Philosophy', key:'home.philosophy.q3', label:'Quote 3', lines:3 },
+  { section:'Homepage · Philosophy', key:'home.philosophy.q4', label:'Quote 4', lines:3 },
+  { section:'Shop Page', key:'shop.title', label:'Shop hero title', lines:2 },
+  { section:'Shop Page', key:'shop.sub',   label:'Shop hero subtitle', lines:2 },
+  { section:'About Page', key:'about.title', label:'About page title', lines:2 },
+  { section:'About Page', key:'about.body',  label:'About page body', lines:6 },
+  { section:'Learn Page', key:'learn.title', label:'Learn page title', lines:2 },
+  { section:'Learn Page', key:'learn.body',  label:'Learn page intro body', lines:6 },
+];
+
+async function loadSiteText(){
+  var host = document.getElementById('siteTextHost');
+  if(!host) return;
+  host.className = 'loader'; host.innerHTML = 'Loading…';
+  try{
+    var d = await api('/api/admin/site-text');
+    var byKey = {};
+    (d.texts || []).forEach(function(t){ byKey[t.key] = t; });
+
+    // Group keys by section
+    var sections = {};
+    SITE_TEXT_KEYS.forEach(function(k){
+      (sections[k.section] = sections[k.section] || []).push(k);
+    });
+
+    host.className = '';
+    host.innerHTML = Object.keys(sections).map(function(sec){
+      return '<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px">' +
+        '<div style="font-size:11px;letter-spacing:.14em;color:var(--t2);text-transform:uppercase;font-weight:600;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+sec+'</div>' +
+        sections[sec].map(function(k){
+          var t = byKey[k.key] || {};
+          var zh = (t.zh != null ? t.zh : '');
+          var en = (t.en != null ? t.en : '');
+          return '<div style="margin-bottom:18px">' +
+            '<div style="font-size:12px;color:var(--t1);margin-bottom:4px;font-weight:500">'+escapeHtml(k.label)+'</div>' +
+            '<div style="font-size:10px;color:var(--t4);font-family:monospace;margin-bottom:8px">'+k.key+'</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+              textField(k.key,'zh','中文 (ZH)', zh, k.lines) +
+              textField(k.key,'en','English (EN)', en, k.lines) +
+            '</div>' +
+            '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px">' +
+              '<span id="stmsg-'+escAttr(k.key)+'" style="font-size:11px;color:var(--t3);align-self:center"></span>' +
+              '<button class="btn-sec" onclick="saveSiteText(\''+escAttr(k.key)+'\')">Save</button>' +
+              (byKey[k.key] ? '<button class="btn-sec" style="color:var(--huo);border-color:rgba(168,72,72,.3)" onclick="resetSiteText(\''+escAttr(k.key)+'\')">Reset to default</button>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    }).join('');
+  }catch(e){
+    host.innerHTML = '<div class="empty">Failed: '+escapeHtml(e.message)+'</div>';
+  }
+}
+
+function textField(key, lang, label, value, lines){
+  var id = 'st-'+escAttr(key)+'-'+lang;
+  var style = 'background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;width:100%;resize:vertical;line-height:1.6;color:var(--t1);outline:none';
+  if(lines <= 1){
+    return '<div><label style="font-size:10px;letter-spacing:.12em;color:var(--t3);display:block;margin-bottom:4px">'+label+'</label>' +
+      '<input id="'+id+'" value="'+escAttr(value)+'" style="'+style+'"></div>';
+  }
+  return '<div><label style="font-size:10px;letter-spacing:.12em;color:var(--t3);display:block;margin-bottom:4px">'+label+'</label>' +
+    '<textarea id="'+id+'" rows="'+lines+'" style="'+style+'">'+escapeHtml(value)+'</textarea></div>';
+}
+
+async function saveSiteText(key){
+  var zh = document.getElementById('st-'+key+'-zh').value;
+  var en = document.getElementById('st-'+key+'-en').value;
+  var msg = document.getElementById('stmsg-'+key);
+  try{
+    await api('/api/admin/site-text', {method:'PUT', body:{key, zh, en}});
+    if(msg){ msg.textContent = 'Saved'; msg.style.color = 'var(--mu)'; setTimeout(function(){ if(msg) msg.textContent = ''; }, 2500); }
+  }catch(e){
+    if(msg){ msg.textContent = 'Error: '+e.message; msg.style.color = 'var(--huo)'; }
+  }
+}
+
+async function resetSiteText(key){
+  if(!confirm('Revert "'+key+'" to the hardcoded page default? (clears both ZH and EN)')) return;
+  try{
+    await api('/api/admin/site-text?key='+encodeURIComponent(key), {method:'DELETE'});
+    toast('Reverted');
+    loadSiteText();
+  }catch(e){
+    toast('Failed: '+e.message, 'err');
+  }
 }
 
 async function uploadPageImage(slot, input){

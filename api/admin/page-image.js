@@ -11,16 +11,25 @@ module.exports = async (req, res) => {
   }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // Two kinds of slots:
+  //   numeric 1..4           → editorial grid (home_<n>.jpg)
+  //   'banner_home' | 'banner_shop' | 'banner_learn' | 'banner_about' → page banners
   const { slot, contentType } = req.body || {};
-  const n = parseInt(slot);
-  if (!n || n < 1 || n > 4) return res.status(400).json({ error: 'slot must be 1..4' });
 
   const ct = String(contentType || '').toLowerCase();
   if (!/^image\/(png|jpe?g|webp)$/.test(ct)) {
     return res.status(400).json({ error: 'Only PNG, JPG, or WebP allowed' });
   }
-  // Always store as .jpg path so the public URL is stable regardless of source format
-  const path = `home_${n}.jpg`;
+
+  let path;
+  const n = parseInt(slot);
+  if (!isNaN(n) && n >= 1 && n <= 4) {
+    path = `home_${n}.jpg`;
+  } else if (typeof slot === 'string' && /^banner_(home|shop|learn|about)$/.test(slot)) {
+    path = `${slot}.jpg`;
+  } else {
+    return res.status(400).json({ error: 'slot must be 1..4 or banner_(home|shop|learn|about)' });
+  }
 
   const sb = getSupabaseAdmin();
   // Use createSignedUploadUrl with upsert so re-upload replaces the file
@@ -32,7 +41,7 @@ module.exports = async (req, res) => {
   const pub = sb.storage.from('page-images').getPublicUrl(path);
 
   res.status(200).json({
-    slot: n,
+    slot,
     path,
     uploadUrl: data.signedUrl,
     token: data.token,
