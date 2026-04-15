@@ -20,20 +20,48 @@ module.exports = async (req, res) => {
     // 格式化返回
     const items = products.data.map(p => {
       const price = p.default_price;
+      const meta = p.metadata || {};
+
+      // Parse size-quantity array. Priority: sizes_json (new) > sizes (legacy, qty=0)
+      let sizesArray = [];
+      if (meta.sizes_json) {
+        try {
+          const parsed = JSON.parse(meta.sizes_json);
+          if (Array.isArray(parsed)) {
+            sizesArray = parsed
+              .map(x => ({ size: String(x.size||'').trim(), qty: Math.max(0, parseInt(x.qty)||0) }))
+              .filter(x => x.size);
+          }
+        } catch(e) { /* fallthrough */ }
+      }
+      if (!sizesArray.length && meta.sizes) {
+        // Legacy: comma string with no per-size stock — treat as qty 0 (unknown)
+        sizesArray = meta.sizes.split(',')
+          .map(s => ({ size: s.trim(), qty: 0 }))
+          .filter(x => x.size);
+      }
+
+      const totalStock = sizesArray.reduce((sum, s) => sum + (s.qty||0), 0);
+      const hasStock = sizesArray.some(s => (s.qty||0) > 0);
+
       return {
         id: p.id,
         name: p.name,
         description: p.description || '',
         images: p.images || [],
         // 从 Stripe metadata 读取五行属性等自定义字段
-        element: (p.metadata || {}).element || '',       // 五行: 金/木/水/火/土
-        element_class: (p.metadata || {}).element_class || '', // CSS: jin/mu/shui/huo/tu
-        element_desc: (p.metadata || {}).element_desc || '',
-        category: (p.metadata || {}).category || '',     // 分类: clothing/accessory/service
-        name_zh: (p.metadata || {}).name_zh || p.name,   // 中文名
-        sizes: (p.metadata || {}).sizes || 'XS,S,M,L,XL',
+        element: meta.element || '',              // 五行: 金/木/水/火/土
+        element_class: meta.element_class || '',  // CSS: jin/mu/shui/huo/tu
+        element_desc: meta.element_desc || '',
+        category: meta.category || '',            // 分类: clothing/accessory/service
+        name_zh: meta.name_zh || p.name,          // 中文名
+        gender: meta.gender || '',
+        sizes: meta.sizes || '',                  // legacy comma string (for back-compat)
+        sizes_array: sizesArray,                  // [{size, qty}, ...]
+        total_stock: totalStock,
+        has_stock: hasStock,
         price_id: price ? price.id : null,
-        price_amount: price ? price.unit_amount : 0,     // 分为单位
+        price_amount: price ? price.unit_amount : 0,
         price_currency: price ? price.currency : 'usd',
         price_display: price ? formatPrice(price.unit_amount, price.currency) : ''
       };

@@ -22,9 +22,10 @@ var KES_CONFIG = {
   // 然后把链接粘贴到这里
   STRIPE_PAYMENT_LINK: 'https://buy.stripe.com/9B6dR27778ye0NZfxm5c400',
 
-  // 报告价格（仅展示用）
-  REPORT_PRICE: '¥29.9',
-  REPORT_PRICE_EN: '$4.99',
+  // 报告价格（仅展示用 — 实际付款金额在 Stripe Payment Link 里）
+  // 全站统一 USD，中英文版都展示 $9.99
+  REPORT_PRICE: '$9.99',
+  REPORT_PRICE_EN: '$9.99',
 
   // 邀请码
   VALID_CODES: ['KESVIP'],

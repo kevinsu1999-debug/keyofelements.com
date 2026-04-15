@@ -8,6 +8,7 @@ var _tick = null;
 var _currentTab = 'stats';
 var _editingProduct = null; // null = create, object = edit
 var _stagedImages = []; // [{publicUrl, path, file?}]
+var _stagedSizes = [];  // [{size:'XS', qty:10}, ...]
 var _userSearchTimer = null;
 
 /* ── Init ── */
@@ -232,16 +233,39 @@ async function toggleProductActive(id, active){
 function openProductModal(id){
   _editingProduct = null;
   _stagedImages = [];
+  _stagedSizes = [];
   if(id){
     var p = (window.__PRODUCTS_CACHE || []).find(function(x){ return x.id === id; });
     if(p){
       _editingProduct = p;
       _stagedImages = (p.images || []).map(function(u){ return {publicUrl:u, path:''}; });
+      _stagedSizes = parseSizesFromMetadata(p.metadata || {});
     }
+  }
+  if(!_stagedSizes.length){
+    // Default starter rows for new product
+    _stagedSizes = [{size:'XS',qty:0},{size:'S',qty:0},{size:'M',qty:0},{size:'L',qty:0},{size:'XL',qty:0}];
   }
   document.getElementById('modalTitle').textContent = _editingProduct ? 'Edit Product' : 'New Product';
   renderProductForm();
   document.getElementById('modalBg').classList.add('on');
+}
+
+function parseSizesFromMetadata(meta){
+  // Priority: sizes_json (new format) > sizes (legacy comma string)
+  if(meta.sizes_json){
+    try{
+      var arr = JSON.parse(meta.sizes_json);
+      if(Array.isArray(arr)){
+        return arr.map(function(x){ return {size: String(x.size||'').trim(), qty: parseInt(x.qty)||0}; }).filter(function(x){ return x.size; });
+      }
+    }catch(e){ /* fallthrough */ }
+  }
+  if(meta.sizes){
+    // Legacy: "XS,S,M,L,XL" — no stock info, default 0
+    return meta.sizes.split(',').map(function(s){ return {size: s.trim(), qty: 0}; }).filter(function(x){ return x.size; });
+  }
+  return [];
 }
 function closeProductModal(){
   document.getElementById('modalBg').classList.remove('on');
@@ -269,9 +293,12 @@ function renderProductForm(){
       formField('element','Element / 五行', '<select id="pfElem">'+ELEMENTS.map(function(e){return '<option value="'+e[0]+'"'+(m.element===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
       formField('category','Category / 分类', '<select id="pfCat">'+CATEGORIES.map(function(e){return '<option value="'+e[0]+'"'+(m.category===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
     '</div>' +
-    '<div class="form-grid2">' +
-      formField('gender','Gender', '<select id="pfGender">'+GENDERS.map(function(e){return '<option value="'+e[0]+'"'+(m.gender===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
-      formField('sizes','Sizes (comma)', '<input id="pfSizes" value="'+escapeAttr(m.sizes||'XS,S,M,L,XL')+'">') +
+    formField('gender','Gender', '<select id="pfGender">'+GENDERS.map(function(e){return '<option value="'+e[0]+'"'+(m.gender===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
+    '<div class="form-row">' +
+      '<label>Sizes &amp; Stock</label>' +
+      '<div style="font-size:10px;color:var(--t3);margin-bottom:8px">每行一个尺码；数量 = 当前可售库存。手动调整（每成一单回来 -1）。</div>' +
+      '<div id="sizeRows"></div>' +
+      '<button type="button" class="btn-sec" style="margin-top:6px" onclick="addSizeRow()">+ Add size</button>' +
     '</div>' +
     formField('sort','Sort order (lower shows first)', '<input id="pfSort" type="number" value="'+escapeAttr(m.sort_order||'99')+'">') +
     '<div class="form-row">' +
@@ -283,6 +310,7 @@ function renderProductForm(){
     (p.id ? '<div style="font-size:11px;color:var(--t3);margin-top:12px">Editing price creates a new Stripe Price and archives the old one. Existing orders keep their original price reference.</div>' : '');
 
   renderImgList();
+  renderSizeRows();
   var drop = document.getElementById('imgDrop'), inp = document.getElementById('imgInput');
   drop.addEventListener('click', function(){ inp.click(); });
   inp.addEventListener('change', function(e){ handleFiles(e.target.files); });
@@ -293,6 +321,36 @@ function renderProductForm(){
     drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('dragover'); });
   });
   drop.addEventListener('drop', function(e){ handleFiles(e.dataTransfer.files); });
+}
+
+function renderSizeRows(){
+  var host = document.getElementById('sizeRows');
+  if(!host) return;
+  if(!_stagedSizes.length){
+    host.innerHTML = '<div style="font-size:11px;color:var(--t3);padding:8px 0">No sizes. Click "+ Add size" to add one.</div>';
+    return;
+  }
+  host.innerHTML = _stagedSizes.map(function(s, i){
+    return '<div style="display:grid;grid-template-columns:1fr 120px 40px;gap:8px;margin-bottom:6px;align-items:center">' +
+      '<input type="text" placeholder="Size (e.g. XS / M / 38)" value="'+escapeAttr(s.size)+'" oninput="_updSize('+i+',\'size\',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none">' +
+      '<input type="number" min="0" placeholder="Stock" value="'+s.qty+'" oninput="_updSize('+i+',\'qty\',this.value)" style="background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none">' +
+      '<button type="button" onclick="removeSizeRow('+i+')" style="background:var(--card);border:1px solid var(--line2);border-radius:6px;padding:6px;cursor:pointer;color:var(--t3);font-size:14px">×</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addSizeRow(){
+  _stagedSizes.push({size:'', qty:0});
+  renderSizeRows();
+}
+function removeSizeRow(i){
+  _stagedSizes.splice(i, 1);
+  renderSizeRows();
+}
+function _updSize(i, field, val){
+  if(!_stagedSizes[i]) return;
+  if(field === 'qty') _stagedSizes[i].qty = Math.max(0, parseInt(val)||0);
+  else _stagedSizes[i].size = String(val).trim();
 }
 
 function formField(id, label, input){
@@ -340,8 +398,17 @@ async function saveProduct(){
   var elem = document.getElementById('pfElem').value;
   var cat = document.getElementById('pfCat').value;
   var gender = document.getElementById('pfGender').value;
-  var sizes = document.getElementById('pfSizes').value.trim();
   var sort = document.getElementById('pfSort').value;
+
+  // Normalize staged sizes — drop blanks, dedupe by name
+  var cleanSizes = [];
+  var seen = {};
+  _stagedSizes.forEach(function(s){
+    var name = String(s.size||'').trim();
+    if(!name || seen[name]) return;
+    seen[name] = true;
+    cleanSizes.push({size:name, qty:Math.max(0, parseInt(s.qty)||0)});
+  });
 
   if(!name){ toast('Name is required', 'err'); return; }
   if(!priceMajor || priceMajor <= 0){ toast('Valid price required', 'err'); return; }
@@ -352,7 +419,11 @@ async function saveProduct(){
   if(elem) { metadata.element = elem; metadata.element_class = {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[elem]||''; }
   if(cat) metadata.category = cat;
   if(gender) metadata.gender = gender;
-  if(sizes) metadata.sizes = sizes;
+  if(cleanSizes.length){
+    metadata.sizes_json = JSON.stringify(cleanSizes);
+    // Also write legacy `sizes` comma list for backward compat with existing shop code
+    metadata.sizes = cleanSizes.map(function(s){ return s.size; }).join(',');
+  }
   if(sort) metadata.sort_order = String(sort);
   // Preserve image paths list for bookkeeping
   var paths = _stagedImages.map(function(x){ return x.path || ''; }).filter(Boolean).join(',');
