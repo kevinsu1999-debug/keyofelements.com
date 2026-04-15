@@ -48,20 +48,27 @@ module.exports = async (req, res) => {
       const totalStock = sizesArray.reduce((sum, s) => sum + (s.qty||0), 0);
       const hasStock = sizesArray.some(s => (s.qty||0) > 0);
 
+      // Element now includes 阴/阳 as values alongside the 5 classical elements.
+      // Backward compat: legacy products that only have meta.yinyang (no element)
+      // get promoted so the chip filter still finds them after the data model
+      // collapse.
+      let elementChar = meta.element || '';
+      let elementClass = meta.element_class || '';
+      if (!elementChar && meta.yinyang === 'yin')  { elementChar = '阴'; elementClass = 'yin'; }
+      if (!elementChar && meta.yinyang === 'yang') { elementChar = '阳'; elementClass = 'yang'; }
+
       return {
         id: p.id,
         name: p.name,
         description: p.description || '',
         description_zh: meta.description_zh || '',
         images: p.images || [],
-        // 从 Stripe metadata 读取五行属性等自定义字段
-        element: meta.element || '',              // 五行: 金/木/水/火/土
-        element_class: meta.element_class || '',  // CSS: jin/mu/shui/huo/tu
+        element: elementChar,                     // 五行+阴阳: 金/木/水/火/土/阴/阳
+        element_class: elementClass,              // CSS: jin/mu/shui/huo/tu/yin/yang
         element_desc: meta.element_desc || '',
         category: meta.category || '',            // 分类: clothing/accessory/service
         name_zh: meta.name_zh || p.name,          // 中文名
         gender: meta.gender || '',
-        yinyang: meta.yinyang || '',              // 阴阳: yin/yang/''
         sizes: meta.sizes || '',                  // legacy comma string (for back-compat)
         sizes_array: sizesArray,                  // [{size, qty}, ...]
         total_stock: totalStock,

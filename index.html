@@ -387,6 +387,8 @@ footer{border-top:1px solid var(--line);padding:clamp(40px,5vh,64px) clamp(32px,
 .foot-btm{border-top:1px solid var(--line);padding:14px clamp(32px,5vw,72px);display:flex;justify-content:space-between;font-size:11px;color:var(--t4)}
 
 .mu{color:var(--mu)}.huo{color:var(--huo)}.tu{color:var(--tu)}.jin{color:var(--jin)}.shui{color:var(--shui)}
+.yin{color:#1a1a1a;font-family:'Noto Serif SC',serif}
+.yang{color:#6a6561;font-family:'Noto Serif SC',serif;text-shadow:0 0 0 #1a1a1a,0 0 1px rgba(0,0,0,.3)}
 
 /* phi learn cta */
 .phi-learn-cta{
@@ -1399,9 +1401,13 @@ body{font-size:15px;line-height:1.75}
 .nav-burger.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
 @media(max-width:768px){
   .nav-burger{display:block}
-  .nav-links{display:none !important;position:absolute;top:100%;left:0;right:0;background:var(--bg,#f4f2ee);border-bottom:1px solid var(--line);padding:12px 20px;flex-direction:column;gap:4px !important;z-index:100}
+  /* Nav uses overflow:hidden to contain its aurora pseudo — on mobile we need
+     the nav-links dropdown to extend BELOW the bar, so clip only on desktop */
+  nav{overflow:visible !important}
+  nav::before,nav::after{border-bottom-left-radius:inherit;border-bottom-right-radius:inherit}
+  .nav-links{display:none !important;position:absolute;top:100%;left:0;right:0;background:rgba(255,255,255,.98);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:8px 0;flex-direction:column;gap:0 !important;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.06)}
   .nav-links.open{display:flex !important}
-  .nav-links .nl{padding:10px 0;font-size:12px;text-align:left;border-bottom:1px solid var(--line)}
+  .nav-links .nl{padding:14px 24px;font-size:13px;text-align:left;border-bottom:1px solid var(--line);border-radius:0}
   .nav-links .nl:last-child{border-bottom:none}
   nav{position:relative}
   .nav-bag{display:none !important}

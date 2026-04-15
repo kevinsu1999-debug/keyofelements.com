@@ -7,9 +7,8 @@
 var _shopProducts = null;   // in-memory cache from /api/products
 var _shopLoading = false;
 var _currentPDP = null;     // product being shown in PDP
-var _filterElement = 'all'; // 'all' | 'shui' | 'jin' | 'mu' | 'huo' | 'tu'
+var _filterElement = 'all'; // 'all' | 'shui' | 'jin' | 'mu' | 'huo' | 'tu' | 'yin' | 'yang'
 var _filterCategory = 'all';// 'all' | 'clothing' | 'accessory' | 'life' | 'service' | 'other'
-var _filterYinYang = 'all'; // 'all' | 'yin' | 'yang'
 var _shuffleOrder = null;   // cached random ordering for current session
 
 /* ── Boot ── */
@@ -18,11 +17,10 @@ document.addEventListener('DOMContentLoaded', function(){
   appendYinYangToElementRow();
   resetFilterChipState();
   // Override the global shopFilter (originally defined in index.html for hardcoded products).
-  // Element + Yin/Yang live in the same row but are independent filter dimensions
-  // — scoped by data-dim so clicking one doesn't deselect the other.
+  // 阴/阳 are element values now, so they share this single filter dimension.
   window.shopFilter = function(e, btn){
     _filterElement = e;
-    document.querySelectorAll('#shop-chips .sh-chip[data-dim="elem"]').forEach(function(b){ b.classList.remove('on'); });
+    document.querySelectorAll('#shop-chips .sh-chip').forEach(function(b){ b.classList.remove('on'); });
     if(btn) btn.classList.add('on');
     renderShopGrid();
   };
@@ -30,19 +28,6 @@ document.addEventListener('DOMContentLoaded', function(){
     _filterCategory = c;
     document.querySelectorAll('#shop-chips-cat .sh-chip').forEach(function(b){ b.classList.remove('on'); });
     if(btn) btn.classList.add('on');
-    renderShopGrid();
-  };
-  // Click-to-toggle behavior for Yin/Yang: clicking an already-active chip clears
-  // the filter. Clicking the other switches. There is no explicit "All" chip.
-  window.shopFilterYY = function(y, btn){
-    if(_filterYinYang === y){
-      _filterYinYang = 'all';
-      if(btn) btn.classList.remove('on');
-    } else {
-      _filterYinYang = y;
-      document.querySelectorAll('#shop-chips .sh-chip[data-dim="yy"]').forEach(function(b){ b.classList.remove('on'); });
-      if(btn) btn.classList.add('on');
-    }
     renderShopGrid();
   };
   loadShopProducts();
@@ -69,17 +54,12 @@ function injectCategoryChips(){
   elemChips.parentNode.insertBefore(row, elemChips.nextSibling);
 }
 
-/* Append 阴/阳 Yin/Yang chips to the end of the element row.
-   They share the row with element chips visually, but are tracked as a separate
-   filter dimension via data-dim="yy". Existing element chips get data-dim="elem"
-   tagged on the fly so the click handlers can scope their "remove on" selector. */
+/* Append 阴/阳 chips to the end of the element row. These are element chips
+   (same filter dimension as 水/金/木/火/土) — they call shopFilter and keep
+   their black/white styling via .yy-yin / .yy-yang classes. */
 function appendYinYangToElementRow(){
   var elemChips = document.getElementById('shop-chips');
   if(!elemChips) return;
-  // Tag existing element chips so filter handlers can scope by dimension.
-  elemChips.querySelectorAll('.sh-chip').forEach(function(b){
-    if(!b.dataset.dim) b.dataset.dim = 'elem';
-  });
   // Avoid double append
   if(elemChips.querySelector('.yy-yin')) return;
   var isZh = document.documentElement.lang === 'zh';
@@ -87,13 +67,11 @@ function appendYinYangToElementRow(){
   var yangLabel = isZh ? '阳' : 'Yang';
   var yin = document.createElement('button');
   yin.className = 'sh-chip yy-yin';
-  yin.dataset.dim = 'yy';
-  yin.setAttribute('onclick', "shopFilterYY('yin',this)");
+  yin.setAttribute('onclick', "shopFilter('yin',this)");
   yin.innerHTML = '<span>'+yinLabel+'</span>';
   var yang = document.createElement('button');
   yang.className = 'sh-chip yy-yang';
-  yang.dataset.dim = 'yy';
-  yang.setAttribute('onclick', "shopFilterYY('yang',this)");
+  yang.setAttribute('onclick', "shopFilter('yang',this)");
   yang.innerHTML = '<span>'+yangLabel+'</span>';
   elemChips.appendChild(yin);
   elemChips.appendChild(yang);
@@ -146,13 +124,12 @@ function renderShopGrid(){
     return;
   }
 
-  // ── Filter: by element AND category AND yin/yang ──
+  // ── Filter: by element (includes 阴/阳) AND category ──
   var filtered = _shopProducts.filter(function(p){
-    var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[p.element] || '';
+    var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin','阴':'yin','阳':'yang'}[p.element] || '';
     var elemOk = (_filterElement === 'all') || (elemClass === _filterElement);
     var catOk  = (_filterCategory === 'all') || ((p.category || '') === _filterCategory);
-    var yyOk   = (_filterYinYang === 'all') || ((p.yinyang || '') === _filterYinYang);
-    return elemOk && catOk && yyOk;
+    return elemOk && catOk;
   });
 
   // ── Sort ──
@@ -160,7 +137,7 @@ function renderShopGrid(){
   // re-renders don't reshuffle while the user is browsing.
   // Any specific filter applied: alphabetical by display name.
   var sorted;
-  if(_filterElement === 'all' && _filterCategory === 'all' && _filterYinYang === 'all'){
+  if(_filterElement === 'all' && _filterCategory === 'all'){
     if(!_shuffleOrder || _shuffleOrder.length !== _shopProducts.length){
       _shuffleOrder = _shopProducts.map(function(p){ return p.id; });
       shuffleArr(_shuffleOrder);
@@ -182,7 +159,7 @@ function renderShopGrid(){
   }
 
   grid.innerHTML = sorted.map(function(p){
-    var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[p.element] || 'shui';
+    var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin','阴':'yin','阳':'yang'}[p.element] || 'shui';
     var elemChar = p.element || '';
     var displayName = isZh ? (p.name_zh || p.name) : p.name;
     var cat = p.category || '';

@@ -229,10 +229,11 @@ async function loadStats(){
 }
 
 /* ── Products ── */
-var ELEMENTS = [['','(none)'],['水','Water'],['木','Wood'],['火','Fire'],['土','Earth'],['金','Metal']];
+var ELEMENTS = [['','(none)'],['水','Water'],['木','Wood'],['火','Fire'],['土','Earth'],['金','Metal'],['阴','Yin (阴)'],['阳','Yang (阳)']];
 var CATEGORIES = [['','(none)'],['clothing','Clothing / 服饰'],['accessory','Accessory / 配饰'],['life','Life / 生活'],['service','Service / 服务'],['other','Other']];
 var GENDERS = [['','Neutral'],['male','Male / 男'],['female','Female / 女'],['unisex','Unisex']];
-var YINYANG = [['','(none)'],['yin','阴 / Yin'],['yang','阳 / Yang']];
+// Map element display char → CSS class used on chips and PDP element badge.
+var ELEM_CLASS_MAP = {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin','阴':'yin','阳':'yang'};
 
 async function loadProducts(){
   var host = document.getElementById('prodHost');
@@ -350,10 +351,7 @@ function renderProductForm(){
       formField('element','Element / 五行', '<select id="pfElem">'+ELEMENTS.map(function(e){return '<option value="'+e[0]+'"'+(m.element===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
       formField('category','Category / 分类', '<select id="pfCat">'+CATEGORIES.map(function(e){return '<option value="'+e[0]+'"'+(m.category===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
     '</div>' +
-    '<div class="form-grid2">' +
-      formField('gender','Gender', '<select id="pfGender">'+GENDERS.map(function(e){return '<option value="'+e[0]+'"'+(m.gender===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
-      formField('yinyang','Yin/Yang / 阴阳', '<select id="pfYinYang">'+YINYANG.map(function(e){return '<option value="'+e[0]+'"'+(m.yinyang===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
-    '</div>' +
+    formField('gender','Gender', '<select id="pfGender">'+GENDERS.map(function(e){return '<option value="'+e[0]+'"'+(m.gender===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
     '<div class="form-row">' +
       '<label>Sizes &amp; Stock</label>' +
       '<div style="font-size:10px;color:var(--t3);margin-bottom:8px">每行一个尺码；数量 = 当前可售库存。手动调整（每成一单回来 -1）。</div>' +
@@ -362,14 +360,14 @@ function renderProductForm(){
     '</div>' +
     formField('sort','Sort order (lower shows first)', '<input id="pfSort" type="number" value="'+escapeAttr(m.sort_order||'99')+'">') +
     '<div class="form-row">' +
-      '<label>Available in Shop / \u5728 Shop \u4e2d\u4e0a\u67b6</label>' +
+      '<label>Shop Visibility / Shop \u663e\u793a</label>' +
       '<div style="display:flex;gap:14px;align-items:center;padding:8px 0">' +
         '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t1);cursor:pointer;text-transform:none;letter-spacing:0">' +
-          '<input type="checkbox" id="pfShopVisible" '+(m.hidden==='true'?'':'checked')+' style="width:16px;height:16px;accent-color:var(--t1);cursor:pointer">' +
-          '<span>Available in Shop / \u5728 Shop \u9875\u9762\u53ef\u8d2d\u4e70</span>' +
+          '<input type="checkbox" id="pfHidden" '+(m.hidden==='true'?'checked':'')+' style="width:16px;height:16px;accent-color:var(--t1);cursor:pointer">' +
+          '<span>Not available in shop / \u4ece Shop \u4e0b\u67b6</span>' +
         '</label>' +
       '</div>' +
-      '<div style="font-size:11px;color:var(--t3);margin-top:-4px">\u53d6\u6d88\u52fe\u9009\u540e\u4ea7\u54c1\u4ece\u516c\u5f00 shop \u9875\u4e0b\u67b6\uff08Stripe \u4ecd\u4fdd\u7559\u4ea7\u54c1\u4e0e\u652f\u4ed8\u94fe\u63a5\uff09\u3002\u9002\u5408\u4e34\u65f6\u4e0b\u67b6\u3001\u62a5\u544a\u89e3\u9501\u7b49\u670d\u52a1\u578b\u4ea7\u54c1\u3002</div>' +
+      '<div style="font-size:11px;color:var(--t3);margin-top:-4px">\u9ed8\u8ba4\u4e0d\u52fe\u9009\uff08\u4ea7\u54c1\u5728 Shop \u4e2d\u53ef\u89c1\uff09\u3002\u52fe\u9009\u540e\u4ea7\u54c1\u4ece\u516c\u5f00 Shop \u4e0b\u67b6\uff08Stripe \u4ecd\u4fdd\u7559\u4ea7\u54c1\u4e0e\u652f\u4ed8\u94fe\u63a5\uff09\u3002\u9002\u5408\u4e34\u65f6\u4e0b\u67b6\u3001\u62a5\u544a\u89e3\u9501\u7b49\u670d\u52a1\u578b\u4ea7\u54c1\u3002</div>' +
     '</div>' +
     '<div class="form-row">' +
       '<label>Product Images</label>' +
@@ -469,9 +467,8 @@ async function saveProduct(){
   var elem = document.getElementById('pfElem').value;
   var cat = document.getElementById('pfCat').value;
   var gender = document.getElementById('pfGender').value;
-  var yinyang = document.getElementById('pfYinYang').value;
   var sort = document.getElementById('pfSort').value;
-  var shopVisible = !!document.getElementById('pfShopVisible').checked;
+  var hiddenFromShop = !!document.getElementById('pfHidden').checked;
 
   // Normalize staged sizes — drop blanks, dedupe by name
   var cleanSizes = [];
@@ -490,19 +487,21 @@ async function saveProduct(){
   var metadata = {};
   if(nameZh) metadata.name_zh = nameZh;
   if(descZh) metadata.description_zh = descZh;
-  if(elem) { metadata.element = elem; metadata.element_class = {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin'}[elem]||''; }
+  if(elem) { metadata.element = elem; metadata.element_class = ELEM_CLASS_MAP[elem] || ''; }
   if(cat) metadata.category = cat;
   if(gender) metadata.gender = gender;
-  if(yinyang) metadata.yinyang = yinyang;
+  // Clear legacy yinyang field — 阴/阳 now live in the element dimension itself
+  metadata.yinyang = '';
   if(cleanSizes.length){
     metadata.sizes_json = JSON.stringify(cleanSizes);
     // Also write legacy `sizes` comma list for backward compat with existing shop code
     metadata.sizes = cleanSizes.map(function(s){ return s.size; }).join(',');
   }
   if(sort) metadata.sort_order = String(sort);
-  // Visibility flag — when unchecked, mark hidden so /api/products excludes it from public shop.
-  // Admin endpoint always returns all products regardless of this flag.
-  metadata.hidden = shopVisible ? 'false' : 'true';
+  // Visibility flag — when the "Not available in shop" box is checked, mark the
+  // product hidden so /api/products excludes it from the public shop. Admin
+  // endpoint always returns all products regardless of this flag.
+  metadata.hidden = hiddenFromShop ? 'true' : 'false';
   // Preserve image paths list for bookkeeping
   var paths = _stagedImages.map(function(x){ return x.path || ''; }).filter(Boolean).join(',');
   if(paths) metadata.image_paths = paths;
