@@ -1000,6 +1000,10 @@ body{font-size:15px;line-height:1.75}
 .sh-chip-rows{display:flex;flex-direction:column;gap:8px;width:100%;max-width:760px}
 .sh-chip-rows .sh-chips{display:grid !important;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;justify-content:start !important}
 .sh-chip-rows .sh-chip{width:auto;min-width:0;padding:0 8px !important}
+/* Element row holds 8 chips (All + 5 elements + 阴 + 阳) — fit them on one row */
+.sh-chip-rows #shop-chips{grid-template-columns:repeat(8,minmax(0,1fr)) !important;gap:6px}
+.sh-chip-rows #shop-chips .sh-chip{padding:0 4px !important;font-size:10px !important}
+.sh-chip-rows #shop-chips .sh-chip span{font-size:13px !important}
 /* Yin/Yang as persistent color markers — 阴 always black, 阳 always white.
    Same size as element chips (inherit default 1-col grid). Selected state keeps
    the color identity and adds a contrasting ring instead of inverting, so the
@@ -1017,6 +1021,8 @@ body{font-size:15px;line-height:1.75}
 .sh-chip.yy-yang.on span{color:#1a1a1a !important}
 @media(max-width:640px){
   .sh-chip-rows .sh-chips{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* Element row keeps 8 chips compressed into 4 cols × 2 rows on mobile */
+  .sh-chip-rows #shop-chips{grid-template-columns:repeat(4,minmax(0,1fr)) !important}
   .sh-chip-bar-top{flex-direction:column;align-items:flex-start;gap:8px;text-align:left}
 }
 /* (legacy .shui-chip.on / .jin-chip.on rules removed — superseded by .sh-chip.{elem}-chip.on above) */
