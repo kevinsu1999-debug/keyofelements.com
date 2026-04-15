@@ -1034,10 +1034,27 @@ body{font-size:15px;line-height:1.75}
 .sgc:hover{background:var(--card)}
 .sgc-img{aspect-ratio:1/1;width:100%;display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg2)}
 .sgc-img > img{width:100%;height:100%;object-fit:cover;display:block}
-.sgc-dot{position:absolute;top:12px;left:12px;width:8px;height:8px;border-radius:50%}
+.sgc-dots{position:absolute;top:12px;left:12px;display:flex;gap:4px;z-index:2}
+.sgc-dot{width:10px;height:10px;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sgc-dot.shui{background:var(--shui)}
+.sgc-dot.jin{background:var(--jin)}
+.sgc-dot.mu{background:var(--mu)}
+.sgc-dot.huo{background:var(--huo)}
+.sgc-dot.tu{background:var(--tu)}
+.sgc-dot.yin{background:#1a1a1a;box-shadow:0 0 0 1.5px #fff,0 1px 3px rgba(0,0,0,.3)}
+.sgc-dot.yang{background:#fff;box-shadow:0 0 0 1.5px #1a1a1a,0 1px 3px rgba(0,0,0,.2)}
 .sgc-match{position:absolute;bottom:12px;right:12px;font-size:9px;padding:3px 8px;border-radius:100px;background:rgba(244,242,238,.9);border:1px solid var(--line);color:var(--t2);letter-spacing:.04em}
 .sgc-body{padding:14px 16px;background:var(--card);flex:1;display:flex;flex-direction:column;gap:6px;min-height:96px}
-.sgc-el{font-size:9px;letter-spacing:.1em;color:var(--t3);min-height:14px}
+/* Element chip row on the card — mirrors filter chip colors */
+.sgc-chips{display:flex;gap:4px;flex-wrap:wrap;min-height:22px}
+.sgc-chip{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 8px;border-radius:100px;font-family:'Noto Serif SC',serif;font-size:12px;font-weight:700;line-height:1;border:1px solid transparent}
+.sgc-chip.shui{background:var(--shui);color:#fff;border-color:var(--shui)}
+.sgc-chip.jin {background:var(--jin); color:#fff;border-color:var(--jin)}
+.sgc-chip.mu  {background:var(--mu);  color:#fff;border-color:var(--mu)}
+.sgc-chip.huo {background:var(--huo); color:#fff;border-color:var(--huo)}
+.sgc-chip.tu  {background:var(--tu);  color:#fff;border-color:var(--tu)}
+.sgc-chip.yin {background:#1a1a1a;    color:#f4f2ee;border-color:#1a1a1a}
+.sgc-chip.yang{background:#f4f2ee;    color:#1a1a1a;border-color:#1a1a1a}
 .sgc-name{font-size:13px;color:var(--t1);font-weight:400;line-height:1.3;flex:1}
 .sgc-foot{display:flex;justify-content:space-between;align-items:center}
 .sgc-price{font-size:13px;font-weight:500;color:var(--t1)}

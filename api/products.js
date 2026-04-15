@@ -48,14 +48,23 @@ module.exports = async (req, res) => {
       const totalStock = sizesArray.reduce((sum, s) => sum + (s.qty||0), 0);
       const hasStock = sizesArray.some(s => (s.qty||0) > 0);
 
-      // Element now includes 阴/阳 as values alongside the 5 classical elements.
-      // Backward compat: legacy products that only have meta.yinyang (no element)
-      // get promoted so the chip filter still finds them after the data model
-      // collapse.
+      // Element supports multi-value (comma-separated) since products can carry
+      // more than one material/color. Backward compat: legacy products that only
+      // have meta.yinyang (no element) get promoted so the chip filter still
+      // finds them after the yinyang → element collapse.
       let elementChar = meta.element || '';
       let elementClass = meta.element_class || '';
       if (!elementChar && meta.yinyang === 'yin')  { elementChar = '阴'; elementClass = 'yin'; }
       if (!elementChar && meta.yinyang === 'yang') { elementChar = '阳'; elementClass = 'yang'; }
+
+      // Derive arrays from the comma-separated strings.
+      const CLS_MAP = {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin','阴':'yin','阳':'yang'};
+      const elements = elementChar ? elementChar.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      let elementClasses = elementClass ? elementClass.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      // If element_class wasn't saved or lengths mismatch, derive from chars
+      if (!elementClasses.length || elementClasses.length !== elements.length) {
+        elementClasses = elements.map(c => CLS_MAP[c] || '').filter(Boolean);
+      }
 
       return {
         id: p.id,
@@ -63,8 +72,10 @@ module.exports = async (req, res) => {
         description: p.description || '',
         description_zh: meta.description_zh || '',
         images: p.images || [],
-        element: elementChar,                     // 五行+阴阳: 金/木/水/火/土/阴/阳
-        element_class: elementClass,              // CSS: jin/mu/shui/huo/tu/yin/yang
+        element: elementChar,                     // '水' or '水,金' (string for display)
+        element_class: elementClass,              // 'shui' or 'shui,jin' (string)
+        elements,                                 // ['水'] or ['水','金'] (array)
+        element_classes: elementClasses,          // ['shui'] or ['shui','jin'] (array)
         element_desc: meta.element_desc || '',
         category: meta.category || '',            // 分类: clothing/accessory/service
         name_zh: meta.name_zh || p.name,          // 中文名

@@ -124,10 +124,14 @@ function renderShopGrid(){
     return;
   }
 
-  // ── Filter: by element (includes 阴/阳) AND category ──
+  // ── Filter: by element (includes 阴/阳, supports multi-element products) AND category ──
+  var CLS_MAP = {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin','阴':'yin','阳':'yang'};
   var filtered = _shopProducts.filter(function(p){
-    var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin','阴':'yin','阳':'yang'}[p.element] || '';
-    var elemOk = (_filterElement === 'all') || (elemClass === _filterElement);
+    var classes = (p.element_classes && p.element_classes.length)
+      ? p.element_classes
+      : (p.element_class ? String(p.element_class).split(',').map(function(s){return s.trim();}).filter(Boolean)
+         : (p.element ? String(p.element).split(',').map(function(s){return CLS_MAP[s.trim()]||'';}).filter(Boolean) : []));
+    var elemOk = (_filterElement === 'all') || classes.indexOf(_filterElement) !== -1;
     var catOk  = (_filterCategory === 'all') || ((p.category || '') === _filterCategory);
     return elemOk && catOk;
   });
@@ -159,17 +163,33 @@ function renderShopGrid(){
   }
 
   grid.innerHTML = sorted.map(function(p){
-    var elemClass = p.element_class || {'水':'shui','木':'mu','火':'huo','土':'tu','金':'jin','阴':'yin','阳':'yang'}[p.element] || 'shui';
-    var elemChar = p.element || '';
+    // Multi-element support: collect both char list and class list
+    var classes = (p.element_classes && p.element_classes.length)
+      ? p.element_classes
+      : (p.element_class ? String(p.element_class).split(',').map(function(s){return s.trim();}).filter(Boolean)
+         : (p.element ? String(p.element).split(',').map(function(s){return CLS_MAP[s.trim()]||'';}).filter(Boolean) : []));
+    var chars = (p.elements && p.elements.length)
+      ? p.elements
+      : (p.element ? String(p.element).split(',').map(function(s){return s.trim();}).filter(Boolean) : []);
+    var primaryClass = classes[0] || 'shui';
     var displayName = isZh ? (p.name_zh || p.name) : p.name;
-    var cat = p.category || '';
-    var catLabel = isZh ? {clothing:'', accessory:'　配饰', life:'　生活', service:'　服务', other:''}[cat] : '';
-    var elemLabel = elemChar + (catLabel || '');
     var priceStr = p.price_display || '';
     var img = (p.images && p.images[0]) || '';
     var imgHtml = img
       ? '<img src="'+escAttr(img)+'" style="width:100%;height:100%;object-fit:cover" alt="">'
-      : '<div class="sgc-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:\'Cormorant Garamond\',serif;font-size:56px;color:rgba(0,0,0,.15);background:var(--'+elemClass+'-bg,var(--bg3))">'+(elemChar||'·')+'</div>';
+      : '<div class="sgc-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:\'Cormorant Garamond\',serif;font-size:56px;color:rgba(0,0,0,.15);background:var(--'+primaryClass+'-bg,var(--bg3))">'+(chars[0]||'·')+'</div>';
+
+    // Element dots on image: one dot per element, stacked horizontally.
+    // 阴 (yin): black fill + white border; 阳 (yang): white fill + black border.
+    var dotsHtml = '<div class="sgc-dots">' + classes.map(function(c){
+      return '<span class="sgc-dot '+c+'"></span>';
+    }).join('') + '</div>';
+
+    // Element chips under the image — replaces the old plain-text label.
+    var chipsHtml = '<div class="sgc-chips">' + chars.map(function(ch, i){
+      var cls = classes[i] || (CLS_MAP[ch] || '');
+      return '<span class="sgc-chip '+cls+'">'+escHtml(ch)+'</span>';
+    }).join('') + '</div>';
 
     // Stock badge: "Sold out" if no stock; "Low: N" if total <= 3 but > 0
     var stockBadge = '';
@@ -185,12 +205,11 @@ function renderShopGrid(){
     var outLabel = isZh ? '已售罄' : 'Sold out';
     var outOfStock = p.sizes_array && p.sizes_array.length && !p.has_stock;
 
-    return '<div class="sgc" data-e="'+elemClass+'" data-pid="'+escAttr(p.id)+'" style="cursor:pointer" onclick="openPDPFromProduct(\''+escAttr(p.id)+'\')">' +
-      '<div class="sgc-img" style="position:relative;overflow:hidden">'+imgHtml+stockBadge+
-        '<div class="sgc-dot" style="background:var(--'+elemClass+')"></div>' +
+    return '<div class="sgc" data-e="'+primaryClass+'" data-pid="'+escAttr(p.id)+'" style="cursor:pointer" onclick="openPDPFromProduct(\''+escAttr(p.id)+'\')">' +
+      '<div class="sgc-img" style="position:relative;overflow:hidden">'+imgHtml+stockBadge+dotsHtml+
       '</div>' +
       '<div class="sgc-body">' +
-        '<div class="sgc-el">'+elemLabel+'</div>' +
+        chipsHtml +
         '<div class="sgc-name">'+escHtml(displayName)+'</div>' +
         '<div class="sgc-foot">' +
           '<div class="sgc-price">'+priceStr+'</div>' +

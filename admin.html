@@ -112,6 +112,25 @@ body{min-height:100vh}
 .form-row input,.form-row select,.form-row textarea{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;outline:none}
 .form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--a)}
 .form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* Element multi-select checkbox grid */
+.pf-elem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:4px 0}
+.pf-elem-box{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--bg2);transition:all .15s;font-size:12px;color:var(--t1);text-transform:none;letter-spacing:0}
+.pf-elem-box:hover{border-color:var(--t2)}
+.pf-elem-box input{width:14px;height:14px;accent-color:var(--t1);cursor:pointer;margin:0}
+.pf-elem-box input:checked ~ .pf-elem-char{font-weight:700}
+.pf-elem-box:has(input:checked){border-color:var(--t1);background:var(--bg)}
+.pf-elem-char{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:600;min-width:1.2em;text-align:center}
+.pf-elem-char.shui{color:var(--shui)}
+.pf-elem-char.jin{color:var(--jin)}
+.pf-elem-char.mu{color:var(--mu)}
+.pf-elem-char.huo{color:var(--huo)}
+.pf-elem-char.tu{color:var(--tu)}
+.pf-elem-char.yin{color:#1a1a1a}
+.pf-elem-char.yang{color:#6a6561}
+.pf-elem-lbl{font-size:10px;color:var(--t3);letter-spacing:.02em}
+@media(max-width:640px){
+  .pf-elem-grid{grid-template-columns:repeat(2,1fr)}
+}
 .img-drop{border:2px dashed var(--line2);border-radius:10px;padding:24px;text-align:center;color:var(--t3);font-size:12px;cursor:pointer;transition:border-color .15s,background .15s;background:var(--bg2)}
 .img-drop:hover{border-color:var(--a);background:rgba(134,150,167,.06)}
 .img-drop.dragover{border-color:var(--mu);background:rgba(82,138,98,.06)}

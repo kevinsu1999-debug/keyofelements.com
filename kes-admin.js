@@ -229,7 +229,9 @@ async function loadStats(){
 }
 
 /* ── Products ── */
-var ELEMENTS = [['','(none)'],['水','Water'],['木','Wood'],['火','Fire'],['土','Earth'],['金','Metal'],['阴','Yin (阴)'],['阳','Yang (阳)']];
+// Element is multi-select (checkbox group) — a single product can carry
+// multiple materials/colors. Stored as a comma-separated string in metadata.
+var ELEMENTS = [['水','Water / 水'],['木','Wood / 木'],['火','Fire / 火'],['土','Earth / 土'],['金','Metal / 金'],['阴','Yin / 阴'],['阳','Yang / 阳']];
 var CATEGORIES = [['','(none)'],['clothing','Clothing / 服饰'],['accessory','Accessory / 配饰'],['life','Life / 生活'],['service','Service / 服务'],['other','Other']];
 var GENDERS = [['','Neutral'],['male','Male / 男'],['female','Female / 女'],['unisex','Unisex']];
 // Map element display char → CSS class used on chips and PDP element badge.
@@ -347,10 +349,24 @@ function renderProductForm(){
           return '<option value="'+c+'"'+((p.price_currency||'usd')===c?' selected':'')+'>'+c.toUpperCase()+'</option>';
         }).join('')+'</select>') +
     '</div>' +
-    '<div class="form-grid2">' +
-      formField('element','Element / 五行', '<select id="pfElem">'+ELEMENTS.map(function(e){return '<option value="'+e[0]+'"'+(m.element===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
-      formField('category','Category / 分类', '<select id="pfCat">'+CATEGORIES.map(function(e){return '<option value="'+e[0]+'"'+(m.category===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
-    '</div>' +
+    (function(){
+      // Element multi-select: parse existing comma list so pre-checked boxes match saved state
+      var currentElems = String(m.element||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+      var boxes = ELEMENTS.map(function(e){
+        var checked = currentElems.indexOf(e[0]) !== -1;
+        var cls = ELEM_CLASS_MAP[e[0]] || '';
+        return '<label class="pf-elem-box" data-class="'+cls+'">'+
+          '<input type="checkbox" class="pfElem" value="'+e[0]+'"'+(checked?' checked':'')+'>'+
+          '<span class="pf-elem-char '+cls+'">'+e[0]+'</span>'+
+          '<span class="pf-elem-lbl">'+e[1]+'</span>'+
+        '</label>';
+      }).join('');
+      return '<div class="form-row">' +
+        '<label>Element / 五行 <span style="color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0">(多选 / multi-select)</span></label>' +
+        '<div class="pf-elem-grid">'+boxes+'</div>' +
+      '</div>';
+    })() +
+    formField('category','Category / 分类', '<select id="pfCat">'+CATEGORIES.map(function(e){return '<option value="'+e[0]+'"'+(m.category===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
     formField('gender','Gender', '<select id="pfGender">'+GENDERS.map(function(e){return '<option value="'+e[0]+'"'+(m.gender===e[0]?' selected':'')+'>'+e[1]+'</option>';}).join('')+'</select>') +
     '<div class="form-row">' +
       '<label>Sizes &amp; Stock</label>' +
@@ -464,7 +480,11 @@ async function saveProduct(){
   var descZh = document.getElementById('pfDescZh').value.trim();
   var priceMajor = parseFloat(document.getElementById('pfPrice').value);
   var cur = document.getElementById('pfCur').value;
-  var elem = document.getElementById('pfElem').value;
+  // Element is a multi-select checkbox group — collect all checked values
+  var elemList = Array.prototype.slice.call(document.querySelectorAll('input.pfElem:checked'))
+    .map(function(cb){ return cb.value; });
+  var elem = elemList.join(',');
+  var elemClasses = elemList.map(function(c){ return ELEM_CLASS_MAP[c] || ''; }).filter(Boolean).join(',');
   var cat = document.getElementById('pfCat').value;
   var gender = document.getElementById('pfGender').value;
   var sort = document.getElementById('pfSort').value;
@@ -487,7 +507,9 @@ async function saveProduct(){
   var metadata = {};
   if(nameZh) metadata.name_zh = nameZh;
   if(descZh) metadata.description_zh = descZh;
-  if(elem) { metadata.element = elem; metadata.element_class = ELEM_CLASS_MAP[elem] || ''; }
+  // Element (comma-separated for multi-select support)
+  metadata.element = elem;
+  metadata.element_class = elemClasses;
   if(cat) metadata.category = cat;
   if(gender) metadata.gender = gender;
   // Clear legacy yinyang field — 阴/阳 now live in the element dimension itself
