@@ -142,7 +142,13 @@ function loadPanel(tab){
   else if(tab === 'orders') loadOrders();
 }
 
-/* ── Page Images: sectioned sub-directories ── */
+/* ── Page Images: interactive page mockups ──
+ * Each page is rendered as a small 1:1-proportioned wireframe. Image-backed
+ * regions (banners + the editorial grid) are clickable "hotspots" — click
+ * any region to upload/replace that image. The hotspot itself shows the
+ * current image thumbnail as background, or a dashed "+ upload" state when
+ * empty. Hover reveals a "Replace" overlay.
+ */
 function loadPageImages(){
   var host = document.getElementById('pageImgGrid');
   if(!host) return;
@@ -150,61 +156,102 @@ function loadPageImages(){
   var pubBase = sbBase + '/storage/v1/object/public/page-images/';
   var v = '?v=' + Math.floor(Date.now()/60000);
 
-  var SECTIONS = [
-    {
-      title: 'Homepage Editorial',
-      note: 'The four-image grid under "Live with what resonates". Portrait 4:5 works best.',
-      cols: 4,       // 4 cards per row, small previews
-      ratio: '4/5',
-      slots: [
-        {slot:1, filename:'home_1.jpg', label:'Slot 1 · Water 水'},
-        {slot:2, filename:'home_2.jpg', label:'Slot 2 · Metal 金'},
-        {slot:3, filename:'home_3.jpg', label:'Slot 3 · Wood  木'},
-        {slot:4, filename:'home_4.jpg', label:'Slot 4 · Fire  火'}
-      ]
-    },
-    {
-      title: 'Page Banners',
-      note: 'Wide 16:9 banner at the top of each page. Stays hidden until uploaded.',
-      cols: 4,
-      ratio: '16/9',
-      slots: [
-        {slot:'banner_home',  filename:'banner_home.jpg',  label:'Homepage'},
-        {slot:'banner_shop',  filename:'banner_shop.jpg',  label:'Shop page'},
-        {slot:'banner_learn', filename:'banner_learn.jpg', label:'Learn page'},
-        {slot:'banner_about', filename:'banner_about.jpg', label:'About page'}
-      ]
-    }
-  ];
-
-  function renderSlot(s, ratio){
-    var url = pubBase + s.filename + v;
-    var slotAttr = typeof s.slot === 'number' ? s.slot : "'"+s.slot+"'";
-    var safeId = String(s.slot).replace(/[^a-z0-9_]/gi,'_');
-    return '<div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">' +
-      '<div style="font-size:10px;letter-spacing:.1em;color:var(--t3);text-transform:uppercase">'+s.label+'</div>' +
-      '<div style="aspect-ratio:'+ratio+';background:var(--bg2);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative">' +
-        '<img id="pgimg-'+safeId+'" src="'+url+'" alt="" onload="this.style.opacity=1" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s">' +
-        '<div style="display:none;align-items:center;justify-content:center;color:var(--t4);font-size:10px;text-align:center;padding:10px">empty</div>' +
-      '</div>' +
+  // Reusable hotspot — click to open file picker, bg = current image.
+  function hotspot(slot, filename, labelHtml, extraClass){
+    var url = pubBase + filename + v;
+    var slotAttr = typeof slot === 'number' ? slot : "'"+slot+"'";
+    var safeId = String(slot).replace(/[^a-z0-9_]/gi,'_');
+    var cls = 'pg-hot' + (extraClass ? ' ' + extraClass : '');
+    return '<div class="'+cls+'" data-slot="'+safeId+'" onclick="document.getElementById(\'pgfile-'+safeId+'\').click()">' +
+      '<img class="pg-hot-img" id="pgimg-'+safeId+'" src="'+url+'" alt="" ' +
+        'onload="this.parentElement.setAttribute(\'data-loaded\',\'1\')" ' +
+        'onerror="this.style.display=\'none\'">' +
+      '<div class="pg-hot-label">'+labelHtml+'</div>' +
+      '<div class="pg-hot-overlay"><span>Click to upload</span></div>' +
       '<input type="file" id="pgfile-'+safeId+'" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadPageImage('+slotAttr+', this)">' +
-      '<button class="btn-sec" style="font-size:10px;padding:6px 12px;align-self:flex-start" onclick="document.getElementById(\'pgfile-'+safeId+'\').click()">Upload</button>' +
     '</div>';
   }
 
-  host.innerHTML = SECTIONS.map(function(sec){
-    return '<div style="margin-bottom:28px">' +
-      '<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:4px;flex-wrap:wrap">' +
-        '<h3 style="font-family:\'Cormorant Garamond\',serif;font-size:20px;font-weight:400;color:var(--t1)">'+sec.title+'</h3>' +
-        '<div style="font-size:11px;color:var(--t3);flex:1;min-width:200px">'+sec.note+'</div>' +
+  var css = '<style>' +
+    '.pg-mock-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:1100px}' +
+    '@media(max-width:840px){.pg-mock-grid{grid-template-columns:1fr}}' +
+    '.pg-mock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px}' +
+    '.pg-mock-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}' +
+    '.pg-mock-head h3{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:400;color:var(--t1)}' +
+    '.pg-mock-head .pg-mock-url{font-size:10px;color:var(--t4);font-family:monospace;letter-spacing:.02em}' +
+    '.pg-frame{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;font-family:inherit}' +
+    '.pg-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:var(--card);border:1px solid var(--line);border-radius:4px;font-size:9px;color:var(--t3);letter-spacing:.2em;height:18px}' +
+    '.pg-filler{background:repeating-linear-gradient(45deg,var(--bg2),var(--bg2) 5px,var(--bg3) 5px,var(--bg3) 10px);border:1px dashed var(--line2);border-radius:4px;font-size:9px;color:var(--t4);text-align:center;padding:8px 4px;letter-spacing:.1em;text-transform:uppercase;opacity:.7}' +
+    '.pg-hot{position:relative;background:var(--card);border:1px dashed var(--line2);border-radius:4px;cursor:pointer;overflow:hidden;transition:border-color .15s;display:flex;align-items:center;justify-content:center;min-height:40px}' +
+    '.pg-hot:hover{border-color:var(--t1);border-style:solid}' +
+    '.pg-hot[data-loaded] {border-style:solid;border-color:var(--line)}' +
+    '.pg-hot-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .2s}' +
+    '.pg-hot[data-loaded] .pg-hot-img{opacity:1}' +
+    '.pg-hot[data-loaded] .pg-hot-label{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7)}' +
+    '.pg-hot-label{position:relative;z-index:2;font-size:10px;letter-spacing:.1em;color:var(--t3);text-align:center;pointer-events:none;padding:4px;text-transform:uppercase}' +
+    '.pg-hot-overlay{position:absolute;inset:0;background:rgba(26,24,20,.72);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:3}' +
+    '.pg-hot-overlay span{color:#fff;font-size:11px;letter-spacing:.1em;padding:6px 14px;border:1px solid rgba(255,255,255,.4);border-radius:100px;text-transform:uppercase}' +
+    '.pg-hot:hover .pg-hot-overlay{opacity:1}' +
+    '.pg-banner-hot{aspect-ratio:16/5}' +
+    '.pg-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px;background:var(--card);border:1px solid var(--line);border-radius:4px}' +
+    '.pg-edit-grid .pg-hot{aspect-ratio:4/5;min-height:0}' +
+    '.pg-edit-split{display:grid;grid-template-columns:1fr 2fr;gap:8px}' +
+    '.pg-edit-text{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:14px 10px;display:flex;flex-direction:column;justify-content:center;gap:4px}' +
+    '.pg-edit-text-line{height:4px;border-radius:2px;background:var(--bg3)}' +
+    '.pg-edit-text-line:nth-child(1){width:70%}' +
+    '.pg-edit-text-line:nth-child(2){width:95%;height:10px;background:var(--t4);margin:6px 0}' +
+    '.pg-edit-text-line:nth-child(3){width:85%;height:10px;background:var(--t4);margin-bottom:4px}' +
+    '.pg-edit-text-line:nth-child(4){width:50%}' +
+    '.pg-edit-text-line:nth-child(5){width:40%;margin-top:8px;background:var(--t2)}' +
+    '.pg-small-mock .pg-banner-hot{aspect-ratio:16/6}' +
+    '.pg-small-mock .pg-filler{min-height:60px;display:flex;align-items:center;justify-content:center}' +
+    '.pg-help{font-size:11px;color:var(--t3);line-height:1.7;margin-bottom:16px;padding:14px 16px;background:var(--bg2);border-radius:8px;border-left:3px solid var(--a)}' +
+  '</style>';
+
+  var homepage = '<div class="pg-mock">' +
+    '<div class="pg-mock-head"><h3>Homepage</h3><div class="pg-mock-url">keyofelements.com/</div></div>' +
+    '<div class="pg-frame">' +
+      '<div class="pg-nav">KES · · ·</div>' +
+      // Homepage top banner (optional, visible only when uploaded)
+      hotspot('banner_home','banner_home.jpg','Top banner · wide','pg-banner-hot') +
+      // Reading form area filler
+      '<div class="pg-filler">Reading form (fixed)</div>' +
+      // Editorial section: text block + 2x2 grid
+      '<div class="pg-edit-split">' +
+        '<div class="pg-edit-text"><div class="pg-edit-text-line"></div><div class="pg-edit-text-line"></div><div class="pg-edit-text-line"></div><div class="pg-edit-text-line"></div><div class="pg-edit-text-line"></div></div>' +
+        '<div class="pg-edit-grid">' +
+          hotspot(1,'home_1.jpg','1 · 水') +
+          hotspot(2,'home_2.jpg','2 · 金') +
+          hotspot(3,'home_3.jpg','3 · 木') +
+          hotspot(4,'home_4.jpg','4 · 火') +
+        '</div>' +
       '</div>' +
-      '<div style="height:1px;background:var(--line);margin:8px 0 16px"></div>' +
-      '<div style="display:grid;grid-template-columns:repeat('+sec.cols+',minmax(0,1fr));gap:12px">' +
-        sec.slots.map(function(s){ return renderSlot(s, sec.ratio); }).join('') +
+    '</div>' +
+  '</div>';
+
+  function smallPageMock(title, slug, bannerSlot, bannerFile){
+    return '<div class="pg-mock pg-small-mock">' +
+      '<div class="pg-mock-head"><h3>'+title+'</h3><div class="pg-mock-url">keyofelements.com/'+slug+'</div></div>' +
+      '<div class="pg-frame">' +
+        '<div class="pg-nav">KES · · ·</div>' +
+        hotspot(bannerSlot, bannerFile, 'Top banner · wide','pg-banner-hot') +
+        '<div class="pg-filler">Content · fixed</div>' +
       '</div>' +
     '</div>';
-  }).join('') +
-  '<style>@media(max-width:720px){#pageImgGrid [style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,minmax(0,1fr)) !important}}</style>';
+  }
+
+  host.innerHTML = css +
+    '<div class="pg-help">Click any image region in the page mockups below to upload / replace that image. ' +
+      'The image you upload appears live on the corresponding section within a minute. ' +
+      'Aspect ratios are enforced: editorial = 4:5 portrait, banners = 16:5 wide.</div>' +
+    '<div class="pg-mock-grid">' +
+      homepage +
+      '<div style="display:flex;flex-direction:column;gap:20px">' +
+        smallPageMock('Shop',  'cn?page=shop',  'banner_shop',  'banner_shop.jpg') +
+        smallPageMock('Learn', 'cn?page=learn', 'banner_learn', 'banner_learn.jpg') +
+        smallPageMock('About', 'cn?page=about', 'banner_about', 'banner_about.jpg') +
+      '</div>' +
+    '</div>';
 }
 
 /* ── Editable site text registry ──
