@@ -388,15 +388,20 @@ async function acceptCurrentTerms(){
   }catch(e){ console.warn('terms accept failed:', e); }
 }
 
-/* ── Disclaimer ── */
+/* ── Disclaimer ──
+ * Uses localStorage so the user only needs to accept ONCE — persists across
+ * refreshes, tabs, and browser restarts. Only reappears if the user clears
+ * browser data or we bump the version key. */
 function dismissDisclaimer(){
   document.getElementById('disclaimerBanner').classList.add('hidden');
-  sessionStorage.setItem('kes_disc','1');
+  try { localStorage.setItem('kes_disc','1'); } catch(e){}
 }
-if(sessionStorage.getItem('kes_disc')==='1'){
-  var db = document.getElementById('disclaimerBanner');
-  if(db) db.classList.add('hidden');
-}
+try {
+  if(localStorage.getItem('kes_disc')==='1'){
+    var db = document.getElementById('disclaimerBanner');
+    if(db) db.classList.add('hidden');
+  }
+} catch(e){}
 
 
 /* ── Check paid status and auto-unlock ── */
