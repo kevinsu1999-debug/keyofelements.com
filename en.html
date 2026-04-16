@@ -159,7 +159,7 @@ nav > *{position:relative;z-index:1}
 /* ══════════════════════════════════════
  BLOCK 2 — READING FORM
 ══════════════════════════════════════ */
-.reading-block{scroll-margin-top:80px;max-width:1440px;margin:0 auto;
+.reading-block{scroll-margin-top:80px;max-width:1440px;margin:0 auto;align-items:stretch;
  display:grid;grid-template-columns:1fr 1fr;
  min-height:100vh;
  border-bottom:1px solid var(--line);
@@ -167,7 +167,7 @@ nav > *{position:relative;z-index:1}
 @media(max-width:800px){.reading-block{grid-template-columns:1fr}}
 
 /* left — form */
-.rb-left{aspect-ratio:1/1;overflow-y:auto;
+.rb-left{
  padding:clamp(56px,8vh,96px) clamp(32px,5vw,72px);
  display:flex;flex-direction:column;justify-content:center;
  border-right:1px solid var(--line);
@@ -194,7 +194,7 @@ nav > *{position:relative;z-index:1}
 .f-btn:hover{opacity:.85}
 
 /* right — animation + quotes */
-.rb-right{aspect-ratio:1/1;
+.rb-right{
  display:flex;flex-direction:column;justify-content:center;align-items:center;
  padding:clamp(56px,8vh,96px) clamp(32px,5vw,64px);
  background:var(--bg2);
