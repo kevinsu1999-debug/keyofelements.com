@@ -270,6 +270,10 @@ nav > *{position:relative;z-index:1}
 .phi-hero-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
 .phi-hero-img[data-banner-loaded] img{display:block}
 .phi-hero-img[data-banner-loaded] .phi-hero-img-empty{display:none}
+.about-slot-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+[data-banner-wrap][data-banner-loaded] .about-slot-img{display:block}
+[data-banner-wrap][data-banner-loaded] > div:not(.about-slot-img):not([data-banner-wrap]){display:none !important}
+
 .phi-hero-img-empty{position:relative;z-index:1;text-align:center;color:var(--t4)}
 
 /* ── Editorial: left-column text + right 2x2 image grid ── */
@@ -2671,13 +2675,13 @@ function pickSize(el){
 
 <!-- 3. Two images side by side -->
 <div style="display:grid;grid-template-columns:1fr 1fr;max-width:1440px;margin:0 auto;width:100%;align-items:stretch">
- <div style="aspect-ratio:1/1;background:#cec7be;display:flex;align-items:center;justify-content:center;overflow:hidden">
+ <div style="aspect-ratio:1/1;background:#cec7be;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative" data-banner-wrap><img data-banner="about_1" alt="" class="about-slot-img">
  <div style="text-align:center;color:#a09890">
  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".8" style="opacity:.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
  <div style="font-size:9px;letter-spacing:.15em;margin-top:6px;opacity:.4">720 × 480</div>
  </div>
  </div>
- <div style="aspect-ratio:1/1;background:#ddd7cf;display:flex;align-items:center;justify-content:center;overflow:hidden">
+ <div style="aspect-ratio:1/1;background:#ddd7cf;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative" data-banner-wrap><img data-banner="about_2" alt="" class="about-slot-img">
  <div style="text-align:center;color:#a09890">
  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".8" style="opacity:.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
  <div style="font-size:9px;letter-spacing:.15em;margin-top:6px;opacity:.4">720 × 480</div>
@@ -2691,7 +2695,7 @@ function pickSize(el){
 </div>
 
 <!-- 5. Full-bleed image -->
-<div style="height:400px;background:#c8c1b8;display:flex;align-items:center;justify-content:center">
+<div style="height:400px;background:#c8c1b8;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden" data-banner-wrap><img data-banner="about_3" alt="" class="about-slot-img">
  <div style="text-align:center;color:#a09890">
  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".8" style="opacity:.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
  <div style="font-size:9px;letter-spacing:.15em;margin-top:6px;opacity:.4">1440 × 400</div>

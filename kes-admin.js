@@ -256,6 +256,22 @@ function loadPageImages(){
     '</div>';
   }
 
+  // About page mockup: 2 squares side-by-side + 1 wide strip below
+  var aboutMock = '<div class="pg-mock pg-small-mock">' +
+    '<div class="pg-mock-head"><h3>About</h3><div class="pg-mock-url">keyofelements.com/cn?page=about</div></div>' +
+    '<div class="pg-frame">' +
+      '<div class="pg-nav">KES · · ·</div>' +
+      '<div class="pg-filler">Quote block</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:4px">' +
+        hotspot('about_1','about_1.jpg','Left · 1:1') +
+        hotspot('about_2','about_2.jpg','Right · 1:1') +
+      '</div>' +
+      '<div class="pg-filler">Text block</div>' +
+      hotspot('about_3','about_3.jpg','Full-bleed strip','pg-banner-hot') +
+      '<div class="pg-filler">Mission / Vision</div>' +
+    '</div>' +
+  '</div>';
+
   host.innerHTML = css +
     '<div class="pg-help">Click any image region in the page mockups below to upload / replace that image. ' +
       'The image you upload appears live on the corresponding section within a minute. ' +
@@ -265,6 +281,7 @@ function loadPageImages(){
       '<div style="display:flex;flex-direction:column;gap:20px">' +
         smallPageMock('Shop',  'cn?page=shop',  'banner_shop',  'banner_shop.jpg') +
         smallPageMock('Learn', 'cn?page=learn', 'banner_learn', 'banner_learn.jpg') +
+        aboutMock +
       '</div>' +
     '</div>';
 }

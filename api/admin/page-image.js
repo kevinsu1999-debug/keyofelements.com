@@ -25,10 +25,12 @@ module.exports = async (req, res) => {
   const n = parseInt(slot);
   if (!isNaN(n) && n >= 1 && n <= 4) {
     path = `home_${n}.jpg`;
-  } else if (typeof slot === 'string' && /^(banner_(home|shop|learn|about)|home_hero)$/.test(slot)) {
+  } else if (typeof slot === 'string' && /^(banner_(shop|learn)|home_hero|about_[1-3])$/.test(slot)) {
+    // banner_home and banner_about removed — no DOM to render them.
+    // about_1 / about_2 / about_3 = the three About-page image slots.
     path = `${slot}.jpg`;
   } else {
-    return res.status(400).json({ error: 'slot must be 1..4, banner_(home|shop|learn|about), or home_hero' });
+    return res.status(400).json({ error: 'slot must be 1..4, banner_shop, banner_learn, home_hero, or about_1..3' });
   }
 
   const sb = getSupabaseAdmin();
