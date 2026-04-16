@@ -177,10 +177,12 @@ async function loadReadings(){
       host.innerHTML = '<div class="empty">No readings yet. Head to the <a href="/" style="color:var(--t1)">home page</a> to generate one.</div>';
       return;
     }
+    var isPaid = _user && (_user.user_metadata||{}).paid;
     host.className = '';
     host.innerHTML = d.readings.map(function(r){
+      var paidBadge = isPaid ? ' <span class="pill pill-paid" style="font-size:9px;vertical-align:middle;margin-left:6px">PAID</span>' : '';
       return '<div class="rd-item" onclick="replayReading(\''+r.id+'\')">' +
-        '<div class="rd-gz">'+escapeHtml(r.year_gz||'—')+'</div>' +
+        '<div class="rd-gz">'+escapeHtml(r.year_gz||'—')+paidBadge+'</div>' +
         '<div class="rd-meta">' +
           escapeHtml(r.day_master||'?')+' · '+escapeHtml(r.strength_verdict||'')+' · ' +
           (r.birth_year||'?')+'-'+(r.birth_month||'?')+'-'+(r.birth_day||'?')+' ' +
@@ -198,13 +200,95 @@ async function replayReading(id){
     var r = await api('/api/account/readings?id='+encodeURIComponent(id));
     document.getElementById('rptModalTitle').textContent = (r.year_gz||'') + ' · ' + (r.day_master||'') + ' · ' + fmtDate(r.created_at);
     var body = document.getElementById('rptModalBody');
-    body.innerHTML = '<pre>'+escapeHtml(JSON.stringify(r.report || {}, null, 2))+'</pre>';
+    body.innerHTML = renderReadingHtml(r.report || {});
     document.getElementById('rptModalBg').classList.add('on');
   }catch(e){
     toast(e.message, 'err');
   }
 }
 function closeRptModal(){ document.getElementById('rptModalBg').classList.remove('on'); }
+
+/* ── Render saved report as formatted HTML (used inside the replay modal) ── */
+function renderReadingHtml(d){
+  if(!d || !d.meta) return '<div class="empty">No report data available.</div>';
+  var m = d.meta || {};
+  var p = d.pillars || {};
+  var s = d.strength || {};
+  var y = d.yongshen || {};
+  var WX_C = {'木':'mu','火':'huo','土':'tu','金':'jin','水':'shui'};
+  var S_WX = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+  var B_WX = {'子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水'};
+  function ec(ch){ var w = S_WX[ch]||''; return '<span class="e-'+(WX_C[w]||'tu')+'">'+escapeHtml(ch)+'</span>'; }
+  function ecb(ch){ var w = B_WX[ch]||''; return '<span class="e-'+(WX_C[w]||'tu')+'">'+escapeHtml(ch)+'</span>'; }
+
+  var html = '';
+
+  // ── Info header ──
+  html += '<div class="rr-info">';
+  html += '<div class="rr-row"><span class="rr-label">Birth</span><span>'+escapeHtml(m.birth||'')+(m.birth_hour_branch?' '+m.birth_hour_branch+'时':'')+'</span></div>';
+  html += '<div class="rr-row"><span class="rr-label">Gender</span><span>'+escapeHtml(m.gender_label||'')+'</span></div>';
+  if(m.birth_city) html += '<div class="rr-row"><span class="rr-label">Birth city</span><span>'+escapeHtml(m.birth_city)+'</span></div>';
+  html += '<div class="rr-row"><span class="rr-label">Day Master</span><span class="e-'+(WX_C[m.day_master_wx]||'tu')+'" style="font-weight:600">'+escapeHtml(p.day?p.day.stem:'')+' '+escapeHtml(m.day_master_wx||'')+'</span></div>';
+  html += '</div>';
+
+  // ── Four Pillars ──
+  if(p.year && p.month && p.day && p.hour){
+    var labels = ['年柱 Year','月柱 Month','日柱 Day','时柱 Hour'];
+    var cols = [p.year, p.month, p.day, p.hour];
+    html += '<div class="rr-pillars">';
+    for(var i=0;i<4;i++){
+      var col = cols[i];
+      html += '<div class="rr-pillar'+(i===2?' rr-day':'')+'">'+
+        '<div class="rr-pillar-label">'+labels[i]+'</div>'+
+        '<div class="rr-pillar-gz">'+ec(col.stem)+'</div>'+
+        '<div class="rr-pillar-gz">'+ecb(col.branch)+'</div>'+
+      '</div>';
+    }
+    html += '</div>';
+  }
+
+  // ── Strength ──
+  if(s.verdict){
+    html += '<div class="rr-section">';
+    html += '<div class="rr-h">身强弱 Strength</div>';
+    html += '<div class="rr-strength">'+escapeHtml(s.verdict)+'</div>';
+    if(s.detail) html += '<div class="rr-text">'+escapeHtml(s.detail)+'</div>';
+    html += '</div>';
+  }
+
+  // ── Yongshen ──
+  if(y.xi || y.ji){
+    html += '<div class="rr-section">';
+    html += '<div class="rr-h">喜忌用神 Favorable / Unfavorable</div>';
+    html += '<div class="rr-yj">';
+    if(y.xi) html += '<div><span class="rr-label">喜 Favorable</span> '+y.xi.map(function(w){return '<span class="rr-wx e-'+(WX_C[w]||'tu')+'">'+w+'</span>';}).join(' ')+'</div>';
+    if(y.ji) html += '<div><span class="rr-label">忌 Unfavorable</span> '+y.ji.map(function(w){return '<span class="rr-wx e-'+(WX_C[w]||'tu')+'">'+w+'</span>';}).join(' ')+'</div>';
+    html += '</div></div>';
+  }
+
+  // ── Report text sections ──
+  var sections = d.sections || [];
+  if(sections.length){
+    html += '<div class="rr-section">';
+    html += '<div class="rr-h">详细分析 Detailed Analysis</div>';
+    sections.forEach(function(sec){
+      html += '<details class="rr-detail"><summary>'+escapeHtml(sec.label||sec.title||'Section')+'</summary>';
+      html += '<div class="rr-detail-body">';
+      if(typeof sec.content === 'string'){
+        html += '<div class="rr-text">'+escapeHtml(sec.content).replace(/\n/g,'<br>')+'</div>';
+      } else if(Array.isArray(sec.content)){
+        sec.content.forEach(function(item){
+          if(typeof item === 'string') html += '<div class="rr-text">'+escapeHtml(item).replace(/\n/g,'<br>')+'</div>';
+          else if(item && item.label) html += '<div class="rr-text"><b>'+escapeHtml(item.label)+'</b><br>'+escapeHtml(item.text||'').replace(/\n/g,'<br>')+'</div>';
+        });
+      }
+      html += '</div></details>';
+    });
+    html += '</div>';
+  }
+
+  return html;
+}
 
 /* ── Orders ── */
 async function loadOrders(){
