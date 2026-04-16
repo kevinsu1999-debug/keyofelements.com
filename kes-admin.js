@@ -265,7 +265,6 @@ function loadPageImages(){
       '<div style="display:flex;flex-direction:column;gap:20px">' +
         smallPageMock('Shop',  'cn?page=shop',  'banner_shop',  'banner_shop.jpg') +
         smallPageMock('Learn', 'cn?page=learn', 'banner_learn', 'banner_learn.jpg') +
-        smallPageMock('About', 'cn?page=about', 'banner_about', 'banner_about.jpg') +
       '</div>' +
     '</div>';
 }

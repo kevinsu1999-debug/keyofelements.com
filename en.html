@@ -2662,11 +2662,6 @@ function pickSize(el){
 
 <!-- ════ ABOUT KES ════ -->
 <div class="page" id="p-about">
-
-<div class="page-banner" data-banner-wrap>
-  <img data-banner="about" alt="">
-</div>
-
 <!-- 1. Full-bleed hero image — tall, cinematic -->
 <div style="height:85vh;min-height:500px;max-height:800px;background:#d8d2ca;position:relative;display:flex;align-items:flex-end">
  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
@@ -2686,14 +2681,14 @@ function pickSize(el){
 </div>
 
 <!-- 3. Two images side by side -->
-<div style="display:grid;grid-template-columns:1fr 1fr;height:480px">
- <div style="background:#cec7be;display:flex;align-items:center;justify-content:center">
+<div style="display:grid;grid-template-columns:1fr 1fr;max-width:1440px;margin:0 auto;width:100%;align-items:stretch">
+ <div style="aspect-ratio:1/1;background:#cec7be;display:flex;align-items:center;justify-content:center;overflow:hidden">
  <div style="text-align:center;color:#a09890">
  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".8" style="opacity:.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
  <div style="font-size:9px;letter-spacing:.15em;margin-top:6px;opacity:.4">720 × 480</div>
  </div>
  </div>
- <div style="background:#ddd7cf;display:flex;align-items:center;justify-content:center">
+ <div style="aspect-ratio:1/1;background:#ddd7cf;display:flex;align-items:center;justify-content:center;overflow:hidden">
  <div style="text-align:center;color:#a09890">
  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".8" style="opacity:.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
  <div style="font-size:9px;letter-spacing:.15em;margin-top:6px;opacity:.4">720 × 480</div>
@@ -2715,13 +2710,13 @@ function pickSize(el){
 </div>
 
 <!-- 6. Mission / Vision — like editorial captions -->
-<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)">
- <div style="padding:clamp(40px,6vh,72px) clamp(32px,5vw,72px);border-right:1px solid var(--line)">
+<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);max-width:1440px;margin:0 auto;width:100%;align-items:stretch">
+  <div style="aspect-ratio:1/1;padding:clamp(40px,6vh,72px) clamp(32px,5vw,72px);border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;overflow:hidden">
  <div style="font-size:9px;letter-spacing:.6em;color:var(--t4);margin-bottom:14px">MISSION</div>
  <div style="font-size:15px;color:var(--t1);line-height:1.9">Awaken self-awareness through the wisdom of destiny.<br>Navigate life's turns with composure.</div>
  </div>
- <div style="padding:clamp(40px,6vh,72px) clamp(32px,5vw,72px)">
- <div style="font-size:9px;letter-spacing:.6em;color:var(--t4);margin-bottom:14px">VISION</div>
+ <div style="aspect-ratio:1/1;padding:clamp(40px,6vh,72px) clamp(32px,5vw,72px);display:flex;flex-direction:column;justify-content:center;overflow:hidden">
+    <div style="font-size:9px;letter-spacing:.6em;color:var(--t4);margin-bottom:14px">VISION</div>
  <div style="font-size:15px;color:var(--t1);line-height:1.9">Integrating Eastern wisdom into every modern choice.</div>
  </div>
 </div>
