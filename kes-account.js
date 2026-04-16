@@ -198,15 +198,14 @@ async function loadReadings(){
 async function replayReading(id){
   try{
     var r = await api('/api/account/readings?id='+encodeURIComponent(id));
-    document.getElementById('rptModalTitle').textContent = (r.year_gz||'') + ' · ' + (r.day_master||'') + ' · ' + fmtDate(r.created_at);
-    var body = document.getElementById('rptModalBody');
-    body.innerHTML = renderReadingHtml(r.report || {});
-    document.getElementById('rptModalBg').classList.add('on');
+    // Store report data and redirect to main page for full rendering
+    // (the main page's kes-report.js has the complete renderer including paid sections)
+    sessionStorage.setItem('kes_replay_report', JSON.stringify(r.report || {}));
+    window.location.href = 'index.html?replay=1';
   }catch(e){
     toast(e.message, 'err');
   }
 }
-function closeRptModal(){ document.getElementById('rptModalBg').classList.remove('on'); }
 
 /* ── Render saved report as formatted HTML (used inside the replay modal) ── */
 function renderReadingHtml(d){

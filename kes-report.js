@@ -311,3 +311,32 @@ function toggleNav(){
 try {
   if(sessionStorage.getItem('kes_code_unlocked')==='1') _rptUnlocked = true;
 } catch(e){}
+
+// ── Replay a saved reading from account page ──
+// When account.html redirects here with ?replay=1, it stores the report JSON
+// in sessionStorage. We pick it up, render the full report (including paid
+// sections if the user has paid), and navigate to the report page.
+(function checkReplay(){
+  try {
+    if(window.location.search.indexOf('replay=1') === -1) return;
+    var raw = sessionStorage.getItem('kes_replay_report');
+    if(!raw) return;
+    sessionStorage.removeItem('kes_replay_report');
+    var data = JSON.parse(raw);
+    if(!data || !data.meta) return;
+    // Wait for DOM + auth to be ready, then render
+    var ready = function(){
+      renderReport(data);
+      if(typeof goPage === 'function') goPage('report');
+      // Clean the URL so refresh doesn't re-trigger
+      if(window.history && window.history.replaceState){
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', function(){ setTimeout(ready, 200); });
+    } else {
+      setTimeout(ready, 200);
+    }
+  } catch(e){ console.warn('replay error:', e); }
+})();
