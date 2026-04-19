@@ -2,7 +2,10 @@
  * KES 命元之钥 — Report Engine v4 (Bilingual EN/ZH)
  * Changes: no ten-god in EN pillars, 5-dot rating, no god column EN, no shensha EN
  */
-var KES_API='https://web-production-11af.up.railway.app';
+// Same-origin: requests go to keyofelements.com/api/calculate (Vercel),
+// which proxies to the Railway FastAPI backend. Required because Railway's
+// *.up.railway.app domain is blocked in mainland China.
+var KES_API='';
 var isEn=(document.documentElement.lang==='en');
 var WX_C={'木':'mu','火':'huo','土':'tu','金':'jin','水':'shui'};
 var S_WX={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
