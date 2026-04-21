@@ -20,6 +20,24 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- Reading landing pages -->
+  <url>
+    <loc>https://keyofelements.com/en/reading</loc>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://keyofelements.com/zh/reading"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://keyofelements.com/en/reading"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://keyofelements.com/en/reading"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://keyofelements.com/zh/reading</loc>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://keyofelements.com/zh/reading"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://keyofelements.com/en/reading"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://keyofelements.com/en/reading"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
   <!-- Knowledge hubs -->
   <url>
     <loc>https://keyofelements.com/en/knowledge</loc>
