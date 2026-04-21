@@ -133,3 +133,65 @@ html[lang^="zh"] .hub-card-meta{font-size:12px;letter-spacing:0;text-transform:n
   .nav-right{gap:14px}
   .hub-grid{grid-template-columns:1fr;padding:20px 20px 60px}
 }
+
+/* ═══ Foundations sections on hub page ═══ */
+.found-sec{max-width:880px;margin:0 auto;padding:60px 24px 20px;border-top:1px solid var(--line)}
+.found-sec:first-of-type{border-top:none}
+.found-label{font-size:11px;letter-spacing:.24em;color:var(--mu);text-transform:uppercase;font-weight:500;margin-bottom:12px}
+html[lang^="zh"] .found-label{font-size:12px;letter-spacing:.3em;text-transform:none}
+.found-sec h2{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4.5vw,40px);font-weight:500;color:var(--t1);margin:0 0 16px;letter-spacing:-.01em}
+html[lang^="zh"] .found-sec h2{font-family:'Noto Serif SC',serif;font-weight:700;letter-spacing:.02em}
+.found-quote{border-left:2px solid var(--mu);padding-left:18px;margin:20px 0;color:var(--t1);font-family:'Noto Serif SC',serif;font-size:15px}
+.found-quote .src{display:block;font-size:11px;color:var(--t3);margin-top:6px;letter-spacing:.05em}
+.found-p{color:var(--t2);margin-bottom:16px;line-height:1.78}
+html[lang^="zh"] .found-p{line-height:1.85;text-align:justify}
+
+/* 阴阳 visual */
+.yy-row{display:grid;grid-template-columns:180px 1fr;gap:32px;align-items:center;margin:24px 0 10px}
+.yy-row svg{max-width:100%}
+.yy-caps{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+.yy-cap{padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+.yy-cap-t{font-family:'Noto Serif SC',serif;font-size:18px;font-weight:700;margin-bottom:4px}
+.yy-cap-d{font-size:12px;color:var(--t3);line-height:1.7}
+
+/* 五行 grid */
+.wx-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:24px 0 10px}
+.wx-card{padding:18px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;text-align:center;border-top:3px solid var(--line)}
+.wx-card.mu{border-top-color:var(--mu)}
+.wx-card.huo{border-top-color:var(--huo)}
+.wx-card.tu{border-top-color:var(--tu)}
+.wx-card.jin{border-top-color:var(--jin)}
+.wx-card.shui{border-top-color:var(--shui)}
+.wx-char{font-family:'Noto Serif SC',serif;font-size:32px;font-weight:300;margin-bottom:4px;line-height:1}
+.wx-card.mu .wx-char{color:var(--mu)}
+.wx-card.huo .wx-char{color:var(--huo)}
+.wx-card.tu .wx-char{color:var(--tu)}
+.wx-card.jin .wx-char{color:var(--jin)}
+.wx-card.shui .wx-char{color:var(--shui)}
+.wx-name{font-size:11px;letter-spacing:.1em;color:var(--t2);margin-bottom:8px}
+.wx-meta{font-size:10px;color:var(--t3);line-height:1.6;letter-spacing:0}
+html[lang^="zh"] .wx-meta{font-size:11px}
+
+/* 相生/相克 rows */
+.cycle-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0;font-family:'Noto Serif SC',serif;font-size:14px;color:var(--t2)}
+.cycle-row strong{font-weight:700;color:var(--t1);margin-right:8px}
+.cycle-row .arr{color:var(--t4);margin:0 4px}
+
+/* 四柱 example */
+.sz-chart{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0;max-width:520px}
+.sz-col{padding:14px 8px;background:var(--card);border:1px solid var(--line);border-radius:8px;text-align:center}
+.sz-col.day{border-color:var(--mu);border-width:2px}
+.sz-pos{font-size:11px;color:var(--t3);letter-spacing:.1em;margin-bottom:8px}
+.sz-stem{font-family:'Noto Serif SC',serif;font-size:26px;font-weight:400;margin-bottom:2px;line-height:1}
+.sz-branch{font-family:'Noto Serif SC',serif;font-size:22px;font-weight:300;color:var(--t2);margin-top:4px}
+.sz-tag{font-size:10px;color:var(--t4);margin-top:6px;letter-spacing:.05em}
+
+@media(max-width:700px){
+  .yy-row{grid-template-columns:1fr;gap:16px;text-align:center}
+  .wx-grid{grid-template-columns:repeat(5,1fr);gap:6px}
+  .wx-card{padding:12px 6px}
+  .wx-char{font-size:24px}
+  .wx-meta{display:none}
+  .sz-chart{grid-template-columns:repeat(4,1fr);gap:4px}
+  .sz-col{padding:10px 4px}
+}
