@@ -45,18 +45,28 @@ function fmtBirth(d){
 }
 
 
-/* Language switcher that preserves URL context.
-   - On /zh/report?params or /en/report?params: swap locale prefix, keep query
-     so the other-language report auto-replays via maybeAutoReplayReport().
-   - On any /zh/<page> or /en/<page> route: swap locale prefix only.
-   - Otherwise: fall back to / (zh home) or /en (en home). */
+/* Cross-language report state preservation.
+   Strategy: on successful submit, save form params to sessionStorage. When
+   user clicks the language switcher, set a replay flag + navigate to other
+   language home. On load, if the flag is set, auto-populate + submit.
+   Failure at any step is silent — normal form submit still works. */
+
+var KES_REPORT_KEY = 'kesReportParams';
+var KES_REPLAY_FLAG = 'kesReplayOnLoad';
+
 function kesSwitchLang(lang){
+  try {
+    /* If the user just ran a report, tell the next page to replay it. */
+    if (sessionStorage.getItem(KES_REPORT_KEY)) {
+      sessionStorage.setItem(KES_REPLAY_FLAG, '1');
+    }
+  } catch(e){ /* private mode, ignore */ }
+  /* Preserve /reading and /knowledge paths across locales; otherwise land on
+     the other language's home (which the replay flag will hydrate). */
   var path = window.location.pathname;
   var search = window.location.search;
   var newUrl;
-  if (path === '/zh/report' || path === '/en/report') {
-    newUrl = '/' + lang + '/report' + search;
-  } else if (/^\/(zh|en)\//.test(path)) {
+  if (/^\/(zh|en)\/(reading|knowledge)/.test(path)) {
     newUrl = path.replace(/^\/(zh|en)\//, '/' + lang + '/') + search;
   } else {
     newUrl = lang === 'zh' ? '/' : '/en';
@@ -64,23 +74,22 @@ function kesSwitchLang(lang){
   window.location = newUrl;
 }
 
-/* Auto-replay a /zh/report or /en/report URL:
-   If the page was loaded at /zh/report?y=...&m=...&..., populate the form
-   with the query-string values and trigger submitReading(). This is how
-   the language switcher preserves report state across locale changes:
-   instead of re-typing, the other-language report page reads the same
-   params from the URL and re-runs the calculation in the new language. */
 function maybeAutoReplayReport(){
-  var path = window.location.pathname;
-  if (path !== '/zh/report' && path !== '/en/report') return;
-  var q = new URLSearchParams(window.location.search);
-  var y = q.get('y'), m = q.get('m'), d = q.get('d'), h = q.get('h');
-  if (!y || !m || !d || !h) return;
+  var saved = null;
+  try {
+    /* Only auto-replay if the flag is explicitly set (just came from a lang
+       switch). Don't fire on every page load — user may have returned later
+       and expects a fresh form. */
+    if (sessionStorage.getItem(KES_REPLAY_FLAG) !== '1') return;
+    sessionStorage.removeItem(KES_REPLAY_FLAG);
+    var raw = sessionStorage.getItem(KES_REPORT_KEY);
+    if (!raw) return;
+    saved = JSON.parse(raw);
+  } catch(e){ return; }
+  if (!saved || !saved.y || !saved.m || !saved.d || !saved.h) return;
 
-  /* Immediately swap to the report page and show a loading state so the user
-     doesn't see the home/form flash during the 1-3s async API call. Without
-     this, switching language feels like "being kicked back to the form". */
-  if (typeof goPage === 'function') goPage('report');
+  /* Swap to report view + show loading immediately so the form doesn't flash. */
+  try { if (typeof goPage === 'function') goPage('report'); } catch(e){}
   var rptWrap = document.querySelector('.report-wrap');
   if (rptWrap && !document.getElementById('kes-auto-loading')) {
     var ld = document.createElement('div');
@@ -90,24 +99,17 @@ function maybeAutoReplayReport(){
     rptWrap.prepend(ld);
   }
 
-  var pop = function(id, v){ var el=document.getElementById(id); if(el && v!=null) el.value = v; };
-  pop('birthYear', y); pop('birthMonth', m); pop('birthDay', d); pop('birthHour', h);
-  pop('cityInput', q.get('bc') || ''); pop('residenceCity', q.get('rc') || '');
-  /* If lon/lat were stored, restore them on the city input's dataset so the
-     calculation uses the exact same true-solar-time correction as original. */
+  var pop = function(id, v){ var el=document.getElementById(id); if(el && v!=null) el.value = String(v); };
+  pop('birthYear', saved.y); pop('birthMonth', saved.m); pop('birthDay', saved.d); pop('birthHour', saved.h);
+  pop('cityInput', saved.bc || ''); pop('residenceCity', saved.rc || '');
   var ci = document.getElementById('cityInput');
-  if (ci && q.get('lon')) { ci.dataset.lon = q.get('lon'); ci.dataset.lat = q.get('lat'); }
-  if (typeof setG === 'function') setG(q.get('g') || 'M');
+  if (ci && saved.lon != null) { ci.dataset.lon = saved.lon; ci.dataset.lat = saved.lat; }
+  try { if (typeof setG === 'function') setG(saved.g || 'M'); } catch(e){}
 
-  /* Trigger submit once form + scripts are fully ready. Loading state is
-     removed by renderReport implicitly (it overwrites report-wrap content
-     via H() calls to children, not to .report-wrap itself, so we clean up
-     manually once submit resolves). */
   setTimeout(function(){
     if (typeof submitReading !== 'function') return;
-    submitReading();
-    /* submitReading is async; poll briefly until it finishes to remove the
-       loading shim. 10s safety timeout if something goes wrong. */
+    try { submitReading(); } catch(e){ console.error('auto-replay submit failed', e); return; }
+    /* Remove loading shim once content renders. 10s safety timeout. */
     var tries = 0;
     var iv = setInterval(function(){
       var done = document.getElementById('rpt-daymaster');
@@ -117,6 +119,8 @@ function maybeAutoReplayReport(){
         clearInterval(iv);
       } else if (++tries > 50) {
         clearInterval(iv);
+        var lm2 = document.getElementById('kes-auto-loading');
+        if (lm2) lm2.remove();
       }
     }, 200);
   }, 300);
@@ -140,18 +144,16 @@ async function submitReading(){
     if(!res.ok)throw new Error(await res.text());
     var data=await res.json();
     renderReport(data);goPage('report');
-    /* Push a shareable, language-switchable URL reflecting the form inputs.
-       Format: /zh/report?y=1990&m=5&d=15&h=寅&g=M&bc=上海&rc=北京
-       Language switcher detects /zh/report or /en/report and preserves
-       the query string when swapping locales, so report state survives
-       the switch without re-submitting. */
+    /* Save form inputs so language switcher can re-run the chart in the
+       other locale without asking the user to re-type. sessionStorage is
+       cleared when the browser tab closes. */
     try {
-      var qs = new URLSearchParams({y:y,m:m,d:d,h:hBr,g:gender,bc:ci.value||'',rc:resCity||'',lon:lon,lat:lat}).toString();
-      var newPath = (isEn?'/en':'/zh') + '/report?' + qs;
-      if (window.location.pathname + window.location.search !== newPath) {
-        history.pushState({kesReport:true}, '', newPath);
-      }
-    } catch(e){ /* pushState not critical */ }
+      sessionStorage.setItem(KES_REPORT_KEY, JSON.stringify({
+        y:y, m:m, d:d, h:hBr, g:gender,
+        bc:ci.value||'', rc:resCity||'',
+        lon:lon, lat:lat
+      }));
+    } catch(e){ /* private mode, ignore */ }
     // Fire-and-forget: persist reading if user is logged in
     try{
       var sbClient = (typeof getSupabase==='function') ? getSupabase() : null;
