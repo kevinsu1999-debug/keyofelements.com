@@ -1,0 +1,135 @@
+/* Shared styles for /knowledge/ article pages (EN + ZH).
+   Changes here ripple to all 20 Day Master articles. */
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f2ee;--bg2:#edeae5;--card:#fff;--line:#dedad4;--line2:#cac6bf;
+  --t1:#1a1814;--t2:#52504c;--t3:#98958f;--t4:#c8c5be;
+  --mu:#528a62;--huo:#a84848;--tu:#7a6248;--jin:#a08828;--shui:#8696a7;
+}
+
+/* Base — EN default */
+html{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;font-size:16px;line-height:1.78;-webkit-font-smoothing:antialiased}
+/* ZH override */
+html[lang^="zh"]{font-family:'Noto Serif SC','Inter',serif;line-height:1.85}
+
+body{min-height:100vh}
+a{color:var(--mu);text-decoration:none;border-bottom:1px solid rgba(82,138,98,.3);transition:border-color .2s}
+a:hover{border-bottom-color:var(--mu)}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:100;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,56px);background:rgba(247,245,241,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{font-family:'Inter',sans-serif;font-size:13px;font-weight:500;letter-spacing:.45em;text-indent:.45em;color:var(--t1);cursor:pointer}
+.nav-right{display:flex;align-items:center;gap:20px}
+.nav-right a{font-size:11px;letter-spacing:.08em;color:var(--t2);border:none;text-transform:uppercase}
+html[lang^="zh"] .nav-right a{font-size:12px;letter-spacing:.1em;text-transform:none}
+.nav-right a:hover{color:var(--t1)}
+.lang-switch{display:flex;border:1px solid var(--line2);border-radius:100px;overflow:hidden}
+.lang-switch a{padding:4px 12px;font-size:10px;letter-spacing:.06em;border:none;color:var(--t3)}
+.lang-switch a.on{background:var(--t1);color:#fff}
+
+/* Breadcrumb */
+.crumb{max-width:720px;margin:0 auto;padding:24px 24px 0;font-size:11px;letter-spacing:.06em;color:var(--t3);text-transform:uppercase}
+html[lang^="zh"] .crumb{font-size:12px;letter-spacing:0;text-transform:none}
+.crumb a{color:var(--t3);border:none}
+.crumb a:hover{color:var(--t1)}
+.crumb span{margin:0 8px;color:var(--t4)}
+
+/* Article */
+article{max-width:720px;margin:0 auto;padding:32px 24px 60px}
+.eyebrow{font-size:11px;letter-spacing:.18em;color:var(--mu);text-transform:uppercase;font-weight:500;margin-bottom:16px}
+html[lang^="zh"] .eyebrow{font-size:12px;letter-spacing:.3em;text-transform:none}
+
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,6vw,56px);font-weight:400;line-height:1.15;color:var(--t1);margin-bottom:8px;letter-spacing:-.01em}
+html[lang^="zh"] h1{font-family:'Noto Serif SC',serif;font-size:clamp(32px,5.5vw,48px);font-weight:700;line-height:1.25;letter-spacing:.02em}
+
+.lede{font-size:18px;line-height:1.7;color:var(--t2);margin:24px 0 40px;font-family:'Cormorant Garamond',serif;font-style:italic}
+html[lang^="zh"] .lede{font-size:17px;line-height:1.85;font-family:'Noto Serif SC',serif;font-style:normal;border-left:2px solid var(--mu);padding-left:18px}
+
+h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--t1);margin:44px 0 18px;letter-spacing:-.005em}
+html[lang^="zh"] h2{font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700;letter-spacing:.02em}
+
+h3{font-size:14px;font-weight:600;color:var(--t1);margin:28px 0 8px;letter-spacing:.02em}
+html[lang^="zh"] h3{font-size:15px;font-weight:700;letter-spacing:0}
+
+p{margin-bottom:18px;color:var(--t2)}
+html[lang^="zh"] p{text-align:justify}
+p strong{color:var(--t1);font-weight:600}
+html[lang^="zh"] p strong{font-weight:700}
+
+.quote{border-left:2px solid var(--mu);padding:4px 0 4px 20px;margin:28px 0;font-family:'Noto Serif SC',serif;font-size:17px;color:var(--t1);line-height:1.8}
+html[lang^="zh"] .quote{padding:6px 0 6px 22px;font-size:18px;line-height:1.85;font-weight:400}
+.quote .en-trans{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--t2);margin-top:6px}
+.quote .src{display:block;font-size:11px;letter-spacing:.08em;color:var(--t3);margin-top:10px;text-transform:uppercase}
+html[lang^="zh"] .quote .src{font-size:12px;letter-spacing:.05em;text-transform:none;font-weight:300}
+
+ul{margin:0 0 20px 24px}
+html[lang^="zh"] ul{margin-left:28px}
+li{margin-bottom:8px;color:var(--t2)}
+html[lang^="zh"] li{margin-bottom:10px}
+
+/* CTA */
+.cta{margin:52px 0 0;padding:32px;background:var(--card);border:1px solid var(--line);border-radius:12px;text-align:center}
+.cta h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--t1);margin:0 0 10px;letter-spacing:0}
+html[lang^="zh"] .cta h3{font-family:'Noto Serif SC',serif;font-weight:700;letter-spacing:.02em}
+.cta p{margin-bottom:20px;color:var(--t2)}
+.btn{display:inline-block;padding:14px 32px;background:var(--t1);color:#fff;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;border:none}
+html[lang^="zh"] .btn{padding:14px 36px;font-size:13px;font-weight:500;letter-spacing:.2em;text-transform:none}
+.btn:hover{background:var(--mu);border:none}
+
+/* FAQ */
+.faq{margin-top:52px;border-top:1px solid var(--line);padding-top:40px}
+.faq h2{margin-top:0}
+.faq-q{font-weight:600;color:var(--t1);margin-top:24px;margin-bottom:6px;font-size:15px}
+html[lang^="zh"] .faq-q{font-weight:700;font-size:16px}
+.faq-a{color:var(--t2)}
+
+/* Related */
+.related{margin-top:52px;padding-top:40px;border-top:1px solid var(--line)}
+.related h3{font-size:11px;letter-spacing:.14em;color:var(--t3);text-transform:uppercase;font-weight:500;margin-bottom:18px}
+html[lang^="zh"] .related h3{font-size:12px;letter-spacing:.2em;text-transform:none}
+.rel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rel-card{padding:18px;background:var(--card);border:1px solid var(--line);border-radius:10px;transition:border-color .2s}
+.rel-card:hover{border-color:var(--line2)}
+.rel-card a{display:block;border:none;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--t1);margin-bottom:4px}
+html[lang^="zh"] .rel-card a{font-family:'Noto Serif SC',serif;font-weight:700}
+.rel-meta{font-size:11px;letter-spacing:.06em;color:var(--t3);text-transform:uppercase}
+html[lang^="zh"] .rel-meta{font-size:12px;letter-spacing:0;text-transform:none}
+
+/* Footer */
+footer{max-width:720px;margin:60px auto 0;padding:32px 24px;border-top:1px solid var(--line);font-size:11px;letter-spacing:.06em;color:var(--t3);text-align:center}
+html[lang^="zh"] footer{font-size:12px;letter-spacing:0}
+footer a{color:var(--t3);border:none;margin:0 12px}
+footer a:hover{color:var(--t1)}
+
+/* Hub page */
+.hub-hero{max-width:880px;margin:0 auto;padding:60px 24px 30px;text-align:center}
+.hub-hero h1{font-size:clamp(40px,7vw,64px);margin-bottom:16px}
+.hub-hero p{font-size:17px;color:var(--t2);max-width:580px;margin:0 auto 10px}
+html[lang^="zh"] .hub-hero p{font-size:16px}
+.hub-grid{max-width:880px;margin:0 auto;padding:20px 24px 80px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.hub-card{display:block;padding:22px 24px;background:var(--card);border:1px solid var(--line);border-radius:12px;transition:all .25s;border-left:3px solid var(--line)}
+.hub-card:hover{border-color:var(--line2);transform:translateY(-2px)}
+.hub-card.mu{border-left-color:var(--mu)}
+.hub-card.huo{border-left-color:var(--huo)}
+.hub-card.tu{border-left-color:var(--tu)}
+.hub-card.jin{border-left-color:var(--jin)}
+.hub-card.shui{border-left-color:var(--shui)}
+.hub-card-stem{font-family:'Noto Serif SC',serif;font-size:36px;font-weight:300;color:var(--t1);margin-bottom:4px;line-height:1}
+.hub-card-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--t1);margin-bottom:4px;border:none}
+html[lang^="zh"] .hub-card-title{font-family:'Noto Serif SC',serif;font-size:18px;font-weight:700}
+.hub-card-meta{font-size:11px;letter-spacing:.08em;color:var(--t3);text-transform:uppercase}
+html[lang^="zh"] .hub-card-meta{font-size:12px;letter-spacing:0;text-transform:none}
+
+@media(max-width:700px){
+  article{padding:24px 20px 48px}
+  .crumb{padding:20px 20px 0}
+  h1{font-size:34px}
+  html[lang^="zh"] h1{font-size:30px}
+  h2{font-size:24px}
+  html[lang^="zh"] h2{font-size:22px}
+  .rel-grid{grid-template-columns:1fr}
+  nav{padding:0 20px}
+  .nav-right{gap:14px}
+  .hub-grid{grid-template-columns:1fr;padding:20px 20px 60px}
+}
