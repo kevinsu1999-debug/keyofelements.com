@@ -44,9 +44,8 @@
     card.id = 'share-card';
     card.style.cssText = [
       'position:fixed','top:0','left:-9999px','width:1080px','height:1080px',
-      'background:#f4f2ee','box-sizing:border-box','padding:72px 64px',
-      'font-family:"Noto Serif SC",serif','color:#1a1814','overflow:hidden',
-      'display:flex','flex-direction:column'
+      'background:#f4f2ee','box-sizing:border-box','padding:56px 56px',
+      'font-family:"Noto Serif SC","Songti SC",serif','color:#1a1814','overflow:hidden'
     ].join(';');
     document.body.appendChild(card);
   }
@@ -77,10 +76,10 @@
       var stWx = ({'甲':'mu','乙':'mu','丙':'huo','丁':'huo','戊':'tu','己':'tu','庚':'jin','辛':'jin','壬':'shui','癸':'shui'})[st]||'tu';
       var brWx = ({'子':'shui','丑':'tu','寅':'mu','卯':'mu','辰':'tu','巳':'huo','午':'huo','未':'tu','申':'jin','酉':'jin','戌':'tu','亥':'shui'})[br]||'tu';
       var isDay = pos==='day';
-      return '<div style="flex:1;text-align:center;padding:18px 8px;background:#fff;border-radius:14px;'+(isDay?'border:2px solid '+col+';':'border:1px solid #dedad4;')+'">'
-        + '<div style="font-size:14px;letter-spacing:.2em;color:#98958f;margin-bottom:12px">'+(isZh?pL:pLe)+'</div>'
-        + '<div style="font-size:56px;font-weight:400;color:'+EL_COLOR[stWx]+';line-height:1;margin-bottom:6px">'+st+'</div>'
-        + '<div style="font-size:48px;font-weight:300;color:'+EL_COLOR[brWx]+';line-height:1">'+br+'</div>'
+      return '<div style="flex:1;text-align:center;padding:14px 6px;background:#fff;border-radius:12px;box-sizing:border-box;'+(isDay?'border:2px solid '+col+';':'border:1px solid #dedad4;')+'">'
+        + '<div style="font-size:12px;letter-spacing:.2em;color:#98958f;line-height:16px;margin-bottom:10px">'+(isZh?pL:pLe)+'</div>'
+        + '<div style="font-size:44px;font-weight:400;color:'+EL_COLOR[stWx]+';line-height:48px;margin-bottom:4px;font-family:\'Noto Serif SC\',\'Songti SC\',serif">'+st+'</div>'
+        + '<div style="font-size:38px;font-weight:300;color:'+EL_COLOR[brWx]+';line-height:42px;font-family:\'Noto Serif SC\',\'Songti SC\',serif">'+br+'</div>'
         + '</div>';
     }).join('');
 
@@ -88,46 +87,47 @@
     var wxBarHtml = order.map(function(k){
       var v = wuxing[k]||0, pct = Math.round(v/total*100);
       var wxC = ({'木':'mu','火':'huo','土':'tu','金':'jin','水':'shui'})[k];
-      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center">'
-        + '<div style="font-size:32px;font-weight:400;color:'+EL_COLOR[wxC]+';margin-bottom:6px">'+k+'</div>'
-        + '<div style="width:100%;height:6px;background:#dedad4;border-radius:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+EL_COLOR[wxC]+'"></div></div>'
-        + '<div style="font-size:20px;color:'+EL_COLOR[wxC]+';margin-top:8px;font-weight:500">'+pct+'%</div>'
+      return '<div style="flex:1;text-align:center">'
+        + '<div style="font-size:24px;font-weight:400;color:'+EL_COLOR[wxC]+';line-height:28px;margin-bottom:6px;font-family:\'Noto Serif SC\',\'Songti SC\',serif">'+k+'</div>'
+        + '<div style="width:100%;height:5px;background:#dedad4;border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="width:'+pct+'%;height:100%;background:'+EL_COLOR[wxC]+'"></div></div>'
+        + '<div style="font-size:15px;color:'+EL_COLOR[wxC]+';line-height:18px;font-weight:500">'+pct+'%</div>'
         + '</div>';
     }).join('');
 
+    // All sections use fixed heights / explicit spacing so total fits 1080 with
+     // 56 top + 56 bottom padding → 968px content budget.
+    // Budget: brand 48 + 28 + hero 380 + 28 + pillars 148 + 28 + wx 130 + 28 + foot 28 = 966.
     card.innerHTML = [
-      // subtle element-tinted accent
+      // top accent bar
       '<div style="position:absolute;top:0;left:0;right:0;height:8px;background:'+col+'"></div>',
 
-      // top: brand
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:56px">',
-        '<div style="font-family:Inter,sans-serif;font-size:18px;letter-spacing:.45em;color:#1a1814;font-weight:500">K E S</div>',
+      // brand row (~48px)
+      '<div style="display:flex;justify-content:space-between;align-items:center;height:48px;margin-bottom:28px">',
+        '<div style="font-family:Inter,Helvetica,sans-serif;font-size:22px;letter-spacing:.45em;color:#1a1814;font-weight:500">K E S</div>',
         '<div style="font-size:16px;color:#98958f;letter-spacing:.15em">命 元 之 钥</div>',
       '</div>',
 
-      // hero: day master
-      '<div style="text-align:center;margin-bottom:12px">',
-        '<div style="font-size:20px;letter-spacing:.35em;color:#98958f;margin-bottom:30px">'+(isZh?'你 的 日 主':'YOUR DAY MASTER')+'</div>',
-        '<div style="background:'+bg+';border-radius:50%;width:360px;height:360px;margin:0 auto;display:flex;align-items:center;justify-content:center;position:relative">',
-          '<div style="font-size:260px;font-weight:400;color:'+col+';line-height:1;font-family:\'Noto Serif SC\',serif">'+ds+'</div>',
+      // hero: day master (~380px block: 28 eyebrow + 280 circle + 20 gap + 28 title + 24 phrase)
+      '<div style="text-align:center;margin-bottom:28px">',
+        '<div style="font-size:16px;letter-spacing:.35em;color:#98958f;line-height:28px;margin-bottom:16px">'+(isZh?'你 的 日 主':'YOUR DAY MASTER')+'</div>',
+        '<div style="background:'+bg+';border-radius:50%;width:280px;height:280px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;text-align:center">',
+          '<div style="font-size:200px;font-weight:400;color:'+col+';line-height:280px;font-family:\'Noto Serif SC\',\'Songti SC\',serif">'+ds+'</div>',
         '</div>',
-        '<div style="font-size:38px;font-weight:700;color:#1a1814;margin-top:36px;letter-spacing:.05em">'+ds+wxZh+(isZh?'日主':' Day Master')+'</div>',
-        '<div style="font-size:22px;color:'+col+';margin-top:12px;letter-spacing:.1em;font-weight:400">'+(isZh?phrase.zh:phrase.en)+'</div>',
+        '<div style="font-size:28px;font-weight:700;color:#1a1814;letter-spacing:.08em;line-height:32px;margin-bottom:10px">'+ds+wxZh+(isZh?'日主':' Day Master')+'</div>',
+        '<div style="font-size:20px;color:'+col+';letter-spacing:.1em;line-height:24px;font-weight:400">'+(isZh?phrase.zh:phrase.en)+'</div>',
       '</div>',
 
-      '<div style="flex:1"></div>',
+      // four pillars (~148px: 16 label + 100 stem/branch + 32 padding)
+      '<div style="display:flex;gap:12px;margin-bottom:28px;height:148px">'+pillarHtml+'</div>',
 
-      // four pillars
-      '<div style="display:flex;gap:12px;margin-bottom:36px">'+pillarHtml+'</div>',
-
-      // five elements
-      '<div style="background:#fff;border:1px solid #dedad4;border-radius:14px;padding:28px 24px;margin-bottom:40px">',
-        '<div style="font-size:14px;letter-spacing:.2em;color:#98958f;margin-bottom:18px;text-align:center">'+(isZh?'五 行 分 布':'FIVE ELEMENTS')+'</div>',
+      // five elements (~130px: 28 padding + 36 label-area + 66 bars)
+      '<div style="background:#fff;border:1px solid #dedad4;border-radius:14px;padding:20px 24px;margin-bottom:28px;height:130px;box-sizing:border-box">',
+        '<div style="font-size:13px;letter-spacing:.2em;color:#98958f;margin-bottom:14px;text-align:center;line-height:16px">'+(isZh?'五 行 分 布':'FIVE ELEMENTS')+'</div>',
         '<div style="display:flex;gap:12px">'+wxBarHtml+'</div>',
       '</div>',
 
-      // footer watermark
-      '<div style="display:flex;justify-content:space-between;align-items:center;font-size:16px;color:#98958f;letter-spacing:.1em">',
+      // footer watermark (~28px)
+      '<div style="display:flex;justify-content:space-between;align-items:center;height:28px;font-size:14px;color:#98958f;letter-spacing:.1em;line-height:28px">',
         '<span>'+(isZh?'免费八字排盘':'FREE BAZI READING')+'</span>',
         '<span style="font-weight:500;color:#1a1814">keyofelements.com</span>',
       '</div>'
@@ -147,24 +147,31 @@
 
     loadHtml2Canvas(function(){
       var card = populateCard(window._lastReportData);
-      // Give fonts a tick to settle before capture
-      setTimeout(function(){
-        html2canvas(card, {scale:1, width:1080, height:1080, backgroundColor:'#f4f2ee', useCORS:true}).then(function(canvas){
-          canvas.toBlob(function(blob){
-            var a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            var ds = window._lastReportData.pillars.day.stem;
-            a.download = 'kes-'+ds+'-daymaster-'+Date.now()+'.png';
-            document.body.appendChild(a); a.click(); a.remove();
-            setTimeout(function(){URL.revokeObjectURL(a.href)}, 500);
-            if (btn) { btn.disabled = false; btn.textContent = document.documentElement.lang==='zh' ? '下载分享图' : 'Download Share Image'; }
-          }, 'image/png');
-        }).catch(function(err){
-          console.error('share image error', err);
-          alert('Error: ' + err.message);
+      // Wait for fonts to actually finish loading before snapshot —
+      // html2canvas renders what's painted, so uncached Noto Serif SC
+      // would otherwise fall back to browser default and the day-master
+      // character would render at the wrong size/weight.
+      var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+      fontsReady.then(function(){
+        // Extra delay for layout settle + sub-pixel reflow
+        return new Promise(function(r){ setTimeout(r, 400); });
+      }).then(function(){
+        return html2canvas(card, {scale:1, width:1080, height:1080, backgroundColor:'#f4f2ee', useCORS:true, logging:false});
+      }).then(function(canvas){
+        canvas.toBlob(function(blob){
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          var ds = window._lastReportData.pillars.day.stem;
+          a.download = 'kes-'+ds+'-daymaster-'+Date.now()+'.png';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function(){URL.revokeObjectURL(a.href)}, 500);
           if (btn) { btn.disabled = false; btn.textContent = document.documentElement.lang==='zh' ? '下载分享图' : 'Download Share Image'; }
-        });
-      }, 250);
+        }, 'image/png');
+      }).catch(function(err){
+        console.error('share image error', err);
+        alert('Error: ' + err.message);
+        if (btn) { btn.disabled = false; btn.textContent = document.documentElement.lang==='zh' ? '下载分享图' : 'Download Share Image'; }
+      });
     });
   }
 
