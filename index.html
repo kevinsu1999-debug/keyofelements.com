@@ -1526,8 +1526,8 @@ setTimeout(function(){ if(!location.hash && window.scrollY === 0) return; if(!lo
   </div>
   <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
     <div class="lang-row">
-      <button class="lb on" onclick="window.location='index.html'">中文</button>
-      <button class="lb" onclick="window.location='en.html'">EN</button>
+      <button class="lb on" onclick="kesSwitchLang('zh')">中文</button>
+      <button class="lb" onclick="kesSwitchLang('en')">EN</button>
     </div>
     <span class="nav-bag">购物袋 (0)</span>
     <span class="nl" id="n-acct" onclick="kesUser ? navGo('account',this) : openLogin('login')" style="display:flex;align-items:center;gap:5px">

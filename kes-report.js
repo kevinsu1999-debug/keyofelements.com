@@ -45,6 +45,46 @@ function fmtBirth(d){
 }
 
 
+/* Language switcher that preserves URL context.
+   - On /zh/report?params or /en/report?params: swap locale prefix, keep query
+     so the other-language report auto-replays via maybeAutoReplayReport().
+   - On any /zh/<page> or /en/<page> route: swap locale prefix only.
+   - Otherwise: fall back to / (zh home) or /en (en home). */
+function kesSwitchLang(lang){
+  var path = window.location.pathname;
+  var search = window.location.search;
+  var newUrl;
+  if (path === '/zh/report' || path === '/en/report') {
+    newUrl = '/' + lang + '/report' + search;
+  } else if (/^\/(zh|en)\//.test(path)) {
+    newUrl = path.replace(/^\/(zh|en)\//, '/' + lang + '/') + search;
+  } else {
+    newUrl = lang === 'zh' ? '/' : '/en';
+  }
+  window.location = newUrl;
+}
+
+/* Auto-replay a /zh/report or /en/report URL:
+   If the page was loaded at /zh/report?y=...&m=...&..., populate the form
+   with the query-string values and trigger submitReading(). This is how
+   the language switcher preserves report state across locale changes:
+   instead of re-typing, the other-language report page reads the same
+   params from the URL and re-runs the calculation in the new language. */
+function maybeAutoReplayReport(){
+  var path = window.location.pathname;
+  if (path !== '/zh/report' && path !== '/en/report') return;
+  var q = new URLSearchParams(window.location.search);
+  var y = q.get('y'), m = q.get('m'), d = q.get('d'), h = q.get('h');
+  if (!y || !m || !d || !h) return;
+  var pop = function(id, v){ var el=document.getElementById(id); if(el && v!=null) el.value = v; };
+  pop('birthYear', y); pop('birthMonth', m); pop('birthDay', d); pop('birthHour', h);
+  pop('cityInput', q.get('bc') || ''); pop('residenceCity', q.get('rc') || '');
+  if (typeof setG === 'function') setG(q.get('g') || 'M');
+  /* Trigger submit once the form + scripts are fully ready */
+  setTimeout(function(){ if (typeof submitReading === 'function') submitReading(); }, 300);
+}
+document.addEventListener('DOMContentLoaded', maybeAutoReplayReport);
+
 async function submitReading(){
   var y=+$('birthYear').value,m=+$('birthMonth').value,d=+$('birthDay').value;
   var hBr=($('birthHour')||{}).value;
@@ -62,6 +102,18 @@ async function submitReading(){
     if(!res.ok)throw new Error(await res.text());
     var data=await res.json();
     renderReport(data);goPage('report');
+    /* Push a shareable, language-switchable URL reflecting the form inputs.
+       Format: /zh/report?y=1990&m=5&d=15&h=寅&g=M&bc=上海&rc=北京
+       Language switcher detects /zh/report or /en/report and preserves
+       the query string when swapping locales, so report state survives
+       the switch without re-submitting. */
+    try {
+      var qs = new URLSearchParams({y:y,m:m,d:d,h:hBr,g:gender,bc:ci.value||'',rc:resCity||''}).toString();
+      var newPath = (isEn?'/en':'/zh') + '/report?' + qs;
+      if (window.location.pathname + window.location.search !== newPath) {
+        history.pushState({kesReport:true}, '', newPath);
+      }
+    } catch(e){ /* pushState not critical */ }
     // Fire-and-forget: persist reading if user is logged in
     try{
       var sbClient = (typeof getSupabase==='function') ? getSupabase() : null;

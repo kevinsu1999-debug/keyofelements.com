@@ -10,6 +10,8 @@
     { "source": "/en/knowledge/:slug", "destination": "/knowledge/en/:slug.html" },
     { "source": "/zh/knowledge/:slug", "destination": "/knowledge/zh/:slug.html" },
     { "source": "/en/reading", "destination": "/reading/en.html" },
-    { "source": "/zh/reading", "destination": "/reading/zh.html" }
+    { "source": "/zh/reading", "destination": "/reading/zh.html" },
+    { "source": "/en/report", "destination": "/en.html" },
+    { "source": "/zh/report", "destination": "/index.html" }
   ]
 }
