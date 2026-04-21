@@ -4,4 +4,4 @@ Disallow: /admin
 Disallow: /account
 Disallow: /api/
 
-Sitemap: https://keyofelements.com/sitemap.xml
+Sitemap: https://www.keyofelements.com/sitemap.xml
