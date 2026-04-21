@@ -76,12 +76,50 @@ function maybeAutoReplayReport(){
   var q = new URLSearchParams(window.location.search);
   var y = q.get('y'), m = q.get('m'), d = q.get('d'), h = q.get('h');
   if (!y || !m || !d || !h) return;
+
+  /* Immediately swap to the report page and show a loading state so the user
+     doesn't see the home/form flash during the 1-3s async API call. Without
+     this, switching language feels like "being kicked back to the form". */
+  if (typeof goPage === 'function') goPage('report');
+  var rptWrap = document.querySelector('.report-wrap');
+  if (rptWrap && !document.getElementById('kes-auto-loading')) {
+    var ld = document.createElement('div');
+    ld.id = 'kes-auto-loading';
+    ld.style.cssText = 'text-align:center;padding:120px 20px;font-size:15px;color:#98958f;letter-spacing:.1em';
+    ld.textContent = (document.documentElement.lang === 'en') ? 'Loading your reading…' : '正在加载命盘…';
+    rptWrap.prepend(ld);
+  }
+
   var pop = function(id, v){ var el=document.getElementById(id); if(el && v!=null) el.value = v; };
   pop('birthYear', y); pop('birthMonth', m); pop('birthDay', d); pop('birthHour', h);
   pop('cityInput', q.get('bc') || ''); pop('residenceCity', q.get('rc') || '');
+  /* If lon/lat were stored, restore them on the city input's dataset so the
+     calculation uses the exact same true-solar-time correction as original. */
+  var ci = document.getElementById('cityInput');
+  if (ci && q.get('lon')) { ci.dataset.lon = q.get('lon'); ci.dataset.lat = q.get('lat'); }
   if (typeof setG === 'function') setG(q.get('g') || 'M');
-  /* Trigger submit once the form + scripts are fully ready */
-  setTimeout(function(){ if (typeof submitReading === 'function') submitReading(); }, 300);
+
+  /* Trigger submit once form + scripts are fully ready. Loading state is
+     removed by renderReport implicitly (it overwrites report-wrap content
+     via H() calls to children, not to .report-wrap itself, so we clean up
+     manually once submit resolves). */
+  setTimeout(function(){
+    if (typeof submitReading !== 'function') return;
+    submitReading();
+    /* submitReading is async; poll briefly until it finishes to remove the
+       loading shim. 10s safety timeout if something goes wrong. */
+    var tries = 0;
+    var iv = setInterval(function(){
+      var done = document.getElementById('rpt-daymaster');
+      if (done && done.textContent && done.textContent.trim() !== '—') {
+        var lm = document.getElementById('kes-auto-loading');
+        if (lm) lm.remove();
+        clearInterval(iv);
+      } else if (++tries > 50) {
+        clearInterval(iv);
+      }
+    }, 200);
+  }, 300);
 }
 document.addEventListener('DOMContentLoaded', maybeAutoReplayReport);
 
@@ -108,7 +146,7 @@ async function submitReading(){
        the query string when swapping locales, so report state survives
        the switch without re-submitting. */
     try {
-      var qs = new URLSearchParams({y:y,m:m,d:d,h:hBr,g:gender,bc:ci.value||'',rc:resCity||''}).toString();
+      var qs = new URLSearchParams({y:y,m:m,d:d,h:hBr,g:gender,bc:ci.value||'',rc:resCity||'',lon:lon,lat:lat}).toString();
       var newPath = (isEn?'/en':'/zh') + '/report?' + qs;
       if (window.location.pathname + window.location.search !== newPath) {
         history.pushState({kesReport:true}, '', newPath);
