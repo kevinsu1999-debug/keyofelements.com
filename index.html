@@ -1546,18 +1546,10 @@ setTimeout(function(){ if(!location.hash && window.scrollY === 0) return; if(!lo
   <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);align-items:stretch;max-width:1440px;margin:0 auto;width:100%">
     <!-- Left: text -->
     <div style="aspect-ratio:1/1;padding:clamp(48px,7vh,88px) clamp(32px,5vw,72px);display:flex;flex-direction:column;justify-content:center;overflow:hidden">
-      <div class="phi-kicker">命 元 之 钥 · 八 字</div>
-      <h1 class="phi-h1" style="margin-bottom:16px">输入你的生日，<br>看你的八字。</h1>
-      <div style="font-size:15px;color:var(--t2);line-height:1.75;max-width:440px;margin-bottom:24px">八字是中国传下来两千年的一套观察方法——用你出生的年、月、日、时，看出你的性格底色、长处与短板，以及大致的人生节奏。我们做这个工具，不是为了"预测"什么，是给你一个看自己的角度。</div>
-      <ul style="list-style:none;padding:0;margin:0 0 28px;font-size:13px;color:var(--t2);line-height:2">
-        <li style="display:flex;align-items:center;gap:10px"><span style="color:var(--mu);font-weight:600;font-size:15px">·</span>你的本命日主（性格的核心）</li>
-        <li style="display:flex;align-items:center;gap:10px"><span style="color:var(--mu);font-weight:600;font-size:15px">·</span>五行强弱分布</li>
-        <li style="display:flex;align-items:center;gap:10px"><span style="color:var(--mu);font-weight:600;font-size:15px">·</span>大运每十年的大方向</li>
-      </ul>
-      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-        <button style="background:var(--t1);color:#fff;border:none;border-radius:100px;padding:16px 38px;font-size:13px;font-weight:600;letter-spacing:.1em;cursor:pointer;font-family:inherit" onclick="document.querySelector('.reading-block').scrollIntoView({behavior:'smooth'})">看 我 的 八 字 →</button>
-        <span style="font-size:11px;color:var(--t3);letter-spacing:.08em">免费 · 不用注册 · 一分钟</span>
-      </div>
+      <div class="phi-kicker">命 元 之 钥</div>
+      <h1 class="phi-h1" style="margin-bottom:24px">古人留下了<br>一种看人的方法。</h1>
+      <div style="font-size:15px;color:var(--t2);line-height:1.95;max-width:460px;margin-bottom:36px">八字与五行，本是中国传了两千年的一套工具。它给的不是预测，而是一种秩序——你天生的偏向、节奏，以及你与周围事物之间的关系。<br><br>我们围绕这件事做两件事：一份免费的命盘解读，和一些与五行同频的生活物。</div>
+      <div><button style="background:var(--t1);color:#fff;border:none;border-radius:100px;padding:16px 38px;font-size:13px;font-weight:500;letter-spacing:.12em;cursor:pointer;font-family:inherit" onclick="document.querySelector('.reading-block').scrollIntoView({behavior:'smooth'})">看 你 的 命 盘 →</button></div>
     </div>
     <!-- Right: lifestyle image — falls back to placeholder when admin hasn't uploaded -->
     <div class="phi-hero-img" data-banner-wrap>
