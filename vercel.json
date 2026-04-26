@@ -10,6 +10,8 @@
     { "source": "/en/knowledge/:slug", "destination": "/knowledge/en/:slug.html" },
     { "source": "/zh/knowledge/:slug", "destination": "/knowledge/zh/:slug.html" },
     { "source": "/en/reading", "destination": "/reading/en.html" },
-    { "source": "/zh/reading", "destination": "/reading/zh.html" }
+    { "source": "/zh/reading", "destination": "/reading/zh.html" },
+    { "source": "/api/account/:path*", "destination": "/api/account?path=:path*" },
+    { "source": "/api/admin/:path*",   "destination": "/api/admin?path=:path*" }
   ]
 }
